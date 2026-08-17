@@ -1,0 +1,177 @@
+@import "tailwindcss";
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Trite Merchant OS design system.
+ * Near-black #252122 chrome, green accent #22c55e, neutral greys.
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --font-display: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  --radius: 0.5rem;
+
+  --background: #f4f5f7;
+  --foreground: oklch(0.213 0.006 17);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.213 0.006 17);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.213 0.006 17);
+
+  /* near-black #252122 */
+  --primary: oklch(0.213 0.006 17);
+  --primary-foreground: oklch(0.985 0 0);
+
+  --secondary: oklch(0.955 0.003 106);
+  --secondary-foreground: oklch(0.213 0.006 17);
+
+  --muted: oklch(0.955 0.003 106);
+  --muted-foreground: oklch(0.523 0.008 60);
+
+  /* green #22c55e */
+  --accent: #22c55e;
+  --accent-foreground: #ffffff;
+
+  --destructive: oklch(0.577 0.222 27);
+  --destructive-foreground: oklch(0.985 0 0);
+  --warning: oklch(0.75 0.15 70);
+  --warning-foreground: oklch(0.213 0.006 17);
+
+  --border: transparent;
+  --input: transparent;
+  --ring: #22c55e;
+
+  --chart-1: #22c55e;
+  --chart-2: oklch(0.34 0.008 17);
+  --chart-3: oklch(0.62 0.01 60);
+  --chart-4: oklch(0.78 0.006 106);
+  --chart-5: #15803d;
+
+  --sidebar: oklch(0.213 0.006 17);
+  --sidebar-foreground: oklch(0.86 0.004 106);
+  --sidebar-primary: #22c55e;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: oklch(0.27 0.006 17);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(0.3 0.006 17);
+  --sidebar-ring: #22c55e;
+}
+
+.dark {
+  --background: oklch(0.18 0.005 17);
+  --foreground: oklch(0.96 0.002 106);
+  --card: oklch(0.222 0.006 17);
+  --card-foreground: oklch(0.96 0.002 106);
+  --popover: oklch(0.222 0.006 17);
+  --popover-foreground: oklch(0.96 0.002 106);
+  --primary: #22c55e;
+  --primary-foreground: #ffffff;
+  --secondary: oklch(0.28 0.006 17);
+  --secondary-foreground: oklch(0.96 0.002 106);
+  --muted: oklch(0.28 0.006 17);
+  --muted-foreground: oklch(0.7 0.008 60);
+  --accent: #22c55e;
+  --accent-foreground: #ffffff;
+  --destructive: oklch(0.65 0.2 27);
+  --destructive-foreground: oklch(0.98 0 0);
+  --warning: oklch(0.78 0.15 70);
+  --warning-foreground: oklch(0.213 0.006 17);
+  --border: transparent;
+  --input: transparent;
+  --ring: #22c55e;
+  --sidebar: oklch(0.16 0.005 17);
+  --sidebar-foreground: oklch(0.86 0.004 106);
+  --sidebar-primary: #22c55e;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: oklch(0.24 0.006 17);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: transparent;
+  --sidebar-ring: #22c55e;
+}
+
+@layer base {
+  * {
+    border-color: transparent;
+  }
+
+  .bg-card {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+}
+
+/* Tabular numerals for money columns */
+@utility num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* The lime dot accent device from the wordmark */
+@utility trite-dot {
+  display: inline-block;
+  width: 0.45em;
+  height: 0.45em;
+  border-radius: 9999px;
+  background: var(--color-accent);
+}
