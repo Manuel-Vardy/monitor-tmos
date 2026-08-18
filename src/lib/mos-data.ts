@@ -151,6 +151,7 @@ export type Product = {
   stock: number;
   threshold: number;
   branch: string;
+  expiry?: string; // ISO date string (YYYY-MM-DD), optional
 };
 
 export const products: Product[] = [
@@ -173,6 +174,7 @@ export const products: Product[] = [
     stock: 96,
     threshold: 20,
     branch: "Osu Flagship",
+    expiry: "2025-08-12",
   },
   {
     sku: "TRT-1003",
@@ -193,6 +195,7 @@ export const products: Product[] = [
     stock: 18,
     threshold: 25,
     branch: "Kumasi Adum",
+    expiry: "2025-09-03",
   },
   {
     sku: "TRT-1005",
@@ -233,6 +236,7 @@ export const products: Product[] = [
     stock: 210,
     threshold: 40,
     branch: "East Legon",
+    expiry: "2025-11-14",
   },
 ];
 
@@ -507,5 +511,35 @@ export function paymentMixFor(branchId: string) {
   return raw.map((m) => ({ ...m, value: Math.round((m.value / total) * 100) }));
 }
 
+export type LineItem = {
+  sku: string;
+  name: string;
+  qty: number;
+  unitPrice: number;
+};
+
+export const activityLineItems: Record<string, LineItem[]> = {
+  "TRX-88214": [
+    { sku: "TRT-1001", name: "Shea Butter Tub (500g)",   qty: 2, unitPrice: 65  },
+    { sku: "TRT-1004", name: "Cocoa Powder (250g)",       qty: 1, unitPrice: 42  },
+    { sku: "TRT-1010", name: "Plantain Chips",            qty: 1, unitPrice: 12  },
+  ],
+  "TRX-88213": [],  // Invoice payment — no line items
+  "TRX-88212": [
+    { sku: "TRT-1007", name: "Rice · Local (25kg)",       qty: 1, unitPrice: 640 },
+  ],
+  "TRX-88211": [
+    { sku: "TRT-1003", name: "Kente Tote Bag (Large/Blue)", qty: 1, unitPrice: 220 },
+  ],
+  "TRX-88210": [
+    { sku: "TRT-1005", name: "Palm Oil (5L)",             qty: 4, unitPrice: 180 },
+    { sku: "TRT-1002", name: "Sobolo Concentrate (1L)",   qty: 3, unitPrice: 38  },
+    { sku: "TRT-1006", name: "Black Soap Bar (Pack of 6)", qty: 2, unitPrice: 54 },
+    { sku: "TRT-1009", name: "Groundnut Paste",           qty: 2, unitPrice: 28  },
+    { sku: "TRT-1011", name: "Ginger Tea Box",            qty: 1, unitPrice: 33  },
+    { sku: "TRT-1008", name: "Bottled Water (Crate/24)",  qty: 1, unitPrice: 45  },
+    { sku: "TRT-1012", name: "Cotton Wrapper",            qty: 1, unitPrice: 145 },
+  ],
+};
 export const activityRows = activity.map((a) => ({ ...a, branchId: branchOf(a.where) }));
 export const productRows = products.map((p) => ({ ...p, branchId: branchOf(p.branch) }));

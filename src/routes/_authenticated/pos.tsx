@@ -10,7 +10,7 @@ import {
   QrCode,
   Check,
   Loader2,
-  Split,
+  Lock,
 } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
@@ -39,12 +39,11 @@ export const Route = createFileRoute("/_authenticated/pos")({
 });
 
 const methods = [
-  { id: "momo", label: "Mobile money", hint: "MTN · Telecel", icon: Smartphone },
-  { id: "card", label: "Card", hint: "Visa · Mastercard", icon: CreditCard },
-  { id: "bank", label: "Bank transfer", hint: "GhIPSS instant", icon: Landmark },
-  { id: "stable", label: "Stablecoin", hint: "USDC · USDT", icon: Coins },
-  { id: "cash", label: "Cash", hint: "Till drawer", icon: Banknote },
-  { id: "split", label: "Split payment", hint: "Two methods", icon: Split },
+  { id: "momo",   label: "Mobile money", hint: "MTN · Telecel",    icon: Smartphone, disabled: false },
+  { id: "card",   label: "Card",         hint: "Visa · Mastercard", icon: CreditCard, disabled: true  },
+  { id: "bank",   label: "Bank transfer",hint: "GhIPSS instant",   icon: Landmark,   disabled: true  },
+  { id: "stable", label: "Stablecoin",   hint: "USDC · USDT",      icon: Coins,      disabled: true  },
+  { id: "cash",   label: "Cash",         hint: "Till drawer",       icon: Banknote,   disabled: false },
 ];
 
 const categories = ["All", "Beverages", "Groceries", "Personal care", "Apparel", "Snacks"];
@@ -214,27 +213,41 @@ function Pos() {
               {methods.map((m) => (
                 <button
                   key={m.id}
-                  onClick={() => setMethod(m.id)}
+                  onClick={() => !m.disabled && setMethod(m.id)}
+                  disabled={m.disabled}
                   className={cn(
-                    "flex flex-col items-start gap-1 rounded-lg border p-2.5 text-left transition-all shadow-2xs",
-                    method === m.id
-                      ? "border-emerald-500 bg-emerald-50 text-emerald-950 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-500 shadow-xs"
-                      : "border-border/80 bg-muted/80 text-foreground hover:bg-muted hover:border-border",
+                    "relative flex flex-col items-start gap-1 rounded-lg border p-2.5 text-left transition-all shadow-2xs",
+                    m.disabled
+                      ? "cursor-not-allowed border-border/40 bg-muted/40 opacity-70"
+                      : method === m.id
+                        ? "border-emerald-700 bg-emerald-700 text-white shadow-xs"
+                        : "border-emerald-200 bg-emerald-50 text-emerald-900 hover:bg-emerald-100 hover:border-emerald-300 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200 dark:hover:bg-emerald-950/70",
                   )}
                 >
+                  {m.disabled && (
+                    <span className="absolute top-1.5 right-1.5 flex items-center gap-0.5 rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-semibold text-muted-foreground">
+                      <Lock className="size-2.5" /> Soon
+                    </span>
+                  )}
                   <m.icon
                     className={cn(
                       "size-4",
-                      method === m.id ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground",
+                      m.disabled
+                        ? "text-muted-foreground"
+                        : method === m.id
+                          ? "text-white"
+                          : "text-emerald-600 dark:text-emerald-400",
                     )}
                   />
                   <span className="text-xs leading-tight font-semibold">{m.label}</span>
                   <span
                     className={cn(
                       "text-[10px] leading-tight",
-                      method === m.id
-                        ? "text-emerald-700/90 dark:text-emerald-400/90"
-                        : "text-muted-foreground",
+                      m.disabled
+                        ? "text-muted-foreground"
+                        : method === m.id
+                          ? "text-emerald-100"
+                          : "text-emerald-700 dark:text-emerald-400",
                     )}
                   >
                     {m.hint}

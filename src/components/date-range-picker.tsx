@@ -26,6 +26,10 @@ type Preset = {
 
 const PRESETS: Preset[] = [
   {
+    label: "Today",
+    range: () => ({ from: new Date(), to: new Date() }),
+  },
+  {
     label: "Last 7 days",
     range: () => ({ from: subDays(new Date(), 6), to: new Date() }),
   },

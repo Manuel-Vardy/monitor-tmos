@@ -5,7 +5,8 @@ import { Users, Wallet, Bell, ShieldCheck } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
-import { branches, roles } from "@/lib/mos-data";
+import { roles } from "@/lib/mos-data";
+import { useBranches } from "@/lib/branches-context";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/settings")({
@@ -34,6 +35,7 @@ const tabs = [
 ] as const;
 
 function Settings() {
+  const { branches } = useBranches();
   const [tab, setTab] = useState<(typeof tabs)[number]["id"]>("roles");
 
   return (

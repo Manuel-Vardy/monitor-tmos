@@ -3,6 +3,7 @@ import {
   Building2,
   Bell,
   ChevronDown,
+  Lock,
   LogOut,
   Menu,
   X,
@@ -10,7 +11,7 @@ import {
 import { useState } from "react";
 
 import { cn } from "@/lib/utils";
-import { branches } from "@/lib/mos-data";
+import { useBranches } from "@/lib/branches-context";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,6 +52,7 @@ function MobileLogo({ className }: { className?: string }) {
 }
 
 function BranchSwitcher() {
+  const { branches } = useBranches();
   const [current, setCurrent] = useState(branches[0]!);
   return (
     <DropdownMenu>
@@ -131,19 +133,30 @@ export function AppShell({
                   const active = pathname === item.to;
                   return (
                     <li key={item.to}>
-                      <Link
-                        to={item.to}
-                        className={cn(
-                          "group flex items-center gap-3 rounded-md px-2.5 py-2 text-sm transition-colors",
-                          active
-                            ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
-                            : "hover:bg-sidebar-accent/60",
-                        )}
-                      >
-                        <item.icon className="size-4 shrink-0 opacity-80" />
-                        <span className="flex-1">{item.label}</span>
-                        {active && <span className="size-1.5 rounded-full bg-sidebar-primary" />}
-                      </Link>
+                      {item.locked ? (
+                        <span
+                          className="group flex items-center gap-3 rounded-md px-2.5 py-2 text-sm opacity-40 cursor-not-allowed select-none"
+                          title="Coming soon"
+                        >
+                          <item.icon className="size-4 shrink-0" />
+                          <span className="flex-1">{item.label}</span>
+                          <Lock className="size-3 shrink-0" />
+                        </span>
+                      ) : (
+                        <Link
+                          to={item.to}
+                          className={cn(
+                            "group flex items-center gap-3 rounded-md px-2.5 py-2 text-sm transition-colors",
+                            active
+                              ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
+                              : "hover:bg-sidebar-accent/60",
+                          )}
+                        >
+                          <item.icon className="size-4 shrink-0 opacity-80" />
+                          <span className="flex-1">{item.label}</span>
+                          {active && <span className="size-1.5 rounded-full bg-sidebar-primary" />}
+                        </Link>
+                      )}
                     </li>
                   );
                 })}

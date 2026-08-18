@@ -49,6 +49,7 @@ export type NavItem = {
   label: string;
   icon: LucideIcon;
   priority?: number;
+  locked?: boolean;
 };
 
 export type NavGroup = {
@@ -72,13 +73,13 @@ export const NAV_PROFILE_MAP: Record<InstitutionType, NavProfile> = {
         { to: "/pos", label: "Checkout / POS", icon: ScanLine, priority: 2 },
         { to: "/sales", label: "Sales", icon: ShoppingCart, priority: 3 },
         { to: "/inventory", label: "Inventory", icon: Boxes, priority: 4 },
-        { to: "/delivery", label: "Delivery", icon: Truck },
+        { to: "/delivery", label: "Delivery", icon: Truck, locked: true },
       ],
     },
     {
       group: "Money",
       items: [
-        { to: "/invoices", label: "Invoicing", icon: FileText },
+        { to: "/invoices", label: "Invoicing", icon: FileText, locked: true },
         { to: "/reports", label: "Reports", icon: BarChart3 },
       ],
     },
@@ -104,7 +105,7 @@ export const NAV_PROFILE_MAP: Record<InstitutionType, NavProfile> = {
       items: [
         { to: "/orders", label: "Orders", icon: ClipboardList, priority: 2 },
         { to: "/purchasing", label: "Purchasing", icon: PackageSearch, priority: 3 },
-        { to: "/delivery", label: "Delivery Routes", icon: Truck, priority: 4 },
+        { to: "/delivery", label: "Delivery Routes", icon: Truck, priority: 4, locked: true },
         { to: "/customers", label: "Customers", icon: Users },
         { to: "/inventory", label: "Inventory", icon: Boxes },
       ],
@@ -112,7 +113,7 @@ export const NAV_PROFILE_MAP: Record<InstitutionType, NavProfile> = {
     {
       group: "Money",
       items: [
-        { to: "/invoices", label: "Invoicing", icon: FileText },
+        { to: "/invoices", label: "Invoicing", icon: FileText, locked: true },
         { to: "/reports", label: "Reports", icon: BarChart3 },
       ],
     },
@@ -136,18 +137,15 @@ export const NAV_PROFILE_MAP: Record<InstitutionType, NavProfile> = {
     {
       group: "Operations",
       items: [
-        { to: "/tables", label: "Table Orders", icon: UtensilsCrossed, priority: 2 },
-        { to: "/kitchen", label: "Kitchen", icon: ChefHat, priority: 3 },
-        { to: "/menu", label: "Menu & Recipes", icon: FileText, priority: 4 },
-        { to: "/inventory", label: "Inventory", icon: Boxes },
-        { to: "/wastage", label: "Wastage", icon: Trash2 },
+        { to: "/menu", label: "Menu & Recipes", icon: FileText, priority: 2 },
+        { to: "/eatery-inventory", label: "Inventory", icon: Boxes, priority: 3 },
       ],
     },
     {
       group: "Money",
       items: [
-        { to: "/invoices", label: "Invoicing", icon: FileText },
-        { to: "/reports", label: "Reports", icon: BarChart3 },
+        { to: "/eatery-sales", label: "Sales", icon: ShoppingCart, priority: 4 },
+        { to: "/eatery-reports", label: "Reports", icon: BarChart3 },
       ],
     },
     {
@@ -170,10 +168,9 @@ export const NAV_PROFILE_MAP: Record<InstitutionType, NavProfile> = {
     {
       group: "Operations",
       items: [
-        { to: "/dispensary", label: "Dispensary", icon: Pill, priority: 2 },
-        { to: "/patients", label: "Patient Billing", icon: UserRound, priority: 3 },
-        { to: "/inventory", label: "Inventory", icon: Boxes, priority: 4 },
-        { to: "/purchasing", label: "Purchasing", icon: PackageSearch },
+        { to: "/sales", label: "Sales", icon: ShoppingCart, priority: 2 },
+        { to: "/inventory", label: "Inventory", icon: Boxes, priority: 3 },
+        { to: "/purchasing", label: "Purchasing", icon: PackageSearch, priority: 4 },
       ],
     },
     {
@@ -273,7 +270,7 @@ export const NAV_PROFILE_MAP: Record<InstitutionType, NavProfile> = {
     {
       group: "Money",
       items: [
-        { to: "/invoices", label: "Invoicing", icon: FileText },
+        { to: "/invoices", label: "Invoicing", icon: FileText, locked: true },
         { to: "/reports", label: "Reports", icon: BarChart3 },
       ],
     },
@@ -336,7 +333,7 @@ export const NAV_PROFILE_MAP: Record<InstitutionType, NavProfile> = {
     {
       group: "Money",
       items: [
-        { to: "/invoices", label: "Invoicing", icon: FileText },
+        { to: "/invoices", label: "Invoicing", icon: FileText, locked: true },
         { to: "/retainers", label: "Retainers", icon: FileStack },
         { to: "/reports", label: "Reports", icon: BarChart3 },
       ],
@@ -368,7 +365,7 @@ export const NAV_PROFILE_MAP: Record<InstitutionType, NavProfile> = {
     {
       group: "Money",
       items: [
-        { to: "/invoices", label: "Invoicing", icon: FileText },
+        { to: "/invoices", label: "Invoicing", icon: FileText, locked: true },
         { to: "/reports", label: "Reports", icon: BarChart3 },
       ],
     },

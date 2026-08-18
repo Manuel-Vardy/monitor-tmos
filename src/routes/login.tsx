@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
-import { Eye, EyeOff } from "lucide-react";
+import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import type { InstitutionType } from "@/lib/institution-types";
 import { INSTITUTION_TYPES } from "@/lib/institution-types";
 import { INSTITUTION_META } from "@/lib/institution-config";
@@ -57,6 +57,8 @@ function SignInPage() {
   const search = Route.useSearch();
   const { setInstitution } = useInstitution();
 
+  // Step: 1 = business type, 2 = sign in
+  const [step, setStep] = useState<1 | 2>(1);
   const [selectedType, setSelectedType] = useState<string>(INSTITUTION_TYPES[0]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -98,7 +100,7 @@ function SignInPage() {
           <p className="mt-4 text-xs text-zinc-500 text-center">© Trite Software and Consultancy Services Limited</p>
         </div>
 
-        {/* ── Right: sign-in form ── */}
+        {/* ── Right: stepped form ── */}
         <div className="relative flex items-center justify-center px-6 py-12 sm:px-10 lg:px-14 xl:px-20">
           <a
             href="/"
@@ -109,116 +111,140 @@ function SignInPage() {
           </a>
 
           <div className="mx-auto w-full max-w-[440px]">
-            {/* Business type selector */}
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold tracking-tight text-center text-black dark:text-white sm:text-2xl mb-4">
-                What type of business are you?
-              </h2>
-              <div className="flex flex-wrap items-center justify-center gap-2">
-                {businessTypeButtons.map((item) => {
-                  const isSelected = selectedType === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setSelectedType(item.id)}
-                      className={`rounded-full px-4 py-2 text-xs sm:text-sm font-medium transition-all duration-200 border-0 outline-none ${
-                        isSelected
-                          ? "bg-[#22c55e] text-white shadow-sm scale-105"
-                          : "bg-black/5 text-black/80 hover:bg-black/10 dark:bg-white/10 dark:text-white/80 dark:hover:bg-white/20"
-                      }`}
-                    >
-                      {item.label}
-                    </button>
-                  );
-                })}
-              </div>
+
+            {/* ── Step indicator ── */}
+            <div className="mb-8 flex items-center justify-center gap-2">
+              <span className={`flex size-6 items-center justify-center rounded-full text-xs font-bold transition-colors ${step === 2 ? "bg-[#22c55e] text-white" : "bg-[#22c55e] text-white"}`}>
+                {step === 2 ? "✓" : "1"}
+              </span>
+              <span className="h-px w-8 bg-black/15 dark:bg-white/20" />
+              <span className={`flex size-6 items-center justify-center rounded-full text-xs font-bold transition-colors ${step === 2 ? "bg-[#22c55e] text-white" : "bg-black/10 text-black/40 dark:bg-white/10 dark:text-white/40"}`}>
+                2
+              </span>
             </div>
 
-            {/* Header */}
-            <div className="text-center mb-8">
-              <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl text-black dark:text-white">
-                Welcome back
-              </h1>
-              <p className="mt-1 text-sm text-black/50 dark:text-white/50">
-                Don't have an account?{" "}
-                <a href="/signup" className="font-medium text-[#22c55e] hover:underline underline-offset-2">
-                  Sign up
-                </a>
-              </p>
-            </div>
-
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Email */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-black/80 dark:text-white/80">
-                  Email
-                </label>
-                <div className="flex h-12 items-center rounded-xl border border-black/20 bg-white px-4 transition-all focus-within:border-[#22c55e] focus-within:ring-1 focus-within:ring-[#22c55e] dark:border-white/20 dark:bg-white/5">
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="kwame.mensah@gmail.com"
-                    className="w-full bg-transparent text-sm text-black outline-none dark:text-white placeholder:text-black/30 dark:placeholder:text-white/30"
-                  />
+            {/* ── Step 1: Business type ── */}
+            {step === 1 && (
+              <div>
+                <div className="text-center mb-8">
+                  <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl text-black dark:text-white">
+                    What type of business are you?
+                  </h1>
+                  <p className="mt-1 text-sm text-black/50 dark:text-white/50">
+                    Choose the one that best describes you
+                  </p>
                 </div>
+
+                <div className="flex flex-wrap items-center justify-center gap-2.5">
+                  {businessTypeButtons.map((item) => {
+                    const isSelected = selectedType === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setSelectedType(item.id)}
+                        className={`rounded-full px-5 py-2.5 text-sm font-medium transition-all duration-200 border outline-none ${
+                          isSelected
+                            ? "bg-[#22c55e] border-[#22c55e] text-white shadow-sm scale-105"
+                            : "bg-black/5 border-transparent text-black/80 hover:bg-black/10 dark:bg-white/10 dark:text-white/80 dark:hover:bg-white/20"
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setStep(2)}
+                  className="mt-10 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#22c55e] text-base font-semibold text-white transition-all hover:bg-[#16a34a] hover:shadow-md"
+                >
+                  Next <ArrowRight className="size-4" />
+                </button>
               </div>
+            )}
 
-              {/* Password */}
-              <div className="flex flex-col gap-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold uppercase tracking-wider text-black/80 dark:text-white/80">
-                    Password
-                  </label>
-                  <a href="#" className="text-xs text-[#22c55e] hover:underline underline-offset-2">
-                    Forgot password?
-                  </a>
+            {/* ── Step 2: Sign in ── */}
+            {step === 2 && (
+              <div>
+                <div className="text-center mb-8">
+                  <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl text-black dark:text-white">
+                    Welcome back
+                  </h1>
+                  <p className="mt-1 text-sm text-black/50 dark:text-white/50">
+                    Sign in to your account to continue
+                  </p>
                 </div>
-                <div className="flex h-12 items-center rounded-xl border border-black/20 bg-white px-4 transition-all focus-within:border-[#22c55e] focus-within:ring-1 focus-within:ring-[#22c55e] dark:border-white/20 dark:bg-white/5">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••••••"
-                    className="w-full bg-transparent text-sm text-black outline-none dark:text-white placeholder:text-black/30 dark:placeholder:text-white/30"
-                  />
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  {/* Email */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-black/80 dark:text-white/80">
+                      Email
+                    </label>
+                    <div className="flex h-12 items-center rounded-xl border border-black/20 bg-white px-4 transition-all focus-within:border-[#22c55e] focus-within:ring-1 focus-within:ring-[#22c55e] dark:border-white/20 dark:bg-white/5">
+                      <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="kwame.mensah@gmail.com"
+                        className="w-full bg-transparent text-sm text-black outline-none dark:text-white placeholder:text-black/30 dark:placeholder:text-white/30"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Password */}
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold uppercase tracking-wider text-black/80 dark:text-white/80">
+                        Password
+                      </label>
+                      <a href="#" className="text-xs text-[#22c55e] hover:underline underline-offset-2">
+                        Forgot password?
+                      </a>
+                    </div>
+                    <div className="flex h-12 items-center rounded-xl border border-black/20 bg-white px-4 transition-all focus-within:border-[#22c55e] focus-within:ring-1 focus-within:ring-[#22c55e] dark:border-white/20 dark:bg-white/5">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••••••"
+                        className="w-full bg-transparent text-sm text-black outline-none dark:text-white placeholder:text-black/30 dark:placeholder:text-white/30"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((v) => !v)}
+                        className="ml-2 shrink-0 text-black/40 hover:text-black/70 dark:text-white/40 dark:hover:text-white/70 transition-colors"
+                        tabIndex={-1}
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                      >
+                        {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                      </button>
+                    </div>
+                  </div>
+
                   <button
-                    type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    className="ml-2 shrink-0 text-black/40 hover:text-black/70 dark:text-white/40 dark:hover:text-white/70 transition-colors"
-                    tabIndex={-1}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    type="submit"
+                    className="mt-6 flex h-12 w-full items-center justify-center rounded-xl bg-[#22c55e] text-base font-semibold text-white transition-all hover:bg-[#16a34a] hover:shadow-md"
                   >
-                    {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                    Sign in
                   </button>
-                </div>
+                </form>
+
+                {/* Back link */}
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="mt-6 flex w-full items-center justify-center gap-1 text-xs text-black/40 hover:text-black/70 dark:text-white/40 dark:hover:text-white/70 transition-colors"
+                >
+                  ← Change business type
+                </button>
               </div>
+            )}
 
-              <button
-                type="submit"
-                className="mt-6 flex h-12 w-full items-center justify-center rounded-xl bg-[#22c55e] text-base font-semibold text-white transition-all hover:bg-[#16a34a] hover:shadow-md"
-              >
-                Sign in
-              </button>
-            </form>
-
-            {/* Divider + alternate */}
-            <div className="mt-6 flex items-center gap-3">
-              <span className="flex-1 h-px bg-black/10 dark:bg-white/10" />
-              <span className="text-xs text-black/40 dark:text-white/40">or</span>
-              <span className="flex-1 h-px bg-black/10 dark:bg-white/10" />
-            </div>
-
-            <p className="mt-5 text-center text-sm text-black/50 dark:text-white/50">
-              New to Trite?{" "}
-              <a href="/signup" className="font-semibold text-[#22c55e] hover:underline underline-offset-2">
-                Create a free account
-              </a>
-            </p>
           </div>
         </div>
       </div>

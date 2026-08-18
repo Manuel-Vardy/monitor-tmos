@@ -5,6 +5,7 @@ import type { InstitutionType } from "@/lib/institution-types";
 import { INSTITUTION_TYPES } from "@/lib/institution-types";
 import { INSTITUTION_META } from "@/lib/institution-config";
 import { useInstitution } from "@/hooks/use-institution";
+import { z } from "zod";
 
 const SESSION_KEY = "tmos_session_v1";
 
@@ -21,7 +22,12 @@ function readSession(): { accountId?: string; onboardingComplete?: boolean } | n
   }
 }
 
+const searchSchema = z.object({
+  redirect: z.string().optional(),
+});
+
 export const Route = createFileRoute("/signup")({
+  validateSearch: searchSchema,
   beforeLoad: () => {
     const session = readSession();
     if (session?.accountId && session?.onboardingComplete) {
@@ -30,8 +36,8 @@ export const Route = createFileRoute("/signup")({
   },
   head: () => ({
     meta: [
-      { title: "Create account — Trite Merchant OS" },
-      { name: "description", content: "Create your Trite Merchant OS account." },
+      { title: "Sign in — Trite Merchant OS" },
+      { name: "description", content: "Sign in to your Trite Merchant OS account." },
     ],
   }),
   component: SignUpPage,
@@ -44,28 +50,18 @@ const businessTypeButtons = INSTITUTION_TYPES.map((type) => ({
 
 function SignUpPage() {
   const navigate = useNavigate();
+  const search = Route.useSearch();
   const { setInstitution } = useInstitution();
 
-  // Step: 1 = business type, 2 = credentials
+  // Step: 1 = business type, 2 = sign in
   const [step, setStep] = useState<1 | 2>(1);
   const [selectedType, setSelectedType] = useState<string>(INSTITUTION_TYPES[0]);
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [passwordError, setPasswordError] = useState("");
-  const [noEmails, setNoEmails] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (password !== confirmPassword) {
-      setPasswordError("Passwords do not match.");
-      return;
-    }
-    setPasswordError("");
     const typeToUse = selectedType as InstitutionType;
     setInstitution(typeToUse, "acc-demo-001");
     try {
@@ -75,7 +71,8 @@ function SignUpPage() {
         JSON.stringify({ ...existing, version: 1, onboardingComplete: true }),
       );
     } catch { /* silent */ }
-    await navigate({ to: "/" });
+    const destination = search.redirect ?? "/";
+    await navigate({ to: destination });
   }
 
   return (
@@ -113,7 +110,7 @@ function SignUpPage() {
 
             {/* ── Step indicator ── */}
             <div className="mb-8 flex items-center justify-center gap-2">
-              <span className={`flex size-6 items-center justify-center rounded-full text-xs font-bold transition-colors ${step === 1 ? "bg-[#22c55e] text-white" : "bg-[#22c55e] text-white"}`}>
+              <span className={`flex size-6 items-center justify-center rounded-full text-xs font-bold transition-colors ${step === 2 ? "bg-[#22c55e] text-white" : "bg-[#22c55e] text-white"}`}>
                 {step === 2 ? "✓" : "1"}
               </span>
               <span className="h-px w-8 bg-black/15 dark:bg-white/20" />
@@ -161,46 +158,49 @@ function SignUpPage() {
                 >
                   Next <ArrowRight className="size-4" />
                 </button>
-
-                <div className="mt-6 flex items-center gap-3">
-                  <span className="flex-1 h-px bg-black/10 dark:bg-white/10" />
-                  <span className="text-xs text-black/40 dark:text-white/40">or</span>
-                  <span className="flex-1 h-px bg-black/10 dark:bg-white/10" />
-                </div>
-                <p className="mt-5 text-center text-sm text-black/50 dark:text-white/50">
-                  Already on Trite?{" "}
-                  <a href="/login" className="font-semibold text-[#22c55e] hover:underline underline-offset-2">
-                    Sign in to your account
-                  </a>
-                </p>
               </div>
             )}
 
-            {/* ── Step 2: Credentials ── */}
+            {/* ── Step 2: Sign in ── */}
             {step === 2 && (
               <div>
                 <div className="text-center mb-8">
                   <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl text-black dark:text-white">
-                    Create an account
+                    Welcome back
                   </h1>
                   <p className="mt-1 text-sm text-black/50 dark:text-white/50">
-                    Already have an account?{" "}
-                    <a href="/login" className="font-medium text-[#22c55e] hover:underline underline-offset-2">
-                      Sign in
-                    </a>
+                    Sign in to your account to continue
                   </p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <InputField label="First Name" type="text"     value={firstName} onChange={setFirstName} placeholder="Kwame" />
-                    <InputField label="Last Name"  type="text"     value={lastName}  onChange={setLastName}  placeholder="Mensah" />
+                  {/* Email */}
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-black/80 dark:text-white/80">
+                      Email
+                    </label>
+                    <div className="flex h-12 items-center rounded-xl border border-black/20 bg-white px-4 transition-all focus-within:border-[#22c55e] focus-within:ring-1 focus-within:ring-[#22c55e] dark:border-white/20 dark:bg-white/5">
+                      <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="kwame.mensah@gmail.com"
+                        className="w-full bg-transparent text-sm text-black outline-none dark:text-white placeholder:text-black/30 dark:placeholder:text-white/30"
+                      />
+                    </div>
                   </div>
-                  <InputField label="Email"    type="email"    value={email}    onChange={setEmail}    placeholder="kwame.mensah@gmail.com" />
 
-                  {/* Password with eye toggle */}
-                  <div className="flex flex-col gap-1.5 text-left">
-                    <label className="text-xs font-bold uppercase tracking-wider text-black/80 dark:text-white/80">Password</label>
+                  {/* Password */}
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold uppercase tracking-wider text-black/80 dark:text-white/80">
+                        Password
+                      </label>
+                      <a href="#" className="text-xs text-[#22c55e] hover:underline underline-offset-2">
+                        Forgot password?
+                      </a>
+                    </div>
                     <div className="flex h-12 items-center rounded-xl border border-black/20 bg-white px-4 transition-all focus-within:border-[#22c55e] focus-within:ring-1 focus-within:ring-[#22c55e] dark:border-white/20 dark:bg-white/5">
                       <input
                         type={showPassword ? "text" : "password"}
@@ -222,78 +222,19 @@ function SignUpPage() {
                     </div>
                   </div>
 
-                  {/* Confirm password with eye toggle */}
-                  <div className="flex flex-col gap-1.5 text-left">
-                    <label className="text-xs font-bold uppercase tracking-wider text-black/80 dark:text-white/80">Confirm Password</label>
-                    <div className={`flex h-12 items-center rounded-xl border bg-white px-4 transition-all focus-within:border-[#22c55e] focus-within:ring-1 focus-within:ring-[#22c55e] dark:bg-white/5 ${
-                      passwordError ? "border-red-400 dark:border-red-500" : "border-black/20 dark:border-white/20"
-                    }`}>
-                      <input
-                        type={showConfirm ? "text" : "password"}
-                        required
-                        value={confirmPassword}
-                        onChange={(e) => { setConfirmPassword(e.target.value); setPasswordError(""); }}
-                        placeholder="••••••••••••"
-                        className="w-full bg-transparent text-sm text-black outline-none dark:text-white placeholder:text-black/30 dark:placeholder:text-white/30"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirm((v) => !v)}
-                        className="ml-2 shrink-0 text-black/40 hover:text-black/70 dark:text-white/40 dark:hover:text-white/70 transition-colors"
-                        tabIndex={-1}
-                        aria-label={showConfirm ? "Hide password" : "Show password"}
-                      >
-                        {showConfirm ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                      </button>
-                    </div>
-                    {passwordError && (
-                      <p className="text-xs text-red-500 mt-0.5">{passwordError}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-3 pt-2 text-xs leading-4 text-black/60 dark:text-white/60">
-                    <label className="flex items-start gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={noEmails}
-                        onChange={(e) => setNoEmails(e.target.checked)}
-                        className="mt-0.5 rounded border-black/25 dark:border-white/30 accent-[#22c55e]"
-                      />
-                      <span>I'd like to receive product updates, feature announcements, and marketing emails from Trite. You can unsubscribe at any time.</span>
-                    </label>
-                    <p className="text-xs text-black/50 dark:text-white/50">
-                      By creating an account, you agree to our{" "}
-                      <a href="#" className="font-medium underline underline-offset-2 hover:text-[#22c55e]">Terms of Service</a>{" "}
-                      and{" "}
-                      <a href="#" className="font-medium underline underline-offset-2 hover:text-[#22c55e]">Privacy Policy</a>.
-                    </p>
-                  </div>
-
                   <button
                     type="submit"
                     className="mt-6 flex h-12 w-full items-center justify-center rounded-xl bg-[#22c55e] text-base font-semibold text-white transition-all hover:bg-[#16a34a] hover:shadow-md"
                   >
-                    Create account
+                    Sign in
                   </button>
                 </form>
-
-                <div className="mt-6 flex items-center gap-3">
-                  <span className="flex-1 h-px bg-black/10 dark:bg-white/10" />
-                  <span className="text-xs text-black/40 dark:text-white/40">or</span>
-                  <span className="flex-1 h-px bg-black/10 dark:bg-white/10" />
-                </div>
-                <p className="mt-5 text-center text-sm text-black/50 dark:text-white/50">
-                  Already on Trite?{" "}
-                  <a href="/login" className="font-semibold text-[#22c55e] hover:underline underline-offset-2">
-                    Sign in to your account
-                  </a>
-                </p>
 
                 {/* Back link */}
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="mt-4 flex w-full items-center justify-center gap-1 text-xs text-black/40 hover:text-black/70 dark:text-white/40 dark:hover:text-white/70 transition-colors"
+                  className="mt-6 flex w-full items-center justify-center gap-1 text-xs text-black/40 hover:text-black/70 dark:text-white/40 dark:hover:text-white/70 transition-colors"
                 >
                   ← Change business type
                 </button>
@@ -304,28 +245,5 @@ function SignUpPage() {
         </div>
       </div>
     </section>
-  );
-}
-
-function InputField({
-  label, type, value, onChange, placeholder,
-}: {
-  label: string; type: string; value: string;
-  onChange: (v: string) => void; placeholder: string;
-}) {
-  return (
-    <div className="flex flex-col gap-1.5 text-left">
-      <label className="text-xs font-bold uppercase tracking-wider text-black/80 dark:text-white/80">{label}</label>
-      <div className="flex h-12 items-center rounded-xl border border-black/20 bg-white px-4 transition-all focus-within:border-[#22c55e] focus-within:ring-1 focus-within:ring-[#22c55e] dark:border-white/20 dark:bg-white/5">
-        <input
-          type={type}
-          required
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          className="w-full bg-transparent text-sm text-black outline-none dark:text-white placeholder:text-black/30 dark:placeholder:text-white/30"
-        />
-      </div>
-    </div>
   );
 }

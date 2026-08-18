@@ -23,6 +23,9 @@ import { Route as AuthenticatedDeliveryRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedDisbursementsRouteImport } from './routes/_authenticated/disbursements'
 import { Route as AuthenticatedDispensaryRouteImport } from './routes/_authenticated/dispensary'
 import { Route as AuthenticatedDonationsRouteImport } from './routes/_authenticated/donations'
+import { Route as AuthenticatedEateryInventoryRouteImport } from './routes/_authenticated/eatery-inventory'
+import { Route as AuthenticatedEateryReportsRouteImport } from './routes/_authenticated/eatery-reports'
+import { Route as AuthenticatedEaterySalesRouteImport } from './routes/_authenticated/eatery-sales'
 import { Route as AuthenticatedExpensesRouteImport } from './routes/_authenticated/expenses'
 import { Route as AuthenticatedFeesRouteImport } from './routes/_authenticated/fees'
 import { Route as AuthenticatedFinishedGoodsRouteImport } from './routes/_authenticated/finished-goods'
@@ -126,6 +129,24 @@ const AuthenticatedDonationsRoute = AuthenticatedDonationsRouteImport.update({
   path: '/donations',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedEateryInventoryRoute =
+  AuthenticatedEateryInventoryRouteImport.update({
+    id: '/eatery-inventory',
+    path: '/eatery-inventory',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedEateryReportsRoute =
+  AuthenticatedEateryReportsRouteImport.update({
+    id: '/eatery-reports',
+    path: '/eatery-reports',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedEaterySalesRoute =
+  AuthenticatedEaterySalesRouteImport.update({
+    id: '/eatery-sales',
+    path: '/eatery-sales',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedExpensesRoute = AuthenticatedExpensesRouteImport.update({
   id: '/expenses',
   path: '/expenses',
@@ -303,6 +324,9 @@ export interface FileRoutesByFullPath {
   '/disbursements': typeof AuthenticatedDisbursementsRoute
   '/dispensary': typeof AuthenticatedDispensaryRoute
   '/donations': typeof AuthenticatedDonationsRoute
+  '/eatery-inventory': typeof AuthenticatedEateryInventoryRoute
+  '/eatery-reports': typeof AuthenticatedEateryReportsRoute
+  '/eatery-sales': typeof AuthenticatedEaterySalesRoute
   '/expenses': typeof AuthenticatedExpensesRoute
   '/fees': typeof AuthenticatedFeesRoute
   '/finished-goods': typeof AuthenticatedFinishedGoodsRoute
@@ -348,6 +372,9 @@ export interface FileRoutesByTo {
   '/disbursements': typeof AuthenticatedDisbursementsRoute
   '/dispensary': typeof AuthenticatedDispensaryRoute
   '/donations': typeof AuthenticatedDonationsRoute
+  '/eatery-inventory': typeof AuthenticatedEateryInventoryRoute
+  '/eatery-reports': typeof AuthenticatedEateryReportsRoute
+  '/eatery-sales': typeof AuthenticatedEaterySalesRoute
   '/expenses': typeof AuthenticatedExpensesRoute
   '/fees': typeof AuthenticatedFeesRoute
   '/finished-goods': typeof AuthenticatedFinishedGoodsRoute
@@ -396,6 +423,9 @@ export interface FileRoutesById {
   '/_authenticated/disbursements': typeof AuthenticatedDisbursementsRoute
   '/_authenticated/dispensary': typeof AuthenticatedDispensaryRoute
   '/_authenticated/donations': typeof AuthenticatedDonationsRoute
+  '/_authenticated/eatery-inventory': typeof AuthenticatedEateryInventoryRoute
+  '/_authenticated/eatery-reports': typeof AuthenticatedEateryReportsRoute
+  '/_authenticated/eatery-sales': typeof AuthenticatedEaterySalesRoute
   '/_authenticated/expenses': typeof AuthenticatedExpensesRoute
   '/_authenticated/fees': typeof AuthenticatedFeesRoute
   '/_authenticated/finished-goods': typeof AuthenticatedFinishedGoodsRoute
@@ -445,6 +475,9 @@ export interface FileRouteTypes {
     | '/disbursements'
     | '/dispensary'
     | '/donations'
+    | '/eatery-inventory'
+    | '/eatery-reports'
+    | '/eatery-sales'
     | '/expenses'
     | '/fees'
     | '/finished-goods'
@@ -490,6 +523,9 @@ export interface FileRouteTypes {
     | '/disbursements'
     | '/dispensary'
     | '/donations'
+    | '/eatery-inventory'
+    | '/eatery-reports'
+    | '/eatery-sales'
     | '/expenses'
     | '/fees'
     | '/finished-goods'
@@ -537,6 +573,9 @@ export interface FileRouteTypes {
     | '/_authenticated/disbursements'
     | '/_authenticated/dispensary'
     | '/_authenticated/donations'
+    | '/_authenticated/eatery-inventory'
+    | '/_authenticated/eatery-reports'
+    | '/_authenticated/eatery-sales'
     | '/_authenticated/expenses'
     | '/_authenticated/fees'
     | '/_authenticated/finished-goods'
@@ -675,6 +714,27 @@ declare module '@tanstack/react-router' {
       path: '/donations'
       fullPath: '/donations'
       preLoaderRoute: typeof AuthenticatedDonationsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/eatery-inventory': {
+      id: '/_authenticated/eatery-inventory'
+      path: '/eatery-inventory'
+      fullPath: '/eatery-inventory'
+      preLoaderRoute: typeof AuthenticatedEateryInventoryRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/eatery-reports': {
+      id: '/_authenticated/eatery-reports'
+      path: '/eatery-reports'
+      fullPath: '/eatery-reports'
+      preLoaderRoute: typeof AuthenticatedEateryReportsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/eatery-sales': {
+      id: '/_authenticated/eatery-sales'
+      path: '/eatery-sales'
+      fullPath: '/eatery-sales'
+      preLoaderRoute: typeof AuthenticatedEaterySalesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/expenses': {
@@ -908,6 +968,9 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDisbursementsRoute: typeof AuthenticatedDisbursementsRoute
   AuthenticatedDispensaryRoute: typeof AuthenticatedDispensaryRoute
   AuthenticatedDonationsRoute: typeof AuthenticatedDonationsRoute
+  AuthenticatedEateryInventoryRoute: typeof AuthenticatedEateryInventoryRoute
+  AuthenticatedEateryReportsRoute: typeof AuthenticatedEateryReportsRoute
+  AuthenticatedEaterySalesRoute: typeof AuthenticatedEaterySalesRoute
   AuthenticatedExpensesRoute: typeof AuthenticatedExpensesRoute
   AuthenticatedFeesRoute: typeof AuthenticatedFeesRoute
   AuthenticatedFinishedGoodsRoute: typeof AuthenticatedFinishedGoodsRoute
@@ -953,6 +1016,9 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDisbursementsRoute: AuthenticatedDisbursementsRoute,
   AuthenticatedDispensaryRoute: AuthenticatedDispensaryRoute,
   AuthenticatedDonationsRoute: AuthenticatedDonationsRoute,
+  AuthenticatedEateryInventoryRoute: AuthenticatedEateryInventoryRoute,
+  AuthenticatedEateryReportsRoute: AuthenticatedEateryReportsRoute,
+  AuthenticatedEaterySalesRoute: AuthenticatedEaterySalesRoute,
   AuthenticatedExpensesRoute: AuthenticatedExpensesRoute,
   AuthenticatedFeesRoute: AuthenticatedFeesRoute,
   AuthenticatedFinishedGoodsRoute: AuthenticatedFinishedGoodsRoute,

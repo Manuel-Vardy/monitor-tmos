@@ -4,7 +4,6 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   TriangleAlert,
-  Plus,
   Banknote,
   Receipt,
   Wallet,
@@ -35,12 +34,12 @@ import { DateRangePicker } from "@/components/date-range-picker";
 import {
   activityRows,
   branchName,
-  branches,
   currency,
-  paymentMixFor,
   productRows,
   seriesFor,
+  activityLineItems,
 } from "@/lib/mos-data";
+import { useBranches } from "@/lib/branches-context";
 import { cn } from "@/lib/utils";
 
 const branchColors: Record<string, string> = {
@@ -75,7 +74,7 @@ function Chip({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "rounded-full px-3 py-1 text-xs font-medium transition-all shadow-xs cursor-pointer",
+        "rounded-full px-3 py-1 text-sm font-semibold transition-all shadow-xs cursor-pointer",
         active ? activeClass : "bg-card hover:bg-secondary text-foreground",
       )}
     >
@@ -144,7 +143,109 @@ const branchMetrics = [
   { key: "staff", label: "Staff" },
 ] as const;
 
+type ActivityRow = (typeof activityRows)[number];
+
+function TransactionModal({
+  row,
+  onClose,
+}: {
+  row: ActivityRow;
+  onClose: () => void;
+}) {
+  const items = activityLineItems[row.id] ?? [];
+  const subtotal = items.reduce((s, i) => s + i.qty * i.unitPrice, 0);
+  const isRefund = row.amount < 0;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Transaction ${row.id}`}
+    >
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* Panel */}
+      <div className="relative z-10 w-full max-w-lg rounded-2xl bg-card shadow-2xl overflow-hidden">
+        {/* Dark header bar — matches sidebar color */}
+        <div className="bg-[--sidebar] px-6 pt-5 pb-4" style={{ background: "oklch(0.213 0.006 17)" }}>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <span className="inline-block rounded-full bg-white/10 px-2.5 py-0.5 num text-xs font-bold text-white/70">
+                {row.id}
+              </span>
+              <h2 className="mt-1.5 text-xl font-bold leading-tight text-white">{row.what}</h2>
+              <p className="mt-0.5 text-sm text-white/60">
+                {row.who} · {row.where} · {row.when}
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+              aria-label="Close"
+            >
+              <X className="size-4 text-white" />
+            </button>
+          </div>
+        </div>
+
+        {/* Meta row */}
+        <div className="grid grid-cols-3 gap-px bg-border">
+          {[
+            { label: "Method", value: row.method },
+            { label: "Status", value: row.status },
+            { label: "Amount", value: currency(Math.abs(row.amount)) },
+          ].map(({ label, value }) => (
+            <div key={label} className="bg-card px-4 py-3">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[#22c55e]">{label}</p>
+              <p className={cn("mt-0.5 text-sm font-semibold", label === "Amount" && isRefund && "text-red-500")}>
+                {label === "Amount" && isRefund ? `−${currency(Math.abs(row.amount))}` : value}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* Line items */}
+        <div className="px-6 py-4">
+          {items.length > 0 ? (
+            <>
+              <h3 className="mb-3 text-sm font-bold text-[#22c55e] uppercase tracking-wide">Items</h3>
+              <ul className="divide-y divide-border">
+                {items.map((item) => (
+                  <li key={item.sku} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                    <div className="min-w-0">
+                      <p className="font-semibold leading-tight truncate">{item.name}</p>
+                      <p className="text-xs text-muted-foreground">{item.sku} · {currency(item.unitPrice)} each</p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="num font-bold text-[#22c55e]">{currency(item.qty * item.unitPrice)}</p>
+                      <p className="text-xs text-muted-foreground">× {item.qty}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-3 flex items-center justify-between rounded-xl bg-emerald-50 dark:bg-emerald-950/40 px-4 py-3 text-sm font-bold">
+                <span className="text-[#22c55e]">Total</span>
+                <span className="num text-[#22c55e]">{currency(subtotal)}</span>
+              </div>
+            </>
+          ) : (
+            <p className="py-2 text-sm text-muted-foreground">
+              No line-item breakdown available for this transaction type.
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function RetailDashboard() {
+  const { branches } = useBranches();
   const [branchId, setBranchId] = useState("all");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [showSales, setShowSales] = useState(true);
@@ -155,9 +256,9 @@ export function RetailDashboard() {
   const [stockView, setStockView] = useState<"all" | "critical">("all");
   const [branchMetric, setBranchMetric] =
     useState<(typeof branchMetrics)[number]["key"]>("revenue");
+  const [selectedRow, setSelectedRow] = useState<(typeof activityRows)[number] | null>(null);
 
   const series = useMemo(() => seriesFor(branchId, "30d"), [branchId]);
-  const mix = useMemo(() => paymentMixFor(branchId), [branchId]);
 
   const totals = useMemo(() => {
     const rows = day ? series.filter((s) => s.day === day) : series;
@@ -216,11 +317,6 @@ export function RetailDashboard() {
     <AppShell
       title="Organisation dashboard"
       subtitle={`Sarpong Retail Ltd · ${branchName(branchId)} · ${rangeLabel}`}
-      actions={
-        <Button size="sm" className="bg-accent text-accent-foreground hover:bg-accent/85">
-          <Plus className="size-4" /> New sale
-        </Button>
-      }
     >
       <div className="space-y-6">
         {/* ── Mobile hero section ── */}
@@ -359,137 +455,100 @@ export function RetailDashboard() {
           />
         </section>
 
-        <section className="grid gap-4 xl:grid-cols-3">
-          <div className="rounded-lg border border-border bg-card p-4 xl:col-span-2">
-            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h2 className="text-sm font-semibold">Sales vs settlement</h2>
-                <p className="text-xs text-muted-foreground">
-                  Click a point to drill into a single day · {branchName(branchId)}
-                </p>
-              </div>
-              <div className="flex gap-1.5">
-                <Chip
-                  active={showSales}
-                  onClick={() => setShowSales((v) => !v)}
-                  activeClass="bg-emerald-600 text-white border-emerald-600"
-                >
-                  Sold
-                </Chip>
-                <Chip
-                  active={showSettled}
-                  onClick={() => setShowSettled((v) => !v)}
-                  activeClass="bg-blue-600 text-white border-blue-600"
-                >
-                  Settled
-                </Chip>
-              </div>
-            </div>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
-                  data={series}
-                  margin={{ left: -18, right: 4, top: 4 }}
-                  onClick={(e) => {
-                    const d = (e?.activeLabel as string) ?? null;
-                    setDay((prev) => (prev === d ? null : d));
-                  }}
-                >
-                  <defs>
-                    <linearGradient id="g-sales" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="var(--color-accent)" stopOpacity={0.55} />
-                      <stop offset="100%" stopColor="var(--color-accent)" stopOpacity={0.02} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="var(--color-border)"
-                    vertical={false}
-                  />
-                  <XAxis
-                    dataKey="day"
-                    tickLine={false}
-                    axisLine={false}
-                    fontSize={12}
-                    stroke="var(--color-muted-foreground)"
-                  />
-                  <YAxis
-                    tickFormatter={(v) => `${Math.round(v / 1000)}k`}
-                    tickLine={false}
-                    axisLine={false}
-                    fontSize={12}
-                    stroke="var(--color-muted-foreground)"
-                  />
-                  <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => currency(v)} />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
-                  {showSales && (
-                    <Area
-                      name="Sold"
-                      type="monotone"
-                      dataKey="sales"
-                      stroke="var(--color-accent)"
-                      strokeWidth={2}
-                      fill="url(#g-sales)"
-                      activeDot={{ r: 5 }}
-                    />
-                  )}
-                  {showSettled && (
-                    <Area
-                      name="Settled"
-                      type="monotone"
-                      dataKey="settled"
-                      stroke="var(--color-chart-2)"
-                      strokeWidth={2}
-                      fill="transparent"
-                      strokeDasharray="4 3"
-                      activeDot={{ r: 5 }}
-                    />
-                  )}
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-            {day && (
-              <p className="mt-3 rounded-md bg-secondary px-3 py-2 text-xs">
-                <span className="font-medium">{day}</span> · sold {currency(totals.sales)} · settled{" "}
-                {currency(totals.settled)} · outstanding {currency(totals.unsettled)}
+        <section className="rounded-lg border border-border bg-card p-4">
+          <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-semibold">Sales vs settlement</h2>
+              <p className="text-xs text-muted-foreground">
+                Click a point to drill into a single day · {branchName(branchId)}
               </p>
-            )}
+            </div>
+            <div className="flex gap-1.5">
+              <Chip
+                active={showSales}
+                onClick={() => setShowSales((v) => !v)}
+                activeClass="bg-emerald-600 text-white border-emerald-600"
+              >
+                Sold
+              </Chip>
+              <Chip
+                active={showSettled}
+                onClick={() => setShowSettled((v) => !v)}
+                activeClass="bg-blue-600 text-white border-blue-600"
+              >
+                Settled
+              </Chip>
+            </div>
           </div>
-
-          <div className="rounded-lg border border-border bg-card p-4">
-            <h2 className="text-sm font-semibold">Payment method mix</h2>
-            <p className="text-xs text-muted-foreground">Click a method to filter activity</p>
-            <ul className="mt-4 space-y-3">
-              {mix.map((m) => {
-                const active = method === m.method;
-                return (
-                  <li key={m.method}>
-                    <button
-                      onClick={() => setMethod(active ? null : m.method)}
-                      aria-pressed={active}
-                      className="w-full rounded-md p-1 text-left transition-colors hover:bg-secondary/70"
-                    >
-                      <div className="mb-1 flex items-baseline justify-between text-sm">
-                        <span className={cn(active && "font-semibold")}>{m.method}</span>
-                        <span className="num text-xs text-muted-foreground">
-                          {currency(m.amount)} · {m.value}%
-                        </span>
-                      </div>
-                      <div className="h-2 overflow-hidden rounded-full bg-secondary">
-                        <div
-                          className={cn(
-                            "h-full rounded-full transition-all",
-                            active ? "bg-foreground" : "bg-accent",
-                          )}
-                          style={{ width: `${m.value}%` }}
-                        />
-                      </div>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart
+                data={series}
+                margin={{ left: -18, right: 4, top: 4 }}
+                onClick={(e) => {
+                  const d = (e?.activeLabel as string) ?? null;
+                  setDay((prev) => (prev === d ? null : d));
+                }}
+              >
+                <defs>
+                  <linearGradient id="g-sales" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--color-accent)" stopOpacity={0.55} />
+                    <stop offset="100%" stopColor="var(--color-accent)" stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="var(--color-border)"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="day"
+                  tickLine={false}
+                  axisLine={false}
+                  fontSize={12}
+                  stroke="var(--color-muted-foreground)"
+                />
+                <YAxis
+                  tickFormatter={(v) => `${Math.round(v / 1000)}k`}
+                  tickLine={false}
+                  axisLine={false}
+                  fontSize={12}
+                  stroke="var(--color-muted-foreground)"
+                />
+                <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => currency(v)} />
+                <Legend wrapperStyle={{ fontSize: 12 }} />
+                {showSales && (
+                  <Area
+                    name="Sold"
+                    type="monotone"
+                    dataKey="sales"
+                    stroke="var(--color-accent)"
+                    strokeWidth={2}
+                    fill="url(#g-sales)"
+                    activeDot={{ r: 5 }}
+                  />
+                )}
+                {showSettled && (
+                  <Area
+                    name="Settled"
+                    type="monotone"
+                    dataKey="settled"
+                    stroke="var(--color-chart-2)"
+                    strokeWidth={2}
+                    fill="transparent"
+                    strokeDasharray="4 3"
+                    activeDot={{ r: 5 }}
+                  />
+                )}
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
+          {day && (
+            <p className="mt-3 rounded-md bg-secondary px-3 py-2 text-xs">
+              <span className="font-medium">{day}</span> · sold {currency(totals.sales)} · settled{" "}
+              {currency(totals.settled)} · outstanding {currency(totals.unsettled)}
+            </p>
+          )}
         </section>
 
         <section className="grid gap-4 xl:grid-cols-3">
@@ -614,11 +673,7 @@ export function RetailDashboard() {
                 </li>
               )}
             </ul>
-            <div className="p-3">
-              <Button variant="outline" size="sm" className="w-full">
-                Send restock links
-              </Button>
-            </div>
+
           </div>
         </section>
 
@@ -650,7 +705,11 @@ export function RetailDashboard() {
             {/* ── Mobile: card list ── */}
             <ul className="divide-y divide-border sm:hidden">
               {rows.map((a) => (
-                <li key={a.id} className="px-4 py-3 space-y-1">
+                <li
+                  key={a.id}
+                  className="px-4 py-3 space-y-1 cursor-pointer hover:bg-secondary/50 transition-colors"
+                  onClick={() => setSelectedRow(a)}
+                >
                   <div className="flex items-center justify-between gap-2">
                     <span className="num text-xs font-semibold text-muted-foreground">{a.id}</span>
                     <button onClick={() => setStatus(status === a.status ? null : a.status)}>
@@ -683,20 +742,24 @@ export function RetailDashboard() {
             {/* ── Desktop: full table ── */}
             <table className="hidden w-full text-base sm:table">
               <thead>
-                <tr className="border-b border-border text-left text-xs tracking-wide text-muted-foreground uppercase">
-                  <th className="px-4 py-2.5 font-medium">Reference</th>
-                  <th className="px-4 py-2.5 font-semibold">Event</th>
-                  <th className="px-4 py-2.5 font-medium">Who</th>
-                  <th className="px-4 py-2.5 font-medium">Branch</th>
-                  <th className="px-4 py-2.5 font-medium">Method</th>
-                  <th className="px-4 py-2.5 text-right font-medium">Amount</th>
-                  <th className="px-4 py-2.5 font-medium">Status</th>
-                  <th className="px-4 py-2.5 text-right font-medium">When</th>
+                <tr className="border-b border-border text-left text-sm tracking-wide text-muted-foreground uppercase">
+                  <th className="px-4 py-2.5 font-bold">Reference</th>
+                  <th className="px-4 py-2.5 font-bold">Event</th>
+                  <th className="px-4 py-2.5 font-bold">Who</th>
+                  <th className="px-4 py-2.5 font-bold">Branch</th>
+                  <th className="px-4 py-2.5 font-bold">Method</th>
+                  <th className="px-4 py-2.5 text-right font-bold">Amount</th>
+                  <th className="px-4 py-2.5 font-bold">Status</th>
+                  <th className="px-4 py-2.5 text-right font-bold">When</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {rows.map((a) => (
-                  <tr key={a.id} className="transition-colors hover:bg-secondary/60">
+                  <tr
+                    key={a.id}
+                    className="transition-colors hover:bg-secondary/60 cursor-pointer"
+                    onClick={() => setSelectedRow(a)}
+                  >
                     <td className="num px-4 py-3 font-medium">{a.id}</td>
                     <td className="px-4 py-3 font-medium">{a.what}</td>
                     <td className="px-4 py-3 text-muted-foreground">{a.who}</td>
@@ -730,6 +793,9 @@ export function RetailDashboard() {
           </div>
         </section>
       </div>
+      {selectedRow && (
+        <TransactionModal row={selectedRow} onClose={() => setSelectedRow(null)} />
+      )}
     </AppShell>
   );
 }

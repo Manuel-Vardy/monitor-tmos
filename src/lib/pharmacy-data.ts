@@ -286,6 +286,127 @@ export const PRESCRIPTIONS: Prescription[] = [
   },
 ];
 
+export type PharmacyPurchaseOrder = {
+  id: string;
+  supplier: string;
+  supplierType: "Manufacturer" | "Wholesaler" | "Distributor" | "Importer";
+  items: {
+    medicationId: string;
+    brandName: string;
+    quantity: number;
+    unitCost: number;
+    batchNumber: string;
+    expiryDate: string;
+  }[];
+  itemsCount: number;
+  totalCost: number;
+  status: "draft" | "submitted" | "partially_received" | "received" | "cancelled";
+  orderDate: string;
+  expectedDelivery: string;
+  branch: string;
+  paymentTerms: "Net 30" | "Net 15" | "Cash on Delivery" | "Prepaid";
+};
+
+export const PHARMACY_PURCHASE_ORDERS: PharmacyPurchaseOrder[] = [
+  {
+    id: "PO-PHA-2026-0891",
+    supplier: "Pfizer Ghana Ltd",
+    supplierType: "Manufacturer",
+    items: [
+      { medicationId: "MED-001", brandName: "Augmentin", quantity: 500, unitCost: 62, batchNumber: "BATCH-2026F", expiryDate: "15 Nov 2028" },
+      { medicationId: "MED-003", brandName: "Norvasc", quantity: 300, unitCost: 33, batchNumber: "BATCH-2026G", expiryDate: "10 Feb 2029" },
+    ],
+    itemsCount: 800,
+    totalCost: 40900,
+    status: "submitted",
+    orderDate: "05 Aug 2026",
+    expectedDelivery: "18 Aug 2026",
+    branch: "Osu Flagship",
+    paymentTerms: "Net 30",
+  },
+  {
+    id: "PO-PHA-2026-0890",
+    supplier: "Sanofi-Aventis Ghana",
+    supplierType: "Manufacturer",
+    items: [
+      { medicationId: "MED-004", brandName: "Glucophage", quantity: 600, unitCost: 26, batchNumber: "BATCH-2026H", expiryDate: "05 Jul 2029" },
+    ],
+    itemsCount: 600,
+    totalCost: 15600,
+    status: "partially_received",
+    orderDate: "02 Aug 2026",
+    expectedDelivery: "14 Aug 2026",
+    branch: "Osu Flagship",
+    paymentTerms: "Net 15",
+  },
+  {
+    id: "PO-PHA-2026-0889",
+    supplier: "Kumasi Pharma Wholesale",
+    supplierType: "Wholesaler",
+    items: [
+      { medicationId: "MED-002", brandName: "Panadol Extra", quantity: 2000, unitCost: 10, batchNumber: "BATCH-2026I", expiryDate: "20 Jun 2029" },
+      { medicationId: "MED-005", brandName: "Feroglobin Syrup", quantity: 400, unitCost: 48, batchNumber: "BATCH-2026J", expiryDate: "18 Dec 2028" },
+    ],
+    itemsCount: 2400,
+    totalCost: 39200,
+    status: "received",
+    orderDate: "25 Jul 2026",
+    expectedDelivery: "01 Aug 2026",
+    branch: "Kumasi Branch",
+    paymentTerms: "Cash on Delivery",
+  },
+  {
+    id: "PO-PHA-2026-0888",
+    supplier: "West African Drug Importers",
+    supplierType: "Importer",
+    items: [
+      { medicationId: "MED-001", brandName: "Augmentin", quantity: 200, unitCost: 65, batchNumber: "BATCH-2026K", expiryDate: "20 Mar 2028" },
+    ],
+    itemsCount: 200,
+    totalCost: 13000,
+    status: "draft",
+    orderDate: "10 Aug 2026",
+    expectedDelivery: "02 Sep 2026",
+    branch: "Takoradi Branch",
+    paymentTerms: "Prepaid",
+  },
+  {
+    id: "PO-PHA-2026-0887",
+    supplier: "Accra Pharma Distributors",
+    supplierType: "Distributor",
+    items: [
+      { medicationId: "MED-003", brandName: "Norvasc", quantity: 150, unitCost: 35, batchNumber: "BATCH-2026L", expiryDate: "30 Nov 2027" },
+      { medicationId: "MED-004", brandName: "Glucophage", quantity: 200, unitCost: 28, batchNumber: "BATCH-2026M", expiryDate: "15 Jan 2029" },
+    ],
+    itemsCount: 350,
+    totalCost: 10850,
+    status: "cancelled",
+    orderDate: "28 Jul 2026",
+    expectedDelivery: "08 Aug 2026",
+    branch: "Accra Mall",
+    paymentTerms: "Net 30",
+  },
+  {
+    id: "PO-PHA-2026-0886",
+    supplier: "GSK Consumer Ghana",
+    supplierType: "Manufacturer",
+    items: [
+      { medicationId: "MED-002", brandName: "Panadol Extra", quantity: 1500, unitCost: 9, batchNumber: "BATCH-2026N", expiryDate: "10 Aug 2029" },
+    ],
+    itemsCount: 1500,
+    totalCost: 13500,
+    status: "received",
+    orderDate: "15 Jul 2026",
+    expectedDelivery: "22 Jul 2026",
+    branch: "Osu Flagship",
+    paymentTerms: "Net 30",
+  },
+];
+
+export const PHARMACY_SUPPLIER_TYPES = ["Manufacturer", "Wholesaler", "Distributor", "Importer"] as const;
+
+export const PHARMACY_PAYMENT_TERMS = ["Net 30", "Net 15", "Cash on Delivery", "Prepaid"] as const;
+
 export const PHARMACY_SUMMARY = {
   totalPendingDispensary: PRESCRIPTIONS.filter((r) => r.status === "pending").length,
   totalDispensedToday: PRESCRIPTIONS.filter((r) => r.status === "dispensed").length,

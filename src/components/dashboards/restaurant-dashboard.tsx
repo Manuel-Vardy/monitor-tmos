@@ -1,51 +1,54 @@
-import { Link } from "@tanstack/react-router";
 import {
-  Users,
+  ArrowUpRight,
+  ArrowDownRight,
   Banknote,
-  ChefHat,
-  Trash2,
-  Plus,
-  UtensilsCrossed,
   Receipt,
-  FileText,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
   TrendingUp,
+  Users,
   Bell,
 } from "lucide-react";
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  Tooltip,
-  ResponsiveContainer,
 } from "recharts";
 
-import { KpiCard } from "@/components/kpi-card";
 import { AppShell } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { currency } from "@/lib/mos-data";
-import {
-  RESTAURANT_TABLES,
-  KITCHEN_ORDERS,
-  MENU_ITEMS,
-  WASTAGE_LOGS,
-  RESTAURANT_SUMMARY,
-} from "@/lib/restaurant-data";
+import { MENU_ITEMS, RESTAURANT_SUMMARY } from "@/lib/restaurant-data";
+import { cn } from "@/lib/utils";
 
-const topMenuItems = [
-  { name: "Jollof & Tilapia", revenue: 3990 },
-  { name: "Grilled Goat Chops", revenue: 3640 },
-  { name: "Banku & Tilapia", revenue: 3510 },
-  { name: "Fresh Sobolo Drink", revenue: 2200 },
-  { name: "Fried Kelewele", revenue: 2275 },
-  { name: "Seafood Platter", revenue: 3920 },
+// ─── Static data ──────────────────────────────────────────────────────────────
+
+const salesTrend = [
+  { day: "Mon", revenue: 2100, covers: 42 },
+  { day: "Tue", revenue: 2850, covers: 57 },
+  { day: "Wed", revenue: 3200, covers: 64 },
+  { day: "Thu", revenue: 2750, covers: 55 },
+  { day: "Fri", revenue: 4100, covers: 82 },
+  { day: "Sat", revenue: 5600, covers: 112 },
+  { day: "Sun", revenue: 4850, covers: 97 },
 ];
+
+const topMenuItems = MENU_ITEMS.slice()
+  .sort((a, b) => b.dailySalesCount - a.dailySalesCount)
+  .slice(0, 6)
+  .map((item) => ({
+    name: item.name.length > 22 ? item.name.slice(0, 22) + "…" : item.name,
+    revenue: item.price * item.dailySalesCount,
+    category: item.category,
+  }));
+
+const weeklyCovers = salesTrend.reduce((s, d) => s + d.covers, 0);
+const weeklyRevenue = salesTrend.reduce((s, d) => s + d.revenue, 0);
+const avgOrderValue = Math.round(weeklyRevenue / weeklyCovers);
 
 const tooltipStyle = {
   background: "var(--color-card)",
@@ -54,39 +57,75 @@ const tooltipStyle = {
   fontSize: 12,
 } as const;
 
+// ─── KPI card ─────────────────────────────────────────────────────────────────
+
+function Stat({
+  label,
+  value,
+  delta,
+  sub,
+  icon: Icon,
+  accent = "green",
+}: {
+  label: string;
+  value: string;
+  delta?: number;
+  sub: string;
+  icon: React.ElementType;
+  accent?: "green" | "blue" | "amber" | "purple";
+}) {
+  const up = (delta ?? 0) >= 0;
+
+  const palette = {
+    green:  { bg: "bg-emerald-50 dark:bg-emerald-950/40", icon: "text-emerald-500", num: "text-emerald-700 dark:text-emerald-400" },
+    blue:   { bg: "bg-blue-50 dark:bg-blue-950/40",       icon: "text-blue-500",    num: "text-blue-700 dark:text-blue-400" },
+    amber:  { bg: "bg-amber-50 dark:bg-amber-950/40",     icon: "text-amber-500",   num: "text-amber-700 dark:text-amber-400" },
+    purple: { bg: "bg-purple-50 dark:bg-purple-950/40",   icon: "text-purple-500",  num: "text-purple-700 dark:text-purple-400" },
+  };
+  const c = palette[accent];
+
+  return (
+    <div className="rounded-xl bg-card p-4 shadow-xs border border-border">
+      <div className="flex items-start justify-between">
+        <p className="text-[10px] sm:text-xs font-semibold tracking-wide text-muted-foreground uppercase leading-tight">
+          {label}
+        </p>
+        <div className={cn("grid size-7 place-items-center rounded-lg", c.bg)}>
+          <Icon className={cn("size-4 shrink-0", c.icon)} />
+        </div>
+      </div>
+      <p className="num mt-2 text-xl sm:text-2xl font-bold leading-tight">{value}</p>
+      <div className="mt-1.5 flex items-center gap-1 text-[10px] sm:text-xs">
+        {delta !== undefined && (
+          <span className={cn("num inline-flex items-center gap-0.5 font-semibold rounded-full px-1.5 py-0.5", c.bg, c.num)}>
+            {up
+              ? <ArrowUpRight className="size-3.5" />
+              : <ArrowDownRight className="size-3.5" />}
+            {Math.abs(delta)}%
+          </span>
+        )}
+        <span className="text-muted-foreground leading-tight">{sub}</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main dashboard ───────────────────────────────────────────────────────────
+
 export function RestaurantDashboard() {
   return (
     <AppShell
-      title="Restaurant & Hospitality Operations"
-      subtitle="Today's floor plan, live kitchen tickets, menu sales & wastage metrics"
-      actions={
-        <div className="hidden lg:flex flex-wrap items-center gap-2">
-          <Link to="/tables">
-            <Button size="sm" className="bg-[#22c55e] text-white hover:bg-[#16a34a]">
-              <Plus className="size-4" /> Open Table
-            </Button>
-          </Link>
-          <Link to="/kitchen">
-            <Button size="sm" variant="outline">
-              <ChefHat className="size-4" /> KDS Display
-            </Button>
-          </Link>
-          <Link to="/wastage">
-            <Button size="sm" variant="outline">
-              <Trash2 className="size-4" /> Log Wastage
-            </Button>
-          </Link>
-        </div>
-      }
+      title="Eatery Operations"
+      subtitle="Osu Flagship · Live overview"
     >
       <div className="space-y-6">
-        {/* Mobile: green hero card + 4 stat cards underneath */}
+
+        {/* ── Mobile hero ── */}
         <div className="lg:hidden space-y-3">
-          {/* Greeting row */}
           <div className="flex items-center justify-between px-0.5">
             <div>
               <p className="text-xs text-muted-foreground">Good morning 🌤</p>
-              <h2 className="text-xl font-bold leading-tight">Restaurant</h2>
+              <h2 className="text-xl font-bold leading-tight">Eatery</h2>
             </div>
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 shadow-xs">
@@ -99,151 +138,149 @@ export function RestaurantDashboard() {
             </div>
           </div>
 
-          {/* Green hero card — Occupied Tables */}
+          {/* Mobile hero card */}
           <div className="relative overflow-hidden rounded-2xl bg-[#22c55e] p-5 text-white shadow-lg">
-            {/* decorative circle */}
             <div
               className="pointer-events-none absolute rounded-full bg-white/10"
               style={{ width: "260px", height: "260px", bottom: "-120px", right: "-60px" }}
             />
-
             <div className="relative z-10">
               <div className="flex items-start justify-between">
-                <p className="text-[11px] font-bold tracking-widest uppercase text-white/80">Occupied Tables</p>
-                <UtensilsCrossed className="size-6 opacity-70" />
+                <p className="text-[11px] font-bold tracking-widest uppercase text-white/80">
+                  Weekly Revenue
+                </p>
+                <TrendingUp className="size-6 opacity-70" />
               </div>
               <p className="num mt-2 text-3xl font-extrabold leading-none tracking-tight">
-                {RESTAURANT_SUMMARY.totalOccupiedTables} / {RESTAURANT_TABLES.length}
+                {currency(weeklyRevenue)}
               </p>
               <div className="mt-3">
                 <p className="text-[11px] font-bold uppercase tracking-widest text-white/80">
-                  Unbilled Tabs · {currency(RESTAURANT_SUMMARY.activeOrderRevenue)}
+                  Covers · {weeklyCovers} guests
                 </p>
                 <p className="mt-0.5 text-xs text-white/75">
-                  +12.4% · {RESTAURANT_SUMMARY.totalAvailableTables} tables ready for guests
+                  Avg order value {currency(avgOrderValue)} · this week
                 </p>
               </div>
-
-              {/* Full-width action buttons matching style */}
-              <div className="mt-4 flex gap-3">
-                <Link to="/tables" className="flex-1">
-                  <span className="block rounded-xl bg-[#166534] py-2.5 text-center text-sm font-semibold text-white transition hover:bg-[#14532d]">
-                    Open Table
-                  </span>
-                </Link>
-                <Link to="/kitchen" className="flex-1">
-                  <span className="block rounded-xl bg-white/20 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-white/30">
-                    KDS Display
-                  </span>
-                </Link>
-              </div>
             </div>
-          </div>
-
-          {/* 4 stat cards below the hero */}
-          <div className="grid grid-cols-2 gap-2.5">
-            <KpiCard
-              label="Occupied Tables"
-              value={`${RESTAURANT_SUMMARY.totalOccupiedTables} / ${RESTAURANT_TABLES.length}`}
-              delta={12.4}
-              sub={`${RESTAURANT_SUMMARY.totalAvailableTables} tables ready`}
-              icon={UtensilsCrossed}
-            />
-            <KpiCard
-              label="Unbilled Order Tabs"
-              value={currency(RESTAURANT_SUMMARY.activeOrderRevenue)}
-              sub="open guest checks"
-              icon={Banknote}
-            />
-            <KpiCard
-              label="Kitchen Prep Tickets"
-              value={RESTAURANT_SUMMARY.activeKitchenTickets}
-              sub="tickets on stations"
-              icon={ChefHat}
-            />
-            <KpiCard
-              label="Today Wastage Value"
-              value={currency(RESTAURANT_SUMMARY.todayWastageCost)}
-              sub="spoilage & cook loss"
-              icon={Trash2}
-            />
           </div>
         </div>
 
-        {/* Desktop: standard 4-column KPI grid */}
-        <div className="hidden lg:grid grid-cols-4 gap-3">
-          <KpiCard
-            label="Occupied Tables"
-            value={`${RESTAURANT_SUMMARY.totalOccupiedTables} / ${RESTAURANT_TABLES.length}`}
-            delta={12.4}
-            sub={`${RESTAURANT_SUMMARY.totalAvailableTables} tables ready`}
-            icon={UtensilsCrossed}
+        {/* ── KPI grid (4 cards) ── */}
+        <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+          <Stat
+            label="Weekly Revenue"
+            value={currency(weeklyRevenue)}
+            delta={14.2}
+            sub="vs last week"
+            icon={Banknote}
+            accent="green"
           />
-          <KpiCard
-            label="Unbilled Order Tabs"
+          <Stat
+            label="Covers This Week"
+            value={weeklyCovers.toLocaleString()}
+            delta={8.5}
+            sub="total guests served"
+            icon={Users}
+            accent="blue"
+          />
+          <Stat
+            label="Avg Order Value"
+            value={currency(avgOrderValue)}
+            delta={3.1}
+            sub="per guest this week"
+            icon={Receipt}
+            accent="amber"
+          />
+          <Stat
+            label="Unbilled Tabs"
             value={currency(RESTAURANT_SUMMARY.activeOrderRevenue)}
             sub="open guest checks"
-            icon={Banknote}
+            icon={TrendingUp}
+            accent="purple"
           />
-          <KpiCard
-            label="Kitchen Prep Tickets"
-            value={RESTAURANT_SUMMARY.activeKitchenTickets}
-            sub="tickets on stations"
-            icon={ChefHat}
-          />
-          <KpiCard
-            label="Today Wastage Value"
-            value={currency(RESTAURANT_SUMMARY.todayWastageCost)}
-            sub="spoilage & cook loss"
-            icon={Trash2}
-          />
-        </div>
+        </section>
 
-        {/* Live Operations Row */}
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* Live Kitchen KDS Queue */}
-          <Card className="p-0 overflow-hidden shadow-none">
-            <div className="flex items-center justify-between border-b border-border px-5 py-4">
-              <div className="flex items-center gap-2">
-                <ChefHat className="size-4 text-emerald-600 dark:text-emerald-400" />
-                <h2 className="text-sm font-semibold">Active Kitchen Tickets</h2>
-              </div>
-              <Link to="/kitchen" className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline">
-                Open KDS →
-              </Link>
+        {/* ── Sales trend + Top menu items ── */}
+        <section className="grid gap-6 lg:grid-cols-2">
+
+          {/* Sales trend area chart */}
+          <Card className="p-5 shadow-none">
+            <div className="mb-4">
+              <h2 className="text-sm font-semibold">Weekly Sales Trend</h2>
+              <p className="text-xs text-muted-foreground">Revenue & covers over the last 7 days</p>
             </div>
-            <ul className="divide-y divide-border">
-              {KITCHEN_ORDERS.map((ticket) => (
-                <li key={ticket.id} className="flex items-start justify-between gap-3 px-5 py-3.5">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-sm">Table {ticket.tableNumber} ({ticket.section})</span>
-                      <span className="text-xs text-muted-foreground font-mono">{ticket.id}</span>
-                    </div>
-                    <p className="mt-1 truncate text-xs text-muted-foreground">
-                      {ticket.items.map((i) => `${i.quantity}x ${i.name}`).join(", ")}
-                    </p>
-                  </div>
-                  <span className="shrink-0 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs font-semibold text-amber-600 dark:bg-amber-950/50 dark:border-amber-800 dark:text-amber-400">
-                    {ticket.status} · {ticket.prepTimeMinutes}m
-                  </span>
-                </li>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
+                  data={salesTrend}
+                  margin={{ left: -16, right: 4, top: 4, bottom: 0 }}
+                >
+                  <defs>
+                    <linearGradient id="g-eatery-rev" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#22c55e" stopOpacity={0.45} />
+                      <stop offset="100%" stopColor="#22c55e" stopOpacity={0.02} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="var(--color-border)"
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="day"
+                    tickLine={false}
+                    axisLine={false}
+                    fontSize={11}
+                    stroke="var(--color-muted-foreground)"
+                  />
+                  <YAxis
+                    tickFormatter={(v: number) => `${Math.round(v / 1000)}k`}
+                    tickLine={false}
+                    axisLine={false}
+                    fontSize={11}
+                    stroke="var(--color-muted-foreground)"
+                  />
+                  <Tooltip
+                    contentStyle={tooltipStyle}
+                    formatter={(v: number, name: string) =>
+                      name === "revenue" ? [currency(v), "Revenue"] : [v, "Covers"]
+                    }
+                  />
+                  <Area
+                    name="revenue"
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke="#22c55e"
+                    strokeWidth={2}
+                    fill="url(#g-eatery-rev)"
+                    activeDot={{ r: 5 }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Day-by-day mini summary */}
+            <div className="mt-4 grid grid-cols-7 gap-1">
+              {salesTrend.map((d) => (
+                <div key={d.day} className="text-center">
+                  <div
+                    className="mx-auto mb-1 rounded-sm bg-[#22c55e]/20"
+                    style={{ height: `${Math.round((d.revenue / 5600) * 40) + 4}px` }}
+                  />
+                  <p className="text-[9px] font-medium text-muted-foreground">{d.day}</p>
+                </div>
               ))}
-            </ul>
+            </div>
           </Card>
 
-          {/* Top Dishes Bar Chart */}
+          {/* Top selling menu items horizontal bar chart */}
           <Card className="p-5 shadow-none">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-sm font-semibold">Top Selling Menu Items</h2>
-                <p className="text-xs text-muted-foreground">Revenue breakdown by dish category</p>
-              </div>
-              <Link to="/menu" className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline">
-                Manage Menu →
-              </Link>
+            <div className="mb-4">
+              <h2 className="text-sm font-semibold">Top Selling Menu Items</h2>
+              <p className="text-xs text-muted-foreground">Revenue by dish · today's sales</p>
             </div>
-            <div className="mt-4 h-72">
+            <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={topMenuItems}
@@ -259,80 +296,85 @@ export function RestaurantDashboard() {
                     type="number"
                     tickLine={false}
                     axisLine={false}
-                    fontSize={11}
+                    fontSize={10}
                     stroke="var(--color-muted-foreground)"
-                    tickFormatter={(v: number) => `GHS ${v.toLocaleString("en-GH")}`}
+                    tickFormatter={(v: number) => `GHS ${(v / 1000).toFixed(1)}k`}
                   />
                   <YAxis
                     type="category"
                     dataKey="name"
-                    width={120}
+                    width={110}
                     tickLine={false}
                     axisLine={false}
-                    fontSize={11}
+                    fontSize={10}
                     stroke="var(--color-muted-foreground)"
                   />
                   <Tooltip
                     cursor={{ fill: "var(--color-secondary)" }}
                     contentStyle={tooltipStyle}
-                    formatter={(v: number) => [`GHS ${v.toLocaleString("en-GH")}`, "Revenue"]}
+                    formatter={(v: number) => [currency(v), "Revenue"]}
                   />
-                  <Bar
-                    dataKey="revenue"
-                    fill="#22c55e"
-                    radius={[0, 4, 4, 0]}
-                  />
+                  <Bar dataKey="revenue" fill="#22c55e" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </Card>
-        </div>
+        </section>
 
-        {/* Live Table Seating Grid Preview */}
-        <Card className="p-5 shadow-none">
-          <div className="flex items-center justify-between border-b border-border pb-4">
+        {/* ── Menu items table ── */}
+        <section className="rounded-lg border border-border bg-card shadow-xs overflow-hidden">
+          <div className="flex items-center justify-between border-b border-border px-5 py-4">
             <div>
-              <h2 className="text-sm font-semibold">Floor Seating Overview</h2>
-              <p className="text-xs text-muted-foreground">Live occupied vs available tables across sections</p>
+              <h2 className="text-sm font-semibold">Menu Performance</h2>
+              <p className="text-xs text-muted-foreground">Today's sales count and revenue per dish</p>
             </div>
-            <Link to="/tables">
-              <Button size="sm" variant="outline" className="text-xs">
-                View Full Floor Plan
-              </Button>
-            </Link>
           </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            {RESTAURANT_TABLES.slice(0, 5).map((t) => (
-              <div
-                key={t.id}
-                className="rounded-lg border border-border bg-secondary/30 p-3 flex flex-col justify-between"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-sm">Table {t.number}</span>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                      t.status === "occupied"
-                        ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
-                        : t.status === "billing"
-                        ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
-                        : t.status === "reserved"
-                        ? "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
-                        : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
-                    }`}
-                  >
-                    {t.status}
-                  </span>
+
+          {/* Mobile: card list */}
+          <ul className="divide-y divide-border sm:hidden">
+            {MENU_ITEMS.map((item) => (
+              <li key={item.id} className="flex items-center gap-3 px-4 py-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium leading-tight truncate">{item.name}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{item.dailySalesCount} sold today</p>
                 </div>
-                <p className="mt-2 text-xs text-muted-foreground">{t.section} · {t.seats} seats</p>
-                {t.currentOrder && (
-                  <p className="mt-1 font-semibold text-xs text-emerald-600 dark:text-emerald-400">
-                    {currency(t.currentOrder.total)} ({t.currentOrder.server})
+                <div className="text-right shrink-0">
+                  <p className="num text-sm font-bold text-[#22c55e]">
+                    {currency(item.price * item.dailySalesCount)}
                   </p>
-                )}
-              </div>
+                  <p className="text-[10px] text-muted-foreground">{currency(item.price)} each</p>
+                </div>
+              </li>
             ))}
+          </ul>
+
+          {/* Desktop: table */}
+          <div className="hidden sm:block overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-secondary/40 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <th className="px-5 py-3">Item</th>
+                  <th className="px-5 py-3">Unit Price</th>
+                  <th className="px-5 py-3">Sold Today</th>
+                  <th className="px-5 py-3 text-right">Revenue</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {MENU_ITEMS.map((item) => (
+                  <tr key={item.id} className="transition-colors hover:bg-secondary/30">
+                    <td className="px-5 py-3 font-medium">{item.name}</td>
+                    <td className="px-5 py-3 num">{currency(item.price)}</td>
+                    <td className="px-5 py-3 num font-semibold">{item.dailySalesCount}</td>
+                    <td className="px-5 py-3 num font-bold text-[#22c55e] text-right">
+                      {currency(item.price * item.dailySalesCount)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </Card>
+        </section>
+
       </div>
     </AppShell>
   );
