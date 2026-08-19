@@ -256,7 +256,7 @@ function EaterySales() {
                   </div>
                   <p className="text-sm font-medium leading-tight">{t.dish}</p>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{t.qty}× · {t.server} · {t.time}</span>
+                    <span>{t.qty}× · {t.time}</span>
                     <span className="num font-bold text-[#22c55e]">{currency(t.total)}</span>
                   </div>
                 </li>
@@ -274,7 +274,6 @@ function EaterySales() {
                     <th className="px-5 py-3 text-right">Qty</th>
                     <th className="px-5 py-3 text-right">Total</th>
                     <th className="px-5 py-3">Method</th>
-                    <th className="px-5 py-3">Server</th>
                     <th className="px-5 py-3">Time</th>
                   </tr>
                 </thead>
@@ -288,12 +287,11 @@ function EaterySales() {
                       <td className="px-5 py-3">
                         <span className={cn("rounded-full px-2.5 py-0.5 text-[11px] font-semibold", methodColors[t.method] ?? "bg-secondary text-muted-foreground")}>{t.method}</span>
                       </td>
-                      <td className="px-5 py-3 text-muted-foreground">{t.server}</td>
                       <td className="px-5 py-3 text-muted-foreground">{t.time}</td>
                     </tr>
                   ))}
                   {filtered.length === 0 && (
-                    <tr><td colSpan={7} className="px-5 py-8 text-center text-sm text-muted-foreground">No transactions found.</td></tr>
+                    <tr><td colSpan={6} className="px-5 py-8 text-center text-sm text-muted-foreground">No transactions found.</td></tr>
                   )}
                 </tbody>
                 {filtered.length > 0 && (
@@ -301,7 +299,7 @@ function EaterySales() {
                     <tr className="border-t-2 border-border bg-secondary/30 font-bold text-sm">
                       <td className="px-5 py-3" colSpan={3}>Total ({filtered.length} sales)</td>
                       <td className="px-5 py-3 text-right text-[#22c55e]">{currency(filteredTotal)}</td>
-                      <td colSpan={3} />
+                      <td colSpan={2} />
                     </tr>
                   </tfoot>
                 )}

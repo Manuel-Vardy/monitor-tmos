@@ -71,7 +71,7 @@ function ReceiptsPage() {
       tx.receiptNo.toLowerCase().includes(search.toLowerCase()) ||
       tx.studentName.toLowerCase().includes(search.toLowerCase()) ||
       tx.studentId.toLowerCase().includes(search.toLowerCase()) ||
-      tx.gradeClass.toLowerCase().includes(search.toLowerCase());
+      tx.receivedBy.toLowerCase().includes(search.toLowerCase());
     return matchMethod && matchSearch;
   });
 
@@ -150,7 +150,7 @@ function ReceiptsPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search receipt #, student name, ID or class…"
+            placeholder="Search receipt #, student name, ID or received by…"
             className="h-9 w-full rounded-md border border-border bg-card pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:border-ring"
           />
         </div>
@@ -203,7 +203,7 @@ function ReceiptsPage() {
                 <div>
                   <span className="font-mono text-xs font-bold text-muted-foreground">{tx.receiptNo}</span>
                   <h3 className="mt-0.5 text-base font-bold text-foreground">{tx.studentName}</h3>
-                  <p className="text-xs text-muted-foreground">{tx.studentId} · Class {tx.gradeClass}</p>
+                  <p className="text-xs text-muted-foreground">{tx.studentId} · {tx.term}</p>
                 </div>
                 <span className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-xs font-semibold ${cfg.bg} ${cfg.color}`}>
                   <MethodIcon className="size-3.5" />

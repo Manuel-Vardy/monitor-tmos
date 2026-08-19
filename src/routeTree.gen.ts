@@ -39,6 +39,7 @@ import { Route as AuthenticatedOrdersRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedPatientsRouteImport } from './routes/_authenticated/patients'
 import { Route as AuthenticatedPaymentsRouteImport } from './routes/_authenticated/payments'
 import { Route as AuthenticatedPayrollRouteImport } from './routes/_authenticated/payroll'
+import { Route as AuthenticatedPharmacyCheckoutRouteImport } from './routes/_authenticated/pharmacy-checkout'
 import { Route as AuthenticatedPosRouteImport } from './routes/_authenticated/pos'
 import { Route as AuthenticatedProductionRouteImport } from './routes/_authenticated/production'
 import { Route as AuthenticatedProjectsRouteImport } from './routes/_authenticated/projects'
@@ -214,6 +215,12 @@ const AuthenticatedPayrollRoute = AuthenticatedPayrollRouteImport.update({
   path: '/payroll',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedPharmacyCheckoutRoute =
+  AuthenticatedPharmacyCheckoutRouteImport.update({
+    id: '/pharmacy-checkout',
+    path: '/pharmacy-checkout',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedPosRoute = AuthenticatedPosRouteImport.update({
   id: '/pos',
   path: '/pos',
@@ -340,6 +347,7 @@ export interface FileRoutesByFullPath {
   '/patients': typeof AuthenticatedPatientsRoute
   '/payments': typeof AuthenticatedPaymentsRoute
   '/payroll': typeof AuthenticatedPayrollRoute
+  '/pharmacy-checkout': typeof AuthenticatedPharmacyCheckoutRoute
   '/pos': typeof AuthenticatedPosRoute
   '/production': typeof AuthenticatedProductionRoute
   '/projects': typeof AuthenticatedProjectsRoute
@@ -388,6 +396,7 @@ export interface FileRoutesByTo {
   '/patients': typeof AuthenticatedPatientsRoute
   '/payments': typeof AuthenticatedPaymentsRoute
   '/payroll': typeof AuthenticatedPayrollRoute
+  '/pharmacy-checkout': typeof AuthenticatedPharmacyCheckoutRoute
   '/pos': typeof AuthenticatedPosRoute
   '/production': typeof AuthenticatedProductionRoute
   '/projects': typeof AuthenticatedProjectsRoute
@@ -439,6 +448,7 @@ export interface FileRoutesById {
   '/_authenticated/patients': typeof AuthenticatedPatientsRoute
   '/_authenticated/payments': typeof AuthenticatedPaymentsRoute
   '/_authenticated/payroll': typeof AuthenticatedPayrollRoute
+  '/_authenticated/pharmacy-checkout': typeof AuthenticatedPharmacyCheckoutRoute
   '/_authenticated/pos': typeof AuthenticatedPosRoute
   '/_authenticated/production': typeof AuthenticatedProductionRoute
   '/_authenticated/projects': typeof AuthenticatedProjectsRoute
@@ -491,6 +501,7 @@ export interface FileRouteTypes {
     | '/patients'
     | '/payments'
     | '/payroll'
+    | '/pharmacy-checkout'
     | '/pos'
     | '/production'
     | '/projects'
@@ -539,6 +550,7 @@ export interface FileRouteTypes {
     | '/patients'
     | '/payments'
     | '/payroll'
+    | '/pharmacy-checkout'
     | '/pos'
     | '/production'
     | '/projects'
@@ -589,6 +601,7 @@ export interface FileRouteTypes {
     | '/_authenticated/patients'
     | '/_authenticated/payments'
     | '/_authenticated/payroll'
+    | '/_authenticated/pharmacy-checkout'
     | '/_authenticated/pos'
     | '/_authenticated/production'
     | '/_authenticated/projects'
@@ -828,6 +841,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPayrollRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/pharmacy-checkout': {
+      id: '/_authenticated/pharmacy-checkout'
+      path: '/pharmacy-checkout'
+      fullPath: '/pharmacy-checkout'
+      preLoaderRoute: typeof AuthenticatedPharmacyCheckoutRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/pos': {
       id: '/_authenticated/pos'
       path: '/pos'
@@ -984,6 +1004,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedPatientsRoute: typeof AuthenticatedPatientsRoute
   AuthenticatedPaymentsRoute: typeof AuthenticatedPaymentsRoute
   AuthenticatedPayrollRoute: typeof AuthenticatedPayrollRoute
+  AuthenticatedPharmacyCheckoutRoute: typeof AuthenticatedPharmacyCheckoutRoute
   AuthenticatedPosRoute: typeof AuthenticatedPosRoute
   AuthenticatedProductionRoute: typeof AuthenticatedProductionRoute
   AuthenticatedProjectsRoute: typeof AuthenticatedProjectsRoute
@@ -1032,6 +1053,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedPatientsRoute: AuthenticatedPatientsRoute,
   AuthenticatedPaymentsRoute: AuthenticatedPaymentsRoute,
   AuthenticatedPayrollRoute: AuthenticatedPayrollRoute,
+  AuthenticatedPharmacyCheckoutRoute: AuthenticatedPharmacyCheckoutRoute,
   AuthenticatedPosRoute: AuthenticatedPosRoute,
   AuthenticatedProductionRoute: AuthenticatedProductionRoute,
   AuthenticatedProjectsRoute: AuthenticatedProjectsRoute,

@@ -24,7 +24,7 @@ export const Route = createFileRoute("/_authenticated/budget")({
       {
         name: "description",
         content:
-          "NGO field project budget approval workflow, requisition requests, category allocations, and board sign-offs.",
+          "Church outreach project budget approval workflow, requisition requests, category allocations, and board sign-offs.",
       },
       { property: "og:title", content: "Budget & Approvals — Trite Merchant OS" },
     ],
@@ -74,7 +74,7 @@ function BudgetPage() {
   return (
     <AppShell
       title="Budget & Field Requisition Approvals"
-      subtitle={`${BUDGET_APPROVALS.length} project funding requisitions · ${currency(NGO_SUMMARY.totalBudgetRequested)} total requested across field projects`}
+      subtitle={`${BUDGET_APPROVALS.length} project funding requisitions · ${currency(NGO_SUMMARY.totalBudgetRequested)} total requested across outreach projects`}
       actions={
         <Button size="sm" className="h-8 px-2.5 sm:h-9 sm:px-3 text-xs sm:text-sm bg-[#22c55e] text-white hover:bg-[#16a34a] shrink-0">
           <Plus className="size-3.5 sm:size-4" />

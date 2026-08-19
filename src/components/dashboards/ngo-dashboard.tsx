@@ -9,7 +9,20 @@ import {
   CheckCircle2,
   Globe,
   Bell,
+  TrendingUp,
+  Wallet,
+  Receipt,
+  CalendarDays,
 } from "lucide-react";
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 import { AppShell } from "@/components/app-shell";
 import { KpiCard } from "@/components/kpi-card";
@@ -19,16 +32,41 @@ import { currency } from "@/lib/mos-data";
 import {
   NGO_DONATIONS,
   NGO_MEMBERS,
-  NGO_PROJECTS,
   BUDGET_APPROVALS,
   NGO_SUMMARY,
 } from "@/lib/ngo-data";
 
+const DUES_TREND = [
+  { month: "Jan", collected: 3800 },
+  { month: "Feb", collected: 4200 },
+  { month: "Mar", collected: 4100 },
+  { month: "Apr", collected: 5200 },
+  { month: "May", collected: 4900 },
+  { month: "Jun", collected: 6100 },
+  { month: "Jul", collected: 5800 },
+  { month: "Aug", collected: 6500 },
+];
+
+const tooltipStyle = {
+  background: "var(--color-card)",
+  border: "1px solid var(--color-border)",
+  borderRadius: 8,
+  fontSize: 12,
+} as const;
+
 export function NgoDashboard() {
+  const paidDues = NGO_MEMBERS.filter((m) => m.duesStatus === "Paid");
+  const outstandingDues = NGO_MEMBERS.reduce(
+    (a, m) => a + (m.annualDues - m.duesPaid),
+    0,
+  );
+  const collectionRate = Math.round(
+    (paidDues.length / NGO_SUMMARY.totalMembersCount) * 100,
+  );
   return (
     <AppShell
-      title="NGO & Non-Profit Operations"
-      subtitle="Donor contributions, community project budgets, member dues, and requisition approvals"
+      title="Church Operations"
+      subtitle="Tithes & offerings, outreach project budgets, member dues, and requisition approvals"
       actions={
         <div className="hidden lg:flex flex-wrap items-center gap-2">
           <Link to="/donations">
@@ -56,7 +94,7 @@ export function NgoDashboard() {
           <div className="flex items-center justify-between px-0.5">
             <div>
               <p className="text-xs text-muted-foreground">Good morning 🌤</p>
-              <h2 className="text-xl font-bold leading-tight">NGO</h2>
+              <h2 className="text-xl font-bold leading-tight">Church</h2>
             </div>
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 shadow-xs">
@@ -87,7 +125,7 @@ export function NgoDashboard() {
               </p>
               <div className="mt-3">
                 <p className="text-[11px] font-bold uppercase tracking-widest text-white/80">
-                  Active Projects · {NGO_SUMMARY.totalActiveProjects}
+                  Active Outreach · {NGO_SUMMARY.totalActiveProjects}
                 </p>
                 <p className="mt-0.5 text-xs text-white/75">
                   +18% · {NGO_DONATIONS.length} contribution commitments
@@ -120,9 +158,9 @@ export function NgoDashboard() {
               icon={HeartHandshake}
             />
             <KpiCard
-              label="Active Field Projects"
+              label="Active Outreach Projects"
               value={NGO_SUMMARY.totalActiveProjects}
-              sub={`${NGO_SUMMARY.totalBeneficiariesReached.toLocaleString()} beneficiaries`}
+              sub={`${NGO_SUMMARY.totalBeneficiariesReached.toLocaleString()} souls reached`}
               icon={FolderKanban}
             />
             <KpiCard
@@ -150,9 +188,9 @@ export function NgoDashboard() {
             icon={HeartHandshake}
           />
           <KpiCard
-            label="Active Field Projects"
+            label="Active Outreach Projects"
             value={NGO_SUMMARY.totalActiveProjects}
-            sub={`${NGO_SUMMARY.totalBeneficiariesReached.toLocaleString()} community beneficiaries`}
+            sub={`${NGO_SUMMARY.totalBeneficiariesReached.toLocaleString()} community souls reached`}
             icon={FolderKanban}
           />
           <KpiCard
@@ -169,64 +207,89 @@ export function NgoDashboard() {
           />
         </section>
 
-        {/* Operations Overview Grid */}
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* Recent Donor Contributions */}
-          <Card className="p-0 overflow-hidden shadow-none">
+        {/* Dues Collection Trend + Recent Paid Dues */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Dues Collection Trend chart */}
+          <Card className="p-0 overflow-hidden shadow-none lg:col-span-2">
             <div className="flex items-center justify-between border-b border-border px-5 py-4">
               <div className="flex items-center gap-2">
-                <HeartHandshake className="size-4 text-emerald-600 dark:text-emerald-400" />
-                <h2 className="text-sm font-semibold">Recent Donor Contributions</h2>
+                <TrendingUp className="size-4 text-emerald-600 dark:text-emerald-400" />
+                <h2 className="text-sm font-semibold">Member Dues Collection Trend</h2>
               </div>
-              <Link to="/donations" className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline">
-                View All Donations →
-              </Link>
+              <span className="text-xs text-muted-foreground">Jan – Aug 2026</span>
             </div>
-            <ul className="divide-y divide-border">
-              {NGO_DONATIONS.map((don) => (
-                <li key={don.id} className="flex items-center justify-between gap-3 px-5 py-3.5">
-                  <div>
-                    <p className="font-semibold text-sm">{don.donorName}</p>
-                    <p className="text-xs text-muted-foreground">{don.donorType} · {don.allocatedProject}</p>
-                  </div>
-                  <div className="text-right">
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold border ${
-                      don.status === "Received"
-                        ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-200"
-                        : "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border-amber-200"
-                    }`}>
-                      {don.status}
-                    </span>
-                    <p className="font-bold text-sm text-foreground mt-0.5">
-                      {don.currency === "USD" ? `$${don.amount.toLocaleString()} USD` : currency(don.amount)}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <div className="px-3 py-4">
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={DUES_TREND} margin={{ left: -18, right: 8, top: 8 }}>
+                    <defs>
+                      <linearGradient id="g-dues" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#22c55e" stopOpacity={0.35} />
+                        <stop offset="100%" stopColor="#22c55e" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
+                    <XAxis
+                      dataKey="month"
+                      tickLine={false}
+                      axisLine={false}
+                      fontSize={12}
+                      stroke="var(--color-muted-foreground)"
+                    />
+                    <YAxis
+                      tickFormatter={(v) => `${Math.round(v / 1000)}k`}
+                      tickLine={false}
+                      axisLine={false}
+                      fontSize={12}
+                      stroke="var(--color-muted-foreground)"
+                    />
+                    <Tooltip
+                      contentStyle={tooltipStyle}
+                      formatter={(v: number) => currency(v)}
+                      labelFormatter={(l) => `${l} 2026 dues`}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="collected"
+                      name="Dues Collected"
+                      stroke="#22c55e"
+                      strokeWidth={2}
+                      fill="url(#g-dues)"
+                      activeDot={{ r: 5, fill: "#22c55e" }}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+              <p className="mt-1 px-2 text-xs text-muted-foreground">
+                Dues collected has risen to {currency(DUES_TREND[DUES_TREND.length - 1].collected)} in August, up from{" "}
+                {currency(DUES_TREND[0].collected)} in January.
+              </p>
+            </div>
           </Card>
 
-          {/* Pending Field Budget Requisitions */}
+          {/* Recent Paid Dues */}
           <Card className="p-0 overflow-hidden shadow-none">
             <div className="flex items-center justify-between border-b border-border px-5 py-4">
               <div className="flex items-center gap-2">
-                <PiggyBank className="size-4 text-purple-600 dark:text-purple-400" />
-                <h2 className="text-sm font-semibold">Budget Requisition Queue</h2>
+                <CheckCircle2 className="size-4 text-emerald-600 dark:text-emerald-400" />
+                <h2 className="text-sm font-semibold">Recent Paid Dues</h2>
               </div>
-              <Link to="/budget" className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline">
-                All Requisitions →
+              <Link to="/members" className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline">
+                All Members →
               </Link>
             </div>
             <ul className="divide-y divide-border">
-              {BUDGET_APPROVALS.map((req) => (
-                <li key={req.id} className="flex items-center justify-between gap-3 px-5 py-3.5">
-                  <div>
-                    <p className="font-semibold text-sm">{req.projectName}</p>
-                    <p className="text-xs text-muted-foreground">{req.requestNo} · {req.category}</p>
+              {paidDues.map((m) => (
+                <li key={m.id} className="flex items-center justify-between gap-3 px-5 py-3.5">
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold text-sm">{m.name}</p>
+                    <p className="text-xs text-muted-foreground">{m.role} · {m.memberId}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] text-muted-foreground">Requested by {req.requestedBy}</p>
-                    <p className="font-bold text-sm text-foreground">{currency(req.amountRequested)}</p>
+                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold border border-emerald-200 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800">
+                      Paid
+                    </span>
+                    <p className="mt-0.5 font-bold text-sm text-foreground">{currency(m.duesPaid)}</p>
                   </div>
                 </li>
               ))}
@@ -234,49 +297,52 @@ export function NgoDashboard() {
           </Card>
         </div>
 
-        {/* Project Budgets & Spend Tracker */}
+        {/* Church Dues Snapshot */}
         <Card className="p-5 shadow-none">
           <div className="flex items-center justify-between border-b border-border pb-3">
             <div className="flex items-center gap-2">
-              <FolderKanban className="size-4 text-blue-600 dark:text-blue-400" />
-              <h2 className="text-sm font-semibold">Community Project Budgets & Execution</h2>
+              <Wallet className="size-4 text-emerald-600 dark:text-emerald-400" />
+              <h2 className="text-sm font-semibold">Church Dues Snapshot</h2>
             </div>
-            <Link to="/projects">
+            <Link to="/members">
               <Button size="sm" variant="outline" className="text-xs">
-                View Project Directory
+                Manage Members
               </Button>
             </Link>
           </div>
-          <div className="mt-4 space-y-4">
-            {NGO_PROJECTS.map((project) => {
-              const pct = Math.round((project.fundsSpent / project.budgetAllocated) * 100);
-              return (
-                <div key={project.id} className="rounded-lg border border-border bg-secondary/20 p-3.5">
-                  <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                    <div>
-                      <span className="font-mono text-xs text-muted-foreground font-semibold">{project.code}</span>
-                      <h3 className="text-sm font-bold text-foreground">{project.title}</h3>
-                      <p className="text-xs text-muted-foreground">{project.location} · Lead: {project.leadCoordinator}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-muted-foreground">
-                        Budget: <span className="font-semibold text-foreground">{currency(project.budgetAllocated)}</span> · Spent: <span className="font-semibold text-emerald-600 dark:text-emerald-400">{currency(project.fundsSpent)}</span>
-                      </p>
-                      <p className="text-xs font-bold text-blue-600 dark:text-blue-400">
-                        {project.beneficiariesCount.toLocaleString()} beneficiaries
-                      </p>
-                    </div>
-                  </div>
-                  <div className="h-2.5 w-full overflow-hidden rounded-full bg-secondary">
-                    <div
-                      className="h-full bg-[#22c55e] transition-all"
-                      style={{ width: `${Math.min(100, pct)}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-lg border border-border bg-secondary/20 p-4">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Receipt className="size-3.5" /> Total Collected
+              </div>
+              <p className="mt-1 num text-xl font-bold">{currency(NGO_SUMMARY.totalDuesCollected)}</p>
+              <p className="text-[11px] text-muted-foreground">From {NGO_SUMMARY.totalMembersCount} registered members</p>
+            </div>
+            <div className="rounded-lg border border-border bg-secondary/20 p-4">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <CalendarDays className="size-3.5" /> Outstanding
+              </div>
+              <p className="mt-1 num text-xl font-bold text-amber-600 dark:text-amber-400">{currency(outstandingDues)}</p>
+              <p className="text-[11px] text-muted-foreground">Awaiting settlement this term</p>
+            </div>
+            <div className="rounded-lg border border-border bg-secondary/20 p-4">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Users className="size-3.5" /> Collection Rate
+              </div>
+              <p className="mt-1 num text-xl font-bold">{collectionRate}%</p>
+              <p className="text-[11px] text-muted-foreground">{paidDues.length} of {NGO_SUMMARY.totalMembersCount} members fully paid</p>
+            </div>
+            <div className="rounded-lg border border-border bg-secondary/20 p-4">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <HeartHandshake className="size-3.5" /> Tithes & Offerings
+              </div>
+              <p className="mt-1 num text-xl font-bold">{currency(NGO_SUMMARY.totalDonationsRaised)}</p>
+              <p className="text-[11px] text-muted-foreground">{NGO_DONATIONS.length} giving commitments</p>
+            </div>
           </div>
+          <p className="mt-4 rounded-md bg-emerald-50 px-3 py-2.5 text-xs text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+            Stewardship is healthy this season — dues momentum is climbing month on month and most members are fully settled. Follow up on the {outstandingDues > 0 ? "outstanding balances" : "few remaining pledges"} to keep the congregation fully current.
+          </p>
         </Card>
       </div>
     </AppShell>

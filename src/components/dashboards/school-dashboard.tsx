@@ -1,14 +1,21 @@
+import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import type { DateRange } from "react-day-picker";
+import { format, differenceInDays, addDays, subDays, startOfDay } from "date-fns";
 import {
   GraduationCap,
-  Users,
   AlertCircle,
-  CalendarDays,
   Banknote,
-  Wallet,
   Plus,
   Receipt,
   Bell,
+  Smartphone,
+  Building2,
+  Landmark,
+  CircleDollarSign,
+  TrendingUp,
+  Users,
+  Coins,
 } from "lucide-react";
 import {
   Bar,
@@ -25,29 +32,46 @@ import { AppShell } from "@/components/app-shell";
 import { KpiCard } from "@/components/kpi-card";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { DateRangePicker } from "@/components/date-range-picker";
 import { currency } from "@/lib/mos-data";
-import {
-  SCHOOL_STUDENTS,
-  FEE_TRANSACTIONS,
-  STAFF_PAYROLL,
-  SCHOOL_EXPENSES,
-  SCHOOL_SUMMARY,
-  GRADE_ORDER,
-} from "@/lib/school-data";
+import { SCHOOL_STUDENTS, FEE_TRANSACTIONS, SCHOOL_SUMMARY } from "@/lib/school-data";
 
-// Calculate real fee collection % for every active grade in school-data
-const chartData = GRADE_ORDER.map((grade) => {
-  const students = SCHOOL_STUDENTS.filter((s) => s.gradeClass === grade);
-  if (students.length === 0) return { grade, collected: 0 };
-  const totalFee = students.reduce((a, s) => a + s.tuitionFee, 0);
-  const totalPaid = students.reduce((a, s) => a + s.paidAmount, 0);
-  return { grade, collected: Math.round((totalPaid / totalFee) * 100) };
-}).filter((d) => d.collected > 0 || SCHOOL_STUDENTS.some((s) => s.gradeClass === d.grade));
+type PaymentMethodKey = "Mobile Money (MTN)" | "Bank Transfer" | "Cash Deposit" | "Stablecoin";
 
-function barColor(pct: number): string {
-  if (pct >= 90) return "#22c55e"; // emerald-500
-  if (pct >= 70) return "#f59e0b"; // amber-500
-  return "#ef4444"; // red-500
+function generateCollectionTrendData(dateRange: DateRange | undefined): {
+  day: string;
+  label: string;
+  collected: number;
+  transactions: number;
+}[] {
+  const from = dateRange?.from ? startOfDay(dateRange.from) : subDays(new Date(), 6);
+  const to = dateRange?.to ? startOfDay(dateRange.to) : new Date();
+  const totalDays = Math.max(1, differenceInDays(to, from) + 1);
+  const points = Math.min(totalDays, 30);
+  const step = Math.max(1, Math.floor(totalDays / points));
+
+  const basePattern = [0.55, 0.78, 0.68, 1.2, 1.45, 1.7, 0.9];
+
+  return Array.from({ length: points }, (_, i) => {
+    const date = addDays(from, i * step);
+    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+    const baseIdx = date.getDay();
+    const pattern = basePattern[baseIdx] ?? 1;
+    const trend = 1 + (i / Math.max(1, points)) * 0.22;
+    const wobble = 0.9 + ((Math.sin(i * 2.1) + 1) / 2) * 0.2;
+
+    const avgDaily = totalDays <= 7 ? 3200 : totalDays <= 30 ? 3800 : 4200;
+    const collected = Math.round(avgDaily * pattern * trend * wobble * (isWeekend ? 1.1 : 1));
+    const transactions = Math.round(collected / (650 + (i % 5) * 50));
+
+    const showFullLabel = points <= 7;
+    return {
+      day: showFullLabel ? format(date, "EEE") : format(date, "d"),
+      label: format(date, "EEE dd MMM"),
+      collected,
+      transactions,
+    };
+  });
 }
 
 const tooltipStyle = {
@@ -57,38 +81,91 @@ const tooltipStyle = {
   fontSize: 12,
 } as const;
 
+const METHOD_COLORS: Record<PaymentMethodKey, string> = {
+  "Mobile Money (MTN)": "#f59e0b",
+  "Bank Transfer": "#0ea5e9",
+  "Cash Deposit": "#64748b",
+  Stablecoin: "#22c55e",
+};
+
+const METHOD_ICONS: Record<PaymentMethodKey, React.ElementType> = {
+  "Mobile Money (MTN)": Smartphone,
+  "Bank Transfer": Landmark,
+  "Cash Deposit": Building2,
+  Stablecoin: Coins,
+};
+
 export function SchoolDashboard() {
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+
+  const trendData = useMemo(() => generateCollectionTrendData(dateRange), [dateRange]);
+
+  const trendTotals = useMemo(() => {
+    const totalCollected = trendData.reduce((s, r) => s + r.collected, 0);
+    const totalTx = trendData.reduce((s, r) => s + r.transactions, 0);
+    const avgDaily = Math.round(totalCollected / Math.max(1, trendData.length));
+    return { totalCollected, totalTx, avgDaily };
+  }, [trendData]);
+
+  const rangeLabel = dateRange?.from
+    ? dateRange.to
+      ? `${format(dateRange.from, "dd MMM yyyy")} – ${format(dateRange.to, "dd MMM yyyy")}`
+      : format(dateRange.from, "dd MMM yyyy")
+    : "Last 7 days";
+
+  const collectedByMethod = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const tx of FEE_TRANSACTIONS) {
+      map.set(tx.paymentMethod, (map.get(tx.paymentMethod) ?? 0) + tx.amountPaid);
+    }
+    if (!map.has("Stablecoin")) map.set("Stablecoin", 1800);
+    return Array.from(map.entries())
+      .map(([method, amount]) => ({
+        method: method as PaymentMethodKey,
+        amount,
+        count: FEE_TRANSACTIONS.filter((t) => t.paymentMethod === method).length,
+      }))
+      .sort((a, b) => b.amount - a.amount);
+  }, []);
+
+  const totalExpected = useMemo(() => SCHOOL_STUDENTS.reduce((s, st) => s + st.tuitionFee, 0), []);
+  const collectionRate =
+    totalExpected > 0 ? Math.round((SCHOOL_SUMMARY.totalFeesCollected / totalExpected) * 100) : 0;
+
+  const overdueStudents = SCHOOL_STUDENTS.filter((s) => s.status === "Overdue").length;
+  const partialStudents = SCHOOL_STUDENTS.filter((s) => s.status === "Partial Payment").length;
+  const fullyPaidStudents = SCHOOL_STUDENTS.filter((s) => s.status === "Paid Full").length;
+
   return (
     <AppShell
       title="School & Academic Operations"
-      subtitle="Term fee collection, student billing, staff payroll, and operational expenses"
+      subtitle="Fee collection, payment processing, reconciliation & financial operations — powered by Trite"
       actions={
         <div className="hidden lg:flex flex-wrap items-center gap-2">
           <Link to="/students">
-            <Button size="sm" className="bg-[#22c55e] text-white hover:bg-[#16a34a]">
-              <Plus className="size-4" /> Enroll Student
+            <Button size="sm" variant="outline">
+              <Users className="size-4" /> Manage Students
             </Button>
           </Link>
           <Link to="/fees">
-            <Button size="sm" variant="outline">
-              <Banknote className="size-4" /> Collect Fee
+            <Button size="sm" className="bg-[#22c55e] text-white hover:bg-[#16a34a]">
+              <Plus className="size-4" /> Collect Payment
             </Button>
           </Link>
         </div>
       }
     >
       <div className="space-y-6">
-        {/* Mobile: green hero card + 4 stat cards underneath */}
+        {/* Mobile: hero + 4 KPI cards */}
         <div className="lg:hidden space-y-3">
-          {/* Greeting row */}
           <div className="flex items-center justify-between px-0.5">
             <div>
               <p className="text-xs text-muted-foreground">Good morning 🌤</p>
-              <h2 className="text-xl font-bold leading-tight">School</h2>
+              <h2 className="text-xl font-bold leading-tight">Fees & Payments</h2>
             </div>
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 shadow-xs">
-                <span className="size-1.5 rounded-full bg-emerald-500" /> Live
+                <span className="size-1.5 rounded-full bg-emerald-500" /> Live · Trite Settling
               </span>
               <button className="relative grid size-9 place-items-center rounded-full bg-card shadow-xs border border-border">
                 <Bell className="size-4" />
@@ -97,116 +174,233 @@ export function SchoolDashboard() {
             </div>
           </div>
 
-          {/* Green hero card — Fees Collected */}
-          <div className="relative overflow-hidden rounded-2xl bg-[#22c55e] p-5 text-white shadow-lg">
-            {/* decorative circle */}
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#22c55e] to-[#16a34a] p-5 text-white shadow-lg">
             <div
               className="pointer-events-none absolute rounded-full bg-white/10"
               style={{ width: "260px", height: "260px", bottom: "-120px", right: "-60px" }}
             />
-
             <div className="relative z-10">
               <div className="flex items-start justify-between">
-                <p className="text-[11px] font-bold tracking-widest uppercase text-white/80">Fees Collected</p>
-                <GraduationCap className="size-6 opacity-70" />
+                <div>
+                  <p className="text-[11px] font-bold tracking-widest uppercase text-white/80">
+                    Total Collected · {rangeLabel}
+                  </p>
+                  <p className="num mt-2 text-3xl font-extrabold leading-none tracking-tight">
+                    {currency(trendTotals.totalCollected)}
+                  </p>
+                </div>
+                <CircleDollarSign className="size-7 opacity-80" />
               </div>
-              <p className="num mt-2 text-3xl font-extrabold leading-none tracking-tight">
-                {currency(SCHOOL_SUMMARY.totalFeesCollected)}
-              </p>
-              <div className="mt-3">
-                <p className="text-[11px] font-bold uppercase tracking-widest text-white/80">
-                  Fee Arrears · {currency(SCHOOL_SUMMARY.totalOutstandingFees)}
-                </p>
-                <p className="mt-0.5 text-xs text-white/75">
-                  +15% · {SCHOOL_STUDENTS.filter((s) => s.status === "Paid Full").length} fully cleared students
-                </p>
+              <div className="mt-4 grid grid-cols-3 gap-3">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/70">
+                    Avg Daily
+                  </p>
+                  <p className="text-lg font-bold leading-none mt-1 num">
+                    {currency(trendTotals.avgDaily)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/70">
+                    Receipts
+                  </p>
+                  <p className="text-lg font-bold leading-none mt-1 num">{trendTotals.totalTx}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/70">
+                    Collected
+                  </p>
+                  <p className="text-lg font-bold leading-none mt-1">{collectionRate}%</p>
+                </div>
               </div>
-
-              {/* Full-width action buttons matching style */}
               <div className="mt-4 flex gap-3">
-                <Link to="/students" className="flex-1">
-                  <span className="block rounded-xl bg-[#166534] py-2.5 text-center text-sm font-semibold text-white transition hover:bg-[#14532d]">
-                    Enroll Student
+                <Link to="/fees" className="flex-1">
+                  <span className="block rounded-xl bg-white text-[#166534] py-2.5 text-center text-sm font-semibold transition hover:bg-white/90">
+                    Collect Fee
                   </span>
                 </Link>
-                <Link to="/fees" className="flex-1">
-                  <span className="block rounded-xl bg-white/20 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-white/30">
-                    Collect Fees
+                <Link to="/receipts" className="flex-1">
+                  <span className="block rounded-xl bg-white/15 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-white/25 backdrop-blur">
+                    Receipts
                   </span>
                 </Link>
               </div>
             </div>
           </div>
 
-          {/* 4 stat cards below the hero */}
           <div className="grid grid-cols-2 gap-2.5">
             <KpiCard
               label="Fees Collected"
               value={currency(SCHOOL_SUMMARY.totalFeesCollected)}
               delta={15}
-              sub={`${SCHOOL_STUDENTS.filter((s) => s.status === "Paid Full").length} fully cleared`}
+              sub={`${fullyPaidStudents} students fully cleared`}
               icon={GraduationCap}
             />
             <KpiCard
               label="Fee Arrears"
               value={currency(SCHOOL_SUMMARY.totalOutstandingFees)}
-              sub={`${SCHOOL_STUDENTS.filter((s) => s.balanceDue > 0).length} balance due`}
+              sub={`${overdueStudents + partialStudents} with balance due`}
               icon={AlertCircle}
             />
             <KpiCard
-              label="Monthly Payroll"
-              value={currency(SCHOOL_SUMMARY.totalMonthlyPayroll)}
-              sub={`${STAFF_PAYROLL.filter((s) => s.status === "Processing").length} processing`}
-              icon={Users}
-            />
-            <KpiCard
-              label="Payroll Due Date"
-              value="15 Aug"
-              sub="4 days remaining"
-              icon={CalendarDays}
+              label="Collection Rate"
+              value={`${collectionRate}%`}
+              sub="Term 3 · billed vs received"
+              icon={TrendingUp}
             />
           </div>
         </div>
 
-        {/* Desktop: standard 4-column KPI grid */}
-        <div className="hidden lg:grid grid-cols-4 gap-3">
+        {/* Desktop: 3-col KPI grid */}
+        <div className="hidden lg:grid grid-cols-3 gap-3">
           <KpiCard
             label="Fees Collected"
             value={currency(SCHOOL_SUMMARY.totalFeesCollected)}
             delta={15}
-            sub={`${SCHOOL_STUDENTS.filter((s) => s.status === "Paid Full").length} fully cleared students`}
+            sub={`${fullyPaidStudents} students fully cleared`}
             icon={GraduationCap}
           />
           <KpiCard
             label="Fee Arrears"
             value={currency(SCHOOL_SUMMARY.totalOutstandingFees)}
-            sub={`${SCHOOL_STUDENTS.filter((s) => s.balanceDue > 0).length} students with balance due`}
+            sub={`${overdueStudents + partialStudents} accounts with balance due`}
             icon={AlertCircle}
           />
           <KpiCard
-            label="Monthly Payroll"
-            value={currency(SCHOOL_SUMMARY.totalMonthlyPayroll)}
-            sub={`${STAFF_PAYROLL.filter((s) => s.status === "Processing").length} staff processing`}
-            icon={Users}
-          />
-          <KpiCard
-            label="Payroll Due Date"
-            value="15 Aug"
-            sub="4 days remaining"
-            icon={CalendarDays}
+            label="Collection Rate"
+            value={`${collectionRate}%`}
+            sub="Term 3 · billed vs received"
+            icon={TrendingUp}
           />
         </div>
 
-        {/* Operations Overview */}
+        {/* Payment Collection Trend + Method Split */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          <Card className="p-5 lg:col-span-2 shadow-none overflow-hidden">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <div>
+                <h2 className="text-base font-semibold">Fee Collection Trend</h2>
+                <p className="text-xs text-muted-foreground">
+                  {rangeLabel} · {trendData.length} data points · Avg daily{" "}
+                  {currency(trendTotals.avgDaily)} · Settled via Trite
+                </p>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 dark:bg-emerald-950/40">
+                  <TrendingUp className="size-3.5 text-emerald-600 dark:text-emerald-400" />
+                  <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400">
+                    +22% WoW
+                  </span>
+                </div>
+                <DateRangePicker value={dateRange} onChange={setDateRange} />
+              </div>
+            </div>
+            <div className="h-[240px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="schoolFeeGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#22c55e" stopOpacity={0.38} />
+                      <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="var(--color-border)"
+                  />
+                  <XAxis
+                    dataKey="day"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: "var(--color-muted-foreground)" }}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: "var(--color-muted-foreground)" }}
+                    tickFormatter={(v) => `GH₵${v / 1000}k`}
+                  />
+                  <Tooltip
+                    formatter={(val) => [currency(Number(val)), "Collected"]}
+                    labelFormatter={(label) => {
+                      const item = trendData.find((d) => d.day === label);
+                      return item?.label ?? label;
+                    }}
+                    contentStyle={tooltipStyle}
+                  />
+                  <Bar
+                    type="monotone"
+                    dataKey="collected"
+                    stroke="#22c55e"
+                    strokeWidth={2.5}
+                    fillOpacity={1}
+                    fill="url(#schoolFeeGrad)"
+                    activeDot={{ r: 5, fill: "#22c55e", stroke: "#fff", strokeWidth: 2 }}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+
+          {/* Payment Method Split */}
+          <Card className="p-5 shadow-none overflow-hidden">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <div className="flex items-center gap-2">
+                <Banknote className="size-4 text-[#22c55e]" />
+                <h2 className="text-sm font-semibold">Collected by Payment Method</h2>
+              </div>
+            </div>
+            <ul className="mt-3 divide-y divide-border">
+              {collectedByMethod.map((row) => {
+                const Icon = METHOD_ICONS[row.method] ?? Banknote;
+                const color = METHOD_COLORS[row.method];
+                const pct = Math.round(
+                  (row.amount / collectedByMethod.reduce((s, r) => s + r.amount, 0)) * 100,
+                );
+                return (
+                  <li
+                    key={row.method}
+                    className="flex items-center justify-between gap-3 py-3 first:pt-2"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span
+                        className="grid size-9 shrink-0 place-items-center rounded-xl"
+                        style={{ backgroundColor: `${color}1A`, color }}
+                      >
+                        <Icon className="size-4" />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm truncate">{row.method}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {row.count} receipt{row.count !== 1 ? "s" : ""} · {pct}%
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="num font-bold text-sm" style={{ color }}>
+                        {currency(row.amount)}
+                      </p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </Card>
+        </div>
+
+        {/* Student Balances + Recent Payments */}
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* Student Fee Standing Preview */}
           <Card className="p-0 overflow-hidden shadow-none">
             <div className="flex items-center justify-between border-b border-border px-5 py-4">
               <div className="flex items-center gap-2">
                 <GraduationCap className="size-4 text-emerald-600 dark:text-emerald-400" />
-                <h2 className="text-sm font-semibold">Student Fee Standing</h2>
+                <h2 className="text-sm font-semibold">Student Account Balances</h2>
               </div>
-              <Link to="/students" className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline">
+              <Link
+                to="/students"
+                className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
+              >
                 All Students ({SCHOOL_STUDENTS.length}) →
               </Link>
             </div>
@@ -215,11 +409,23 @@ export function SchoolDashboard() {
                 <li key={s.id} className="flex items-center justify-between gap-3 px-5 py-3">
                   <div>
                     <p className="font-semibold text-sm">{s.name}</p>
-                    <p className="text-xs text-muted-foreground">{s.gradeClass} · {s.studentId}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {s.studentId} · Guardian: {s.guardianName}
+                    </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Balance Due</p>
-                    <p className={`font-bold text-sm ${s.balanceDue > 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`}>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                      Balance Due
+                    </p>
+                    <p
+                      className={`font-bold text-sm ${
+                        s.balanceDue > 0
+                          ? s.status === "Overdue"
+                            ? "text-rose-600 dark:text-rose-400"
+                            : "text-amber-600 dark:text-amber-400"
+                          : "text-emerald-600 dark:text-emerald-400"
+                      }`}
+                    >
                       {s.balanceDue > 0 ? currency(s.balanceDue) : "Cleared ✓"}
                     </p>
                   </div>
@@ -228,143 +434,48 @@ export function SchoolDashboard() {
             </ul>
           </Card>
 
-          {/* Recent Fee Payments */}
           <Card className="p-0 overflow-hidden shadow-none">
             <div className="flex items-center justify-between border-b border-border px-5 py-4">
               <div className="flex items-center gap-2">
                 <Receipt className="size-4 text-blue-600 dark:text-blue-400" />
-                <h2 className="text-sm font-semibold">Recent Fee Payments</h2>
+                <h2 className="text-sm font-semibold">Recent Receipts (Settled)</h2>
               </div>
-              <Link to="/receipts" className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline">
+              <Link
+                to="/receipts"
+                className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
+              >
                 All Receipts ({FEE_TRANSACTIONS.length}) →
               </Link>
             </div>
             <ul className="divide-y divide-border">
-              {FEE_TRANSACTIONS.map((tx) => (
-                <li key={tx.id} className="flex items-center justify-between gap-3 px-5 py-3">
-                  <div>
-                    <p className="font-semibold text-sm">{tx.studentName}</p>
-                    <p className="text-xs text-muted-foreground">{tx.receiptNo} · {tx.paymentMethod}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{tx.date}</p>
-                    <p className="font-bold text-sm text-emerald-600 dark:text-emerald-400">
-                      {currency(tx.amountPaid)}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </Card>
-        </div>
-
-        {/* Fee Collection Chart */}
-        <Card className="p-5 shadow-none">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h2 className="text-sm font-semibold">Fee Collection Progress by Class (Creche → JHS 3)</h2>
-              <p className="text-xs text-muted-foreground">% of expected term tuition collected per grade level</p>
-            </div>
-            <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1.5">
-                <span className="inline-block size-2.5 rounded-sm bg-emerald-500" />≥ 90% — On track
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="inline-block size-2.5 rounded-sm bg-amber-500" />70–89% — Behind
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="inline-block size-2.5 rounded-sm bg-red-500" />&lt; 70% — At risk
-              </span>
-            </div>
-          </div>
-
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ left: -12, right: 4, top: 4 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
-                <XAxis dataKey="grade" tickLine={false} axisLine={false} fontSize={10} stroke="var(--color-muted-foreground)" />
-                <YAxis
-                  domain={[0, 100]}
-                  tickFormatter={(v: number) => `${v}%`}
-                  tickLine={false}
-                  axisLine={false}
-                  fontSize={11}
-                  stroke="var(--color-muted-foreground)"
-                />
-                <Tooltip
-                  cursor={{ fill: "var(--color-secondary)" }}
-                  contentStyle={tooltipStyle}
-                  formatter={(v: number) => [`${v}%`, "Collected"]}
-                />
-                <Bar dataKey="collected" radius={[4, 4, 0, 0]}>
-                  {chartData.map((entry) => (
-                    <Cell key={entry.grade} fill={barColor(entry.collected)} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        {/* Bottom Row: Payroll + Expenses */}
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* Staff Payroll Summary */}
-          <Card className="p-0 overflow-hidden shadow-none">
-            <div className="flex items-center justify-between border-b border-border px-5 py-4">
-              <div className="flex items-center gap-2">
-                <Users className="size-4 text-purple-600 dark:text-purple-400" />
-                <h2 className="text-sm font-semibold">Staff Payroll Summary</h2>
-              </div>
-              <Link to="/payroll" className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline">
-                Full Payroll ({STAFF_PAYROLL.length}) →
-              </Link>
-            </div>
-            <ul className="divide-y divide-border">
-              {STAFF_PAYROLL.map((staff) => (
-                <li key={staff.id} className="flex items-center justify-between gap-3 px-5 py-3">
-                  <div>
-                    <p className="font-semibold text-sm">{staff.name}</p>
-                    <p className="text-xs text-muted-foreground">{staff.role}</p>
-                  </div>
-                  <div className="flex items-center gap-3 text-right">
-                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold border ${
-                      staff.status === "Paid"
-                        ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800"
-                        : "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800"
-                    }`}>
-                      {staff.status}
-                    </span>
-                    <p className="font-bold text-sm">{currency(staff.netPay)}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </Card>
-
-          {/* Recent Expense Vouchers */}
-          <Card className="p-0 overflow-hidden shadow-none">
-            <div className="flex items-center justify-between border-b border-border px-5 py-4">
-              <div className="flex items-center gap-2">
-                <Wallet className="size-4 text-slate-600 dark:text-slate-400" />
-                <h2 className="text-sm font-semibold">Recent Expense Vouchers</h2>
-              </div>
-              <Link to="/expenses" className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline">
-                All Expenses ({SCHOOL_EXPENSES.length}) →
-              </Link>
-            </div>
-            <ul className="divide-y divide-border">
-              {SCHOOL_EXPENSES.map((exp) => (
-                <li key={exp.id} className="flex items-center justify-between gap-3 px-5 py-3">
-                  <div>
-                    <p className="font-semibold text-sm">{exp.category}</p>
-                    <p className="text-xs text-muted-foreground truncate max-w-[200px]">{exp.description}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[10px] text-muted-foreground">{exp.date}</p>
-                    <p className="font-bold text-sm">{currency(exp.amount)}</p>
-                  </div>
-                </li>
-              ))}
+              {FEE_TRANSACTIONS.map((tx) => {
+                const color = METHOD_COLORS[tx.paymentMethod];
+                const Icon = METHOD_ICONS[tx.paymentMethod] ?? Banknote;
+                return (
+                  <li key={tx.id} className="flex items-center justify-between gap-3 px-5 py-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span
+                        className="grid size-8 shrink-0 place-items-center rounded-lg"
+                        style={{ backgroundColor: `${color}1A`, color }}
+                      >
+                        <Icon className="size-3.5" />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-sm truncate">{tx.studentName}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {tx.receiptNo} · {tx.paymentMethod}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-[10px] text-muted-foreground">{tx.date}</p>
+                      <p className="font-bold text-sm text-emerald-600 dark:text-emerald-400 num">
+                        +{currency(tx.amountPaid)}
+                      </p>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           </Card>
         </div>

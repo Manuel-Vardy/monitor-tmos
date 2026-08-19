@@ -9,9 +9,9 @@ import {
   AlertCircle,
   Clock,
   Phone,
-  ChevronDown,
-  ChevronRight,
   Users,
+  ArrowUpDown,
+  X,
 } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
@@ -21,10 +21,9 @@ import { currency } from "@/lib/mos-data";
 import {
   SCHOOL_STUDENTS,
   SCHOOL_SUMMARY,
-  GRADE_ORDER,
-  GRADE_SECTIONS,
+  FEE_TRANSACTIONS,
   type Student,
-  type GradeClass,
+  type FeeTransaction,
 } from "@/lib/school-data";
 
 export const Route = createFileRoute("/_authenticated/students")({
@@ -34,7 +33,7 @@ export const Route = createFileRoute("/_authenticated/students")({
       {
         name: "description",
         content:
-          "Student enrollment directory grouped by class from Creche to JHS 3, guardian contacts, tuition fee balances, and payment standing.",
+          "Student fee accounts directory, guardian contacts, tuition balances, and payment standing for the Trite Merchant OS payment platform.",
       },
       { property: "og:title", content: "Students — Trite Merchant OS" },
     ],
@@ -43,6 +42,7 @@ export const Route = createFileRoute("/_authenticated/students")({
 });
 
 type Standing = Student["status"];
+type SortKey = "name" | "balanceDue" | "paidAmount" | "tuitionFee";
 
 const STATUS_CONFIG: Record<
   Standing,
@@ -71,45 +71,267 @@ const STATUS_CONFIG: Record<
   },
 };
 
-const SECTION_COLORS: Record<string, { border: string; badge: string; badgeText: string; sectionBg: string }> = {
-  "Early Childhood": {
-    border: "border-purple-400 dark:border-purple-600",
-    badge: "bg-purple-100 dark:bg-purple-950/60 border border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300",
-    badgeText: "text-purple-700 dark:text-purple-300",
-    sectionBg: "bg-purple-50/50 dark:bg-purple-950/20",
-  },
-  "Kindergarten": {
-    border: "border-blue-400 dark:border-blue-600",
-    badge: "bg-blue-100 dark:bg-blue-950/60 border border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300",
-    badgeText: "text-blue-700 dark:text-blue-300",
-    sectionBg: "bg-blue-50/50 dark:bg-blue-950/20",
-  },
-  "Primary School": {
-    border: "border-amber-400 dark:border-amber-600",
-    badge: "bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300",
-    badgeText: "text-amber-700 dark:text-amber-300",
-    sectionBg: "bg-amber-50/50 dark:bg-amber-950/20",
-  },
-  "Junior High School (JHS)": {
-    border: "border-emerald-400 dark:border-emerald-600",
-    badge: "bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300",
-    badgeText: "text-emerald-700 dark:text-emerald-300",
-    sectionBg: "bg-emerald-50/50 dark:bg-emerald-950/20",
-  },
-};
+function StudentStatementModal({
+  student,
+  transactions,
+  onClose,
+}: {
+  student: Student;
+  transactions: FeeTransaction[];
+  onClose: () => void;
+}) {
+  const pctPaid =
+    student.tuitionFee > 0 ? Math.round((student.paidAmount / student.tuitionFee) * 100) : 100;
+  const history = transactions.filter((t) => t.studentId === student.studentId);
 
-function StudentCard({ s }: { s: Student }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Statement for ${student.name}`}
+    >
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-md rounded-2xl bg-card shadow-2xl overflow-hidden">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+          <div>
+            <h2 className="text-lg font-bold">Fee Statement</h2>
+            <p className="text-xs text-muted-foreground">{student.studentId}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="grid size-8 shrink-0 place-items-center rounded-full bg-secondary hover:bg-border transition-colors"
+            aria-label="Close"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+
+        <div className="px-6 py-4">
+          <div className="rounded-lg bg-secondary/40 p-3 text-sm space-y-1">
+            <p className="font-bold text-base">{student.name}</p>
+            {student.schoolId && (
+              <p className="text-xs text-muted-foreground">School ID: {student.schoolId}</p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              {student.guardianName} · {student.guardianPhone}
+            </p>
+          </div>
+
+          <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+            <div className="rounded-lg border border-border p-2">
+              <p className="text-[10px] uppercase text-muted-foreground">Fee</p>
+              <p className="font-bold text-sm">{currency(student.tuitionFee)}</p>
+            </div>
+            <div className="rounded-lg border border-border p-2">
+              <p className="text-[10px] uppercase text-muted-foreground">Paid</p>
+              <p className="font-bold text-sm text-emerald-600 dark:text-emerald-400">
+                {currency(student.paidAmount)}
+              </p>
+            </div>
+            <div className="rounded-lg border border-border p-2">
+              <p className="text-[10px] uppercase text-muted-foreground">Balance</p>
+              <p
+                className={`font-bold text-sm ${student.balanceDue > 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`}
+              >
+                {currency(student.balanceDue)}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-3">
+            <div className="flex justify-between text-[10px] uppercase tracking-wide mb-1">
+              <span className="text-muted-foreground">Payment Progress</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">{pctPaid}%</span>
+            </div>
+            <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600"
+                style={{ width: `${Math.min(100, pctPaid)}%` }}
+              />
+            </div>
+          </div>
+
+          <h3 className="mt-4 mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+            Payment History ({history.length})
+          </h3>
+          {history.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No payments recorded yet.</p>
+          ) : (
+            <ul className="divide-y divide-border rounded-lg border border-border">
+              {history.map((t) => (
+                <li
+                  key={t.id}
+                  className="flex items-center justify-between gap-2 px-3 py-2 text-sm"
+                >
+                  <div>
+                    <p className="font-medium">{currency(t.amountPaid)}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {t.date} · {t.paymentMethod}
+                    </p>
+                  </div>
+                  <span className="font-mono text-[11px] text-muted-foreground">{t.receiptNo}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StudentCollectModal({
+  student,
+  onClose,
+  onSubmit,
+}: {
+  student: Student;
+  onClose: () => void;
+  onSubmit: (tx: FeeTransaction) => void;
+}) {
+  const PAYMENT_METHODS = ["Mobile Money (MTN)", "Bank Transfer", "Cash Deposit"] as const;
+  const [amount, setAmount] = useState(String(student.balanceDue));
+  const [method, setMethod] = useState<(typeof PAYMENT_METHODS)[number]>("Mobile Money (MTN)");
+  const [receivedBy, setReceivedBy] = useState("Bursar Mr. Mensah");
+
+  const inputClass =
+    "h-9 w-full rounded-md border border-border bg-card px-3 text-sm outline-none placeholder:text-muted-foreground focus:border-ring";
+
+  const handleSubmit = () => {
+    const paid = Number(amount) || 0;
+    if (paid <= 0) return;
+    const today = new Date().toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+    onSubmit({
+      id: `REC-${Date.now()}`,
+      receiptNo: `RCP-2026-0${Math.floor(Math.random() * 9000) + 1000}`,
+      studentId: student.studentId,
+      schoolId: student.schoolId,
+      studentName: student.name,
+      amountPaid: paid,
+      paymentMethod: method,
+      date: today,
+      term: student.term,
+      receivedBy,
+    });
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Collect payment for ${student.name}`}
+    >
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-md rounded-2xl bg-card shadow-2xl">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+          <div>
+            <h2 className="text-lg font-bold">Collect Payment</h2>
+            <p className="text-xs text-muted-foreground">
+              {student.name} · Balance {currency(student.balanceDue)}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="grid size-8 shrink-0 place-items-center rounded-full bg-secondary hover:bg-border transition-colors"
+            aria-label="Close"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+
+        <div className="space-y-3 px-6 py-4">
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+              Amount Paid
+            </label>
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0"
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+              Payment Method
+            </label>
+            <select
+              value={method}
+              onChange={(e) => setMethod(e.target.value as (typeof PAYMENT_METHODS)[number])}
+              className={inputClass}
+            >
+              {PAYMENT_METHODS.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+              Received By
+            </label>
+            <input
+              value={receivedBy}
+              onChange={(e) => setReceivedBy(e.target.value)}
+              className={inputClass}
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-2 border-t border-border px-6 py-4">
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            size="sm"
+            className="bg-[#22c55e] text-white hover:bg-[#16a34a]"
+            onClick={handleSubmit}
+            disabled={(Number(amount) || 0) <= 0}
+          >
+            <Plus className="size-3.5" /> Record Payment
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StudentCard({
+  s,
+  onStatement,
+  onCollect,
+}: {
+  s: Student;
+  onStatement: (s: Student) => void;
+  onCollect: (s: Student) => void;
+}) {
   const cfg = STATUS_CONFIG[s.status];
   const Icon = cfg.icon;
+  const pctPaid = s.tuitionFee > 0 ? Math.round((s.paidAmount / s.tuitionFee) * 100) : 100;
   return (
     <div className="flex flex-col justify-between rounded-xl border border-border bg-card p-4 transition-all hover:border-muted-foreground/30">
       <div>
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <span className="font-mono text-[10px] text-muted-foreground font-semibold">{s.studentId}</span>
+            <span className="font-mono text-[10px] text-muted-foreground font-semibold">
+              {s.studentId}
+            </span>
             <h3 className="truncate text-sm font-bold">{s.name}</h3>
+            {s.schoolId && (
+              <p className="font-mono text-[10px] text-muted-foreground">School ID: {s.schoolId}</p>
+            )}
           </div>
-          <span className={`shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] leading-none ${cfg.bg} ${cfg.color}`}>
+          <span
+            className={`shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] leading-none ${cfg.bg} ${cfg.color}`}
+          >
             <Icon className="size-3" />
             {cfg.label}
           </span>
@@ -126,6 +348,20 @@ function StudentCard({ s }: { s: Student }) {
           </div>
         </div>
 
+        {/* Progress bar */}
+        <div className="mt-3">
+          <div className="flex justify-between text-[10px] uppercase tracking-wide mb-1">
+            <span className="text-muted-foreground">Payment Progress</span>
+            <span className="font-bold text-emerald-600 dark:text-emerald-400">{pctPaid}%</span>
+          </div>
+          <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600 transition-all"
+              style={{ width: `${Math.min(100, pctPaid)}%` }}
+            />
+          </div>
+        </div>
+
         <div className="mt-3 rounded-lg bg-secondary/40 p-2.5 space-y-0.5 text-xs">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Fee:</span>
@@ -133,11 +369,15 @@ function StudentCard({ s }: { s: Student }) {
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Paid:</span>
-            <span className="font-medium text-emerald-600 dark:text-emerald-400">{currency(s.paidAmount)}</span>
+            <span className="font-medium text-emerald-600 dark:text-emerald-400">
+              {currency(s.paidAmount)}
+            </span>
           </div>
           <div className="flex justify-between pt-1 border-t border-border/50">
             <span className="font-semibold">Balance:</span>
-            <span className={`font-bold ${s.balanceDue > 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`}>
+            <span
+              className={`font-bold ${s.balanceDue > 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`}
+            >
               {currency(s.balanceDue)}
             </span>
           </div>
@@ -145,74 +385,159 @@ function StudentCard({ s }: { s: Student }) {
       </div>
 
       <div className="mt-3 flex gap-1.5">
-        <Button size="sm" variant="outline" className="w-full text-xs h-7">Statement</Button>
-        <Button size="sm" className="w-full bg-[#22c55e] text-white hover:bg-[#16a34a] text-xs h-7">
-          Fee
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => onStatement(s)}
+          className="w-full text-xs h-7"
+        >
+          Statement
+        </Button>
+        <Button
+          size="sm"
+          onClick={() => onCollect(s)}
+          className="w-full bg-[#22c55e] text-white hover:bg-[#16a34a] text-xs h-7"
+        >
+          Collect
         </Button>
       </div>
     </div>
   );
 }
 
-function ClassGroup({
-  gradeClass,
+function EnrollStudentModal({
   students,
-  sectionColor,
+  onClose,
+  onSubmit,
 }: {
-  gradeClass: GradeClass;
   students: Student[];
-  sectionColor: typeof SECTION_COLORS[string];
+  onClose: () => void;
+  onSubmit: (student: Student) => void;
 }) {
-  const [open, setOpen] = useState(true);
-  if (students.length === 0) return null;
+  const [name, setName] = useState("");
+  const [guardianName, setGuardianName] = useState("");
+  const [guardianPhone, setGuardianPhone] = useState("");
+  const [schoolId, setSchoolId] = useState("");
+  const [tuitionFee, setTuitionFee] = useState("");
 
-  const totalFee = students.reduce((a, s) => a + s.tuitionFee, 0);
-  const totalPaid = students.reduce((a, s) => a + s.paidAmount, 0);
-  const totalBalance = students.reduce((a, s) => a + s.balanceDue, 0);
+  const inputClass =
+    "h-9 w-full rounded-md border border-border bg-card px-3 text-sm outline-none placeholder:text-muted-foreground focus:border-ring";
+
+  const handleSubmit = () => {
+    if (!name.trim() || !guardianName.trim()) return;
+    const fee = Number(tuitionFee) || 0;
+    const nextNum = students.length + 1;
+    onSubmit({
+      id: `STU-${Date.now()}`,
+      studentId: `SCH-2026-E${String(nextNum).padStart(3, "0")}`,
+      schoolId: schoolId.trim() || undefined,
+      name: name.trim(),
+      guardianName: guardianName.trim(),
+      guardianPhone: guardianPhone.trim() || "—",
+      tuitionFee: fee,
+      paidAmount: 0,
+      balanceDue: fee,
+      status: fee === 0 ? "Paid Full" : "Overdue",
+      term: "Term 3, 2026",
+    });
+  };
 
   return (
-    <div className="rounded-xl border border-border bg-card overflow-hidden">
-      {/* Class Header */}
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between gap-3 px-5 py-3.5 hover:bg-secondary/40 transition-colors"
-      >
-        <div className="flex items-center gap-3">
-          {open ? <ChevronDown className="size-4 text-muted-foreground" /> : <ChevronRight className="size-4 text-muted-foreground" />}
-          <h3 className="text-sm font-bold">{gradeClass}</h3>
-          <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${sectionColor.badge}`}>
-            <Users className="inline size-3 mr-1" />
-            {students.length} {students.length === 1 ? "student" : "students"}
-          </span>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Enroll New Student"
+    >
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-md rounded-2xl bg-card shadow-2xl">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+          <div>
+            <h2 className="text-lg font-bold">Enroll New Student</h2>
+            <p className="text-xs text-muted-foreground">Create a Term 3 fee account</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="grid size-8 shrink-0 place-items-center rounded-full bg-secondary hover:bg-border transition-colors"
+            aria-label="Close"
+          >
+            <X className="size-4" />
+          </button>
         </div>
-        <div className="flex items-center gap-6 text-xs text-muted-foreground">
-          <div className="hidden sm:block">
-            <span className="text-[10px] uppercase tracking-wide block">Collected</span>
-            <span className="font-bold text-emerald-600 dark:text-emerald-400">{currency(totalPaid)}</span>
-          </div>
-          <div className="hidden sm:block">
-            <span className="text-[10px] uppercase tracking-wide block">Outstanding</span>
-            <span className={`font-bold ${totalBalance > 0 ? "text-rose-600 dark:text-rose-400" : "text-muted-foreground"}`}>
-              {currency(totalBalance)}
-            </span>
-          </div>
-          <div className="hidden md:block">
-            <span className="text-[10px] uppercase tracking-wide block">Total Fees</span>
-            <span className="font-semibold">{currency(totalFee)}</span>
-          </div>
-        </div>
-      </button>
 
-      {/* Students Grid */}
-      {open && (
-        <div className="border-t border-border px-4 pb-4 pt-3">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {students.map((s) => (
-              <StudentCard key={s.id} s={s} />
-            ))}
+        <div className="space-y-3 px-6 py-4">
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+              Student Name
+            </label>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Kwesi Mensah"
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+              Guardian Name
+            </label>
+            <input
+              value={guardianName}
+              onChange={(e) => setGuardianName(e.target.value)}
+              placeholder="e.g. Mrs. Ama Mensah"
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+              Guardian Phone
+            </label>
+            <input
+              value={guardianPhone}
+              onChange={(e) => setGuardianPhone(e.target.value)}
+              placeholder="e.g. +233 24 000 0000"
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+              School ID
+            </label>
+            <input
+              value={schoolId}
+              onChange={(e) => setSchoolId(e.target.value)}
+              placeholder="e.g. ADM-2026-014"
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+              Tuition Fee
+            </label>
+            <input
+              type="number"
+              value={tuitionFee}
+              onChange={(e) => setTuitionFee(e.target.value)}
+              placeholder="0"
+              className={inputClass}
+            />
           </div>
         </div>
-      )}
+
+        <div className="flex items-center justify-end gap-2 border-t border-border px-6 py-4">
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            size="sm"
+            className="bg-[#22c55e] text-white hover:bg-[#16a34a]"
+            onClick={handleSubmit}
+            disabled={!name.trim() || !guardianName.trim()}
+          >
+            <Plus className="size-3.5" /> Enroll Student
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -221,25 +546,69 @@ function StudentsPage() {
   const [statusFilter, setStatusFilter] = useState<Standing | "all">("all");
   const [search, setSearch] = useState("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [sortKey, setSortKey] = useState<SortKey>("balanceDue");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [students, setStudents] = useState<Student[]>(SCHOOL_STUDENTS);
+  const [transactions, setTransactions] = useState<FeeTransaction[]>(FEE_TRANSACTIONS);
+  const [isEnrollOpen, setIsEnrollOpen] = useState(false);
+  const [statementStudent, setStatementStudent] = useState<Student | null>(null);
+  const [collectStudent, setCollectStudent] = useState<Student | null>(null);
 
-  // Filter students
-  const filtered = SCHOOL_STUDENTS.filter((s) => {
-    const matchStatus = statusFilter === "all" || s.status === statusFilter;
-    const matchSearch =
-      search === "" ||
-      s.name.toLowerCase().includes(search.toLowerCase()) ||
-      s.studentId.toLowerCase().includes(search.toLowerCase()) ||
-      s.guardianName.toLowerCase().includes(search.toLowerCase()) ||
-      s.gradeClass.toLowerCase().includes(search.toLowerCase());
-    return matchStatus && matchSearch;
-  });
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) setSortDir(sortDir === "asc" ? "desc" : "asc");
+    else {
+      setSortKey(key);
+      setSortDir(key === "name" ? "asc" : "desc");
+    }
+  };
+
+  const filtered = students
+    .filter((s) => {
+      const matchStatus = statusFilter === "all" || s.status === statusFilter;
+      const matchSearch =
+        search === "" ||
+        s.name.toLowerCase().includes(search.toLowerCase()) ||
+        s.studentId.toLowerCase().includes(search.toLowerCase()) ||
+        s.guardianName.toLowerCase().includes(search.toLowerCase()) ||
+        s.guardianPhone.toLowerCase().includes(search.toLowerCase());
+      return matchStatus && matchSearch;
+    })
+    .sort((a, b) => {
+      let cmp = 0;
+      switch (sortKey) {
+        case "name":
+          cmp = a.name.localeCompare(b.name);
+          break;
+        case "balanceDue":
+          cmp = a.balanceDue - b.balanceDue;
+          break;
+        case "paidAmount":
+          cmp = a.paidAmount - b.paidAmount;
+          break;
+        case "tuitionFee":
+          cmp = a.tuitionFee - b.tuitionFee;
+          break;
+      }
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+
+  const totalExpected = filtered.reduce((s, st) => s + st.tuitionFee, 0);
+  const totalCollected = filtered.reduce((s, st) => s + st.paidAmount, 0);
+  const totalArrears = filtered.reduce((s, st) => s + st.balanceDue, 0);
+  const avgPct = totalExpected > 0 ? Math.round((totalCollected / totalExpected) * 100) : 0;
 
   return (
     <AppShell
-      title="Student Enrollment Directory"
-      subtitle={`${SCHOOL_SUMMARY.totalStudentsCount} enrolled students · Creche to JHS 3 · ${currency(SCHOOL_SUMMARY.totalOutstandingFees)} in pending tuition balance`}
+      title="Student Fee Accounts"
+      subtitle={`${SCHOOL_SUMMARY.totalStudentsCount} enrolled accounts · ${currency(
+        SCHOOL_SUMMARY.totalOutstandingFees,
+      )} pending · ${avgPct}% collected — powered by Trite`}
       actions={
-        <Button size="sm" className="bg-[#22c55e] text-white hover:bg-[#16a34a]">
+        <Button
+          size="sm"
+          onClick={() => setIsEnrollOpen(true)}
+          className="bg-[#22c55e] text-white hover:bg-[#16a34a]"
+        >
           <Plus className="size-4" /> Enroll New Student
         </Button>
       }
@@ -248,36 +617,42 @@ function StudentsPage() {
       <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Total Students</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Total Accounts
+            </p>
             <span className="rounded-full bg-slate-100 p-2 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
               <GraduationCap className="size-4" />
             </span>
           </div>
-          <p className="mt-3 text-2xl font-bold">{SCHOOL_SUMMARY.totalStudentsCount}</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">Creche → JHS 3 · Term 3</p>
+          <p className="mt-3 text-2xl font-bold num">{students.length}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">Term 3, 2026</p>
         </div>
 
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Tuition Collected</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Fees Collected
+            </p>
             <span className="rounded-full bg-emerald-50 p-2 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
               <CheckCircle2 className="size-4" />
             </span>
           </div>
-          <p className="mt-3 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+          <p className="mt-3 text-2xl font-bold text-emerald-600 dark:text-emerald-400 num">
             {currency(SCHOOL_SUMMARY.totalFeesCollected)}
           </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">Fees received this term</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">Settled via Trite PSP</p>
         </div>
 
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Fee Arrears</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Receivables
+            </p>
             <span className="rounded-full bg-rose-50 p-2 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400">
               <AlertCircle className="size-4" />
             </span>
           </div>
-          <p className="mt-3 text-2xl font-bold text-rose-600 dark:text-rose-400">
+          <p className="mt-3 text-2xl font-bold text-rose-600 dark:text-rose-400 num">
             {currency(SCHOOL_SUMMARY.totalOutstandingFees)}
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">Unpaid tuition balance</p>
@@ -285,14 +660,19 @@ function StudentsPage() {
 
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Cleared Students</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Fully Cleared
+            </p>
             <span className="rounded-full bg-blue-50 p-2 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
               <Users className="size-4" />
             </span>
           </div>
-          <p className="mt-3 text-2xl font-bold text-blue-600 dark:text-blue-400">
-            {SCHOOL_STUDENTS.filter((s) => s.status === "Paid Full").length}
-            <span className="text-sm font-normal text-muted-foreground"> / {SCHOOL_STUDENTS.length}</span>
+          <p className="mt-3 text-2xl font-bold text-blue-600 dark:text-blue-400 num">
+            {students.filter((s) => s.status === "Paid Full").length}
+            <span className="text-sm font-normal text-muted-foreground num">
+              {" "}
+              / {students.length}
+            </span>
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">100% fees paid</p>
         </div>
@@ -305,7 +685,7 @@ function StudentsPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search student name, class, ID or guardian…"
+            placeholder="Search student name, ID, guardian or phone…"
             className="h-9 w-full rounded-md border border-border bg-card pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:border-ring"
           />
         </div>
@@ -318,7 +698,7 @@ function StudentsPage() {
                 : "bg-secondary text-muted-foreground hover:bg-border"
             }`}
           >
-            All Students
+            All Accounts
           </button>
           {(Object.keys(STATUS_CONFIG) as Standing[]).map((st) => {
             const cfg = STATUS_CONFIG[st];
@@ -327,7 +707,9 @@ function StudentsPage() {
                 key={st}
                 onClick={() => setStatusFilter(st)}
                 className={`rounded-full px-3.5 py-1 text-xs font-semibold transition-all ${
-                  statusFilter === st ? cfg.activePill : "bg-secondary text-muted-foreground hover:bg-border"
+                  statusFilter === st
+                    ? cfg.activePill
+                    : "bg-secondary text-muted-foreground hover:bg-border"
                 }`}
               >
                 {cfg.label}
@@ -338,62 +720,109 @@ function StudentsPage() {
         </div>
       </div>
 
-      {/* Students grouped by section → class */}
-      <div className="space-y-8">
-        {GRADE_SECTIONS.map((section) => {
-          const sectionColor = SECTION_COLORS[section.label] ?? {
-            border: "border-slate-200 dark:border-slate-800",
-            badge: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
-            badgeText: "text-slate-700 dark:text-slate-300",
-            sectionBg: "bg-slate-100/60 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800",
-          };
-          // Only show classes that have matching students
-          const classesWithStudents = section.classes.filter((cls) =>
-            filtered.some((s) => s.gradeClass === cls)
-          );
-          if (classesWithStudents.length === 0) return null;
-
-          const sectionStudents = filtered.filter((s) => section.classes.includes(s.gradeClass));
-
-          return (
-            <div key={section.label}>
-              {/* Section Banner */}
-              <div className={`mb-4 flex items-center gap-3 rounded-lg px-4 py-2.5 ${sectionColor.sectionBg}`}>
-                <h2 className={`text-sm font-bold uppercase tracking-wider ${sectionColor.badgeText}`}>
-                  {section.label}
-                </h2>
-                <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${sectionColor.badge}`}>
-                  {sectionStudents.length} students
-                </span>
-                <div className="ml-auto flex items-center gap-4 text-xs">
-                  <span className="text-muted-foreground">
-                    Collected: <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                      {currency(sectionStudents.reduce((a, s) => a + s.paidAmount, 0))}
-                    </span>
-                  </span>
-                  <span className="text-muted-foreground hidden sm:block">
-                    Arrears: <span className={`font-bold ${sectionStudents.some(s => s.balanceDue > 0) ? "text-rose-600 dark:text-rose-400" : "text-muted-foreground"}`}>
-                      {currency(sectionStudents.reduce((a, s) => a + s.balanceDue, 0))}
-                    </span>
-                  </span>
-                </div>
-              </div>
-
-              {/* Class groups within section */}
-              <div className="space-y-3">
-                {classesWithStudents.map((cls) => (
-                  <ClassGroup
-                    key={cls}
-                    gradeClass={cls}
-                    students={filtered.filter((s) => s.gradeClass === cls)}
-                    sectionColor={sectionColor}
-                  />
-                ))}
-              </div>
-            </div>
-          );
-        })}
+      {/* Sort + aggregate row */}
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-xs text-muted-foreground mr-1">Sort by:</span>
+          {[
+            { key: "balanceDue" as SortKey, label: "Balance" },
+            { key: "name" as SortKey, label: "Name" },
+            { key: "paidAmount" as SortKey, label: "Paid" },
+            { key: "tuitionFee" as SortKey, label: "Fee" },
+          ].map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => toggleSort(key)}
+              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all ${
+                sortKey === key
+                  ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"
+                  : "bg-secondary text-muted-foreground hover:bg-border"
+              }`}
+            >
+              {label}
+              <ArrowUpDown className="size-3" />
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-4 text-xs">
+          <span className="text-muted-foreground">
+            Expected: <span className="font-bold num">{currency(totalExpected)}</span>
+          </span>
+          <span className="text-muted-foreground">
+            Collected:{" "}
+            <span className="font-bold text-emerald-600 dark:text-emerald-400 num">
+              {currency(totalCollected)}
+            </span>
+          </span>
+          <span className="text-muted-foreground">
+            Arrears:{" "}
+            <span className="font-bold text-rose-600 dark:text-rose-400 num">
+              {currency(totalArrears)}
+            </span>
+          </span>
+          <span className="font-semibold">
+            {filtered.length} of {students.length} accounts
+          </span>
+        </div>
       </div>
+
+      {/* Flat card grid of students (no class grouping) */}
+      {filtered.length > 0 ? (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {filtered.map((s) => (
+            <StudentCard
+              key={s.id}
+              s={s}
+              onStatement={setStatementStudent}
+              onCollect={setCollectStudent}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-xl border border-dashed border-border bg-card py-16 text-center">
+          <p className="text-sm text-muted-foreground">
+            No student accounts match the current filters.
+          </p>
+        </div>
+      )}
+      {isEnrollOpen && (
+        <EnrollStudentModal
+          students={students}
+          onClose={() => setIsEnrollOpen(false)}
+          onSubmit={(student) => {
+            setStudents((prev) => [student, ...prev]);
+            setIsEnrollOpen(false);
+          }}
+        />
+      )}
+      {statementStudent && (
+        <StudentStatementModal
+          student={statementStudent}
+          transactions={transactions}
+          onClose={() => setStatementStudent(null)}
+        />
+      )}
+      {collectStudent && (
+        <StudentCollectModal
+          student={collectStudent}
+          onClose={() => setCollectStudent(null)}
+          onSubmit={(tx) => {
+            const newPaid = collectStudent.paidAmount + tx.amountPaid;
+            const newBalance = Math.max(0, collectStudent.tuitionFee - newPaid);
+            const newStatus: Student["status"] =
+              newBalance === 0 ? "Paid Full" : newPaid > 0 ? "Partial Payment" : "Overdue";
+            setStudents((prev) =>
+              prev.map((s) =>
+                s.studentId === collectStudent.studentId
+                  ? { ...s, paidAmount: newPaid, balanceDue: newBalance, status: newStatus }
+                  : s,
+              ),
+            );
+            setTransactions((prev) => [tx, ...prev]);
+            setCollectStudent(null);
+          }}
+        />
+      )}
     </AppShell>
   );
 }

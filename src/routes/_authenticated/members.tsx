@@ -27,7 +27,7 @@ export const Route = createFileRoute("/_authenticated/members")({
       {
         name: "description",
         content:
-          "NGO executive membership directory, board members, patron dues tracking, volunteer leaders, and annual contribution ledger.",
+          "Church membership directory, board members, patron dues tracking, volunteer leaders, and annual contribution ledger.",
       },
       { property: "og:title", content: "Members & Dues — Trite Merchant OS" },
     ],
@@ -85,7 +85,7 @@ function MembersPage() {
   return (
     <AppShell
       title="Members Directory & Dues Ledger"
-      subtitle={`${NGO_SUMMARY.totalMembersCount} registered board & executive members · ${currency(NGO_SUMMARY.totalDuesCollected)} in annual membership dues collected`}
+      subtitle={`${NGO_SUMMARY.totalMembersCount} registered members · ${currency(NGO_SUMMARY.totalDuesCollected)} in annual membership dues collected`}
       actions={
         <Button size="sm" className="bg-[#22c55e] text-white hover:bg-[#16a34a]">
           <Plus className="size-4" /> Register New Member

@@ -329,67 +329,65 @@ function EateryReports() {
 
             {/* Detailed menu performance table */}
             <div className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
-              <div className="border-b border-border px-5 py-4">
-                <h2 className="text-sm font-semibold">Menu Item Performance</h2>
-                <p className="mt-0.5 text-xs text-muted-foreground">Ranked by revenue · gross profit & margin per dish</p>
+              <div className="border-b border-border px-5 py-4 sm:px-6 sm:py-5">
+                <h2 className="text-base font-bold sm:text-lg">Menu Item Performance</h2>
+                <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+                  Ranked by revenue · margin per dish
+                </p>
               </div>
               {/* Mobile cards */}
               <ul className="divide-y divide-border sm:hidden">
                 {menuReport.map((item, i) => (
-                  <li key={item.id} className="px-4 py-3 space-y-1">
+                  <li key={item.id} className="px-4 py-3 space-y-2">
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-xs font-bold text-muted-foreground">#{i + 1}</span>
-                      <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold", item.available ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700")}>
-                        {item.available ? "Available" : "Off menu"}
-                      </span>
                     </div>
-                    <p className="text-sm font-medium leading-tight">{item.name}</p>
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>{item.category} · {item.dailySalesCount} sold</span>
-                      <span className="font-bold text-[#22c55e]">{currency(item.totalRevenue)}</span>
+                    <p className="text-sm font-semibold leading-tight">{item.name}</p>
+                    <div className="grid grid-cols-2 gap-2 text-[11px]">
+                      <div>
+                        <p className="text-muted-foreground">Sold</p>
+                        <p className="num font-semibold">{item.dailySalesCount}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Price</p>
+                        <p className="num font-medium">{currency(item.price)}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Revenue</p>
+                        <p className="num font-bold text-[#22c55e]">{currency(item.totalRevenue)}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Margin</p>
+                        <p className="num font-bold">{item.margin}%</p>
+                      </div>
                     </div>
                   </li>
                 ))}
               </ul>
-          {/* Desktop table */}
+              {/* Desktop table */}
               <div className="hidden sm:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-border bg-secondary/40 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      <th className="px-4 py-3">Dish Name</th>
-                      <th className="px-4 py-3">Station</th>
-                      <th className="px-4 py-3">Selling Price</th>
-                      <th className="px-4 py-3">Sold Today</th>
-                      <th className="px-4 py-3 text-right">Revenue</th>
-                      <th className="px-4 py-3"></th>
+                    <tr className="border-b border-border bg-secondary/40 text-left text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                      <th className="w-12 px-5 py-3.5">#</th>
+                      <th className="px-5 py-3.5">Dish Name</th>
+                      <th className="px-5 py-3.5 text-right">Selling Price</th>
+                      <th className="px-5 py-3.5 text-right">Sold Today</th>
+                      <th className="px-5 py-3.5 text-right">Revenue</th>
+                      <th className="px-5 py-3.5 text-right">Margin</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
                     {menuReport.map((item, i) => (
                       <tr key={item.id} className="transition-colors hover:bg-secondary/30">
-                        <td className="px-5 py-3 text-xs font-bold text-muted-foreground">{i + 1}</td>
-                        <td className="px-5 py-3 font-medium">{item.name}</td>
-                        <td className="px-5 py-3 text-muted-foreground">{item.category}</td>
-                        <td className="px-5 py-3 text-right">{currency(item.price)}</td>
-                        <td className="px-5 py-3 text-right font-semibold">{item.dailySalesCount}</td>
-                        <td className="px-5 py-3 text-right font-bold text-[#22c55e]">{currency(item.totalRevenue)}</td>
-                        <td className="px-5 py-3 text-right font-semibold text-emerald-700 dark:text-emerald-400">{currency(item.grossProfit)}</td>
-                        <td className="px-5 py-3 text-right">
-                          <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-bold", item.margin >= 60 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400" : item.margin >= 40 ? "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400" : "bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400")}>
+                        <td className="px-5 py-3.5 text-xs font-bold text-muted-foreground w-12">{i + 1}</td>
+                        <td className="px-5 py-3.5 font-semibold">{item.name}</td>
+                        <td className="px-5 py-3.5 text-right num font-medium">{currency(item.price)}</td>
+                        <td className="px-5 py-3.5 text-right num font-semibold">{item.dailySalesCount}</td>
+                        <td className="px-5 py-3.5 text-right num font-bold text-[#22c55e]">{currency(item.totalRevenue)}</td>
+                        <td className="px-5 py-3.5 text-right">
+                          <span className={cn("inline-block rounded-full px-2.5 py-0.5 text-[11px] font-bold", item.margin >= 60 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400" : item.margin >= 40 ? "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400" : "bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400")}>
                             {item.margin}%
-                          </span>
-                        </td>
-                        <td className="px-5 py-3">
-                          <div className="flex items-center gap-1.5">
-                            <div className="h-1.5 w-16 overflow-hidden rounded-full bg-secondary">
-                              <div className="h-full rounded-full bg-[#22c55e]" style={{ width: `${Math.round((item.totalRevenue / totalMenuRevenue) * 100)}%` }} />
-                            </div>
-                            <span className="text-xs text-muted-foreground">{Math.round((item.totalRevenue / totalMenuRevenue) * 100)}%</span>
-                          </div>
-                        </td>
-                        <td className="px-5 py-3">
-                          <span className={cn("rounded-full px-2.5 py-0.5 text-[11px] font-semibold", item.available ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400" : "bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400")}>
-                            {item.available ? "Available" : "Off menu"}
                           </span>
                         </td>
                       </tr>

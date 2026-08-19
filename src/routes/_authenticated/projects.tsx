@@ -82,7 +82,7 @@ function ProjectsPage() {
   return (
     <AppShell
       title="Community Development Projects"
-      subtitle={`${NGO_SUMMARY.totalActiveProjects} active implementation projects · ${NGO_SUMMARY.totalBeneficiariesReached.toLocaleString()} community beneficiaries impacted`}
+      subtitle={`${NGO_SUMMARY.totalActiveProjects} active outreach projects · ${NGO_SUMMARY.totalBeneficiariesReached.toLocaleString()} souls reached`}
       actions={
         <Button size="sm" className="bg-[#22c55e] text-white hover:bg-[#16a34a]">
           <Plus className="size-4" /> Create New Project

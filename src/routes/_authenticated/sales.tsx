@@ -98,8 +98,15 @@ function TransactionModal({ row, onClose }: { row: ActivityRow; onClose: () => v
             { label: "Amount", value: currency(Math.abs(row.amount)) },
           ].map(({ label, value }) => (
             <div key={label} className="bg-card px-4 py-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[#22c55e]">{label}</p>
-              <p className={cn("mt-0.5 text-sm font-semibold", label === "Amount" && isRefund && "text-red-500")}>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[#22c55e]">
+                {label}
+              </p>
+              <p
+                className={cn(
+                  "mt-0.5 text-sm font-semibold",
+                  label === "Amount" && isRefund && "text-red-500",
+                )}
+              >
                 {label === "Amount" && isRefund ? `−${currency(Math.abs(row.amount))}` : value}
               </p>
             </div>
@@ -110,16 +117,25 @@ function TransactionModal({ row, onClose }: { row: ActivityRow; onClose: () => v
         <div className="px-6 py-4">
           {items.length > 0 ? (
             <>
-              <h3 className="mb-3 text-sm font-bold text-[#22c55e] uppercase tracking-wide">Items</h3>
+              <h3 className="mb-3 text-sm font-bold text-[#22c55e] uppercase tracking-wide">
+                Items
+              </h3>
               <ul className="divide-y divide-border">
                 {items.map((item) => (
-                  <li key={item.sku} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                  <li
+                    key={item.sku}
+                    className="flex items-center justify-between gap-3 py-2.5 text-sm"
+                  >
                     <div className="min-w-0">
                       <p className="font-semibold leading-tight truncate">{item.name}</p>
-                      <p className="text-xs text-muted-foreground">{item.sku} · {currency(item.unitPrice)} each</p>
+                      <p className="text-xs text-muted-foreground">
+                        {item.sku} · {currency(item.unitPrice)} each
+                      </p>
                     </div>
                     <div className="shrink-0 text-right">
-                      <p className="num font-bold text-[#22c55e]">{currency(item.qty * item.unitPrice)}</p>
+                      <p className="num font-bold text-[#22c55e]">
+                        {currency(item.qty * item.unitPrice)}
+                      </p>
                       <p className="text-xs text-muted-foreground">× {item.qty}</p>
                     </div>
                   </li>
@@ -141,118 +157,125 @@ function TransactionModal({ row, onClose }: { row: ActivityRow; onClose: () => v
   );
 }
 
-function PrescriptionModal({
-  rx,
-  onClose,
-}: {
-  rx: Prescription;
-  onClose: () => void;
-}) {
-  const subtotal = rx.items.reduce((s, i) => s + i.totalPrice, 0);
+function SalesModal({ sale, onClose }: { sale: Prescription; onClose: () => void }) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
-      aria-label={`Prescription ${rx.rxNumber}`}
+      aria-label={`Sale ${sale.rxNumber}`}
     >
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="relative z-10 w-full max-w-lg rounded-2xl bg-card shadow-2xl overflow-hidden">
-        <div
-          className="px-6 pt-5 pb-4"
-          style={{ background: "oklch(0.213 0.006 17)" }}
-        >
+        <div className="px-6 pt-5 pb-4" style={{ background: "oklch(0.213 0.006 17)" }}>
           <div className="flex items-start justify-between gap-4">
             <div>
-              <span className="inline-block rounded-full bg-white/10 px-2.5 py-0.5 num text-xs font-bold text-white/70">
-                {rx.rxNumber}
+              <span className="inline-block rounded-full bg-white/10 px-3 py-1 num text-xs font-bold text-white/70">
+                {sale.rxNumber}
               </span>
-              <h2 className="mt-1.5 text-xl font-bold leading-tight text-white">
-                {rx.patientName}
+              <h2 className="mt-2 text-2xl font-bold leading-tight text-white">
+                {sale.patientName}
               </h2>
-              <p className="mt-0.5 text-sm text-white/60">
-                {rx.doctorName} · {rx.clinic}
+              <p className="mt-1 text-base text-white/60">
+                {sale.doctorName} · {sale.clinic}
               </p>
+              {sale.insuranceClaimNumber && (
+                <p className="mt-0.5 text-xs text-white/45">
+                  Claim · {sale.insuranceClaimNumber}
+                </p>
+              )}
             </div>
             <button
               onClick={onClose}
-              className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+              className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
               aria-label="Close"
             >
-              <X className="size-4 text-white" />
+              <X className="size-5 text-white" />
             </button>
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-px bg-border">
-          {[
-            { label: "Status", value: rx.status.replace("_", " ") },
-            { label: "Date", value: rx.date },
-            { label: "Amount", value: currency(rx.totalAmount) },
-          ].map(({ label, value }) => (
-            <div key={label} className="bg-card px-4 py-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[#22c55e]">
-                {label}
+
+        <div className="bg-border">
+          <div className="grid grid-cols-3 gap-px">
+            {[
+              { label: "Status", value: sale.status.replace("_", " ") },
+              { label: "Date", value: sale.date },
+              { label: "Time", value: sale.timeAdded },
+            ].map(({ label, value }) => (
+              <div key={label} className="bg-card px-5 py-4">
+                <p className="text-xs font-bold uppercase tracking-wider text-[#22c55e]">
+                  {label}
+                </p>
+                <p className="mt-1.5 text-lg font-semibold capitalize leading-tight">{value}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-px grid grid-cols-1">
+            <div className="bg-card px-5 py-4">
+              <p className="text-xs font-bold uppercase tracking-wider text-[#22c55e]">Amount</p>
+              <p className="mt-1.5 text-xl font-semibold num leading-tight">
+                {currency(sale.totalAmount)}
               </p>
-              <p className="mt-0.5 text-sm font-semibold capitalize">{value}</p>
             </div>
-          ))}
+          </div>
         </div>
-        <div className="px-6 py-4">
-          <h3 className="mb-3 text-sm font-bold text-[#22c55e] uppercase tracking-wide">
-            Prescription Items
+
+        <div className="px-6 pt-5 pb-6">
+          <h3 className="mb-4 text-base font-bold text-[#22c55e] uppercase tracking-wide">
+            Sale Items
           </h3>
-          <ul className="divide-y divide-border">
-            {rx.items.map((it) => (
+          <ul className="divide-y divide-border space-y-1">
+            {sale.items.map((it) => (
               <li
                 key={it.medicationId}
-                className="flex items-center justify-between gap-3 py-2.5 text-sm"
+                className="flex items-start justify-between gap-4 py-3 text-sm"
               >
-                <div className="min-w-0">
-                  <p className="font-semibold leading-tight truncate">
-                    {it.drugName}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold leading-tight text-base">{it.drugName}</p>
+                  <p className="mt-0.5 text-sm text-muted-foreground">
                     {it.dosage} · {currency(it.unitPrice)} each
                   </p>
                 </div>
                 <div className="shrink-0 text-right">
-                  <p className="num font-bold text-[#22c55e]">
+                  <p className="num font-bold text-[#22c55e] text-base">
                     {currency(it.totalPrice)}
                   </p>
-                  <p className="text-xs text-muted-foreground">× {it.quantity}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">× {it.quantity}</p>
                 </div>
               </li>
             ))}
           </ul>
-          {rx.insuranceProvider && (
-            <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
-              <div className="rounded-lg bg-sky-50 dark:bg-sky-950/40 px-3 py-2">
-                <p className="font-bold text-sky-700 dark:text-sky-400 uppercase tracking-wider text-[10px]">
+
+          {sale.insuranceProvider && (
+            <div className="mt-5 grid grid-cols-2 gap-4">
+              <div className="rounded-xl bg-sky-50 dark:bg-sky-950/40 px-4 py-3">
+                <p className="font-bold text-sky-700 dark:text-sky-400 uppercase tracking-wider text-xs">
                   Insurance
                 </p>
-                <p className="mt-0.5 font-semibold text-sky-800 dark:text-sky-300">
-                  {rx.insuranceProvider}
+                <p className="mt-1 font-semibold text-sky-800 dark:text-sky-300 text-base">
+                  {sale.insuranceProvider}
                 </p>
               </div>
-              <div className="rounded-lg bg-amber-50 dark:bg-amber-950/40 px-3 py-2">
-                <p className="font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider text-[10px]">
+              <div className="rounded-xl bg-amber-50 dark:bg-amber-950/40 px-4 py-3">
+                <p className="font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider text-xs">
                   Patient Copay
                 </p>
-                <p className="mt-0.5 num font-bold text-amber-800 dark:text-amber-300">
-                  {currency(rx.copayAmount)}
+                <p className="mt-1 num font-bold text-amber-800 dark:text-amber-300 text-lg">
+                  {currency(sale.copayAmount)}
                 </p>
               </div>
             </div>
           )}
-          <div className="mt-3 flex items-center justify-between rounded-xl bg-emerald-50 dark:bg-emerald-950/40 px-4 py-3 text-sm font-bold">
-            <span className="text-[#22c55e]">Total</span>
-            <span className="num text-[#22c55e]">{currency(rx.totalAmount)}</span>
+
+          <div className="mt-5 flex items-center justify-between rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 px-5 py-4 text-base font-bold">
+            <span className="text-[#22c55e] text-lg">Total</span>
+            <span className="num text-[#22c55e] text-xl">
+              {currency(sale.totalAmount)}
+            </span>
           </div>
-          <p className="mt-2 text-[10px] text-muted-foreground text-center">
-            Filled by {rx.pharmacist}
+
+          <p className="mt-4 text-sm text-muted-foreground text-center">
+            Filled by {sale.pharmacist}
           </p>
         </div>
       </div>
@@ -300,7 +323,6 @@ const branchColors: Record<string, string> = {
   takoradi: "bg-teal-600 text-white border-teal-600",
 };
 
-
 const statusColors: Record<string, string> = {
   settled: "bg-emerald-600 text-white border-emerald-600",
   confirmed: "bg-emerald-600 text-white border-emerald-600",
@@ -325,7 +347,9 @@ function StatCard({
   return (
     <div className="rounded-lg border border-border bg-card p-3 sm:p-4">
       <div className="flex items-start justify-between">
-        <p className="text-[10px] sm:text-xs font-medium tracking-wide text-muted-foreground uppercase leading-tight pr-1">{label}</p>
+        <p className="text-[10px] sm:text-xs font-medium tracking-wide text-muted-foreground uppercase leading-tight pr-1">
+          {label}
+        </p>
         <Icon className="size-3.5 sm:size-4 shrink-0 text-muted-foreground" />
       </div>
       <p className="num mt-2 text-base sm:text-2xl font-bold leading-tight">{value}</p>
@@ -334,7 +358,11 @@ function StatCard({
           <span
             className={`num inline-flex items-center gap-0.5 font-medium ${up ? "text-foreground" : "text-destructive"}`}
           >
-            {up ? <ArrowUpRight className="size-3 sm:size-3.5" /> : <ArrowDownRight className="size-3 sm:size-3.5" />}
+            {up ? (
+              <ArrowUpRight className="size-3 sm:size-3.5" />
+            ) : (
+              <ArrowDownRight className="size-3 sm:size-3.5" />
+            )}
             {Math.abs(delta)}%
           </span>
         )}
@@ -350,16 +378,14 @@ function SalesPage() {
   const [method, setMethod] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [selectedTxn, setSelectedTxn] = useState<ActivityRow | null>(null);
-  const [selectedRx, setSelectedRx] = useState<Prescription | null>(null);
+  const [selectedSale, setSelectedSale] = useState<Prescription | null>(null);
   const { branches } = useBranches();
   const { institutionType } = useInstitution();
   const isPharmacy = institutionType === "pharmacy";
 
   // ── Pharmacy data ───────────────────────────────────────────────
   const pharmacyTotals = useMemo(() => {
-    const rows = PRESCRIPTIONS.filter(
-      (p) => !status || p.status === status
-    );
+    const rows = PRESCRIPTIONS.filter((p) => !status || p.status === status);
     const gross = rows
       .filter((p) => p.status !== "cancelled")
       .reduce((s, p) => s + p.totalAmount, 0);
@@ -372,10 +398,24 @@ function SalesPage() {
   }, [status]);
 
   const pharmacyRows = useMemo(
-    () =>
-      PRESCRIPTIONS.filter((p) => !status || p.status === status),
-    [status]
+    () => PRESCRIPTIONS.filter((p) => !status || p.status === status),
+    [status],
   );
+
+  const paymentMethodData = useMemo(() => {
+    const counts: Record<string, number> = {};
+    PRESCRIPTIONS.forEach((p) => {
+      const key = p.method || "Other";
+      counts[key] = (counts[key] || 0) + 1;
+    });
+    const total = PRESCRIPTIONS.length || 1;
+    return Object.entries(counts)
+      .map(([method, count]) => ({
+        method,
+        value: Math.round((count / total) * 100),
+      }))
+      .sort((a, b) => b.value - a.value);
+  }, []);
 
   const pharmacySeries = useMemo(() => {
     const basePattern = [0.65, 0.88, 0.72, 1.1, 1.35, 1.55, 0.92];
@@ -398,8 +438,7 @@ function SalesPage() {
       activityRows
         .filter((a) => branchId === "all" || a.branchId === branchId)
         .filter(
-          (a) =>
-            !method || a.method.toLowerCase().includes(method.toLowerCase().split(" ")[0]!),
+          (a) => !method || a.method.toLowerCase().includes(method.toLowerCase().split(" ")[0]!),
         )
         .filter((a) => !status || a.status === status),
     [branchId, method, status],
@@ -438,16 +477,14 @@ function SalesPage() {
     return (
       <AppShell
         title="Pharmacy Sales"
-        subtitle={`Prescription dispensing & copay revenue · ${rangeLabel}`}
+        subtitle={`Sales & copay revenue · ${rangeLabel}`}
         actions={
           <Button variant="outline" size="sm">
             <Download className="size-4" /> Export
           </Button>
         }
       >
-        {selectedRx && (
-          <PrescriptionModal rx={selectedRx} onClose={() => setSelectedRx(null)} />
-        )}
+        {selectedSale && <SalesModal sale={selectedSale} onClose={() => setSelectedSale(null)} />}
         <div className="space-y-6">
           {/* ── Pharmacy Mobile KPI Section ── */}
           <section className="space-y-3 lg:hidden">
@@ -460,7 +497,9 @@ function SalesPage() {
               </div>
               <div className="relative z-10">
                 <div className="flex items-start justify-between">
-                  <p className="text-[11px] font-bold uppercase tracking-widest opacity-80">Total Prescription Revenue</p>
+                  <p className="text-[11px] font-bold uppercase tracking-widest opacity-80">
+                    Total Sales Revenue
+                  </p>
                   <div className="rounded-lg border border-white/40 bg-white/10 p-1.5 backdrop-blur-xs">
                     <Pill className="size-5 text-white" />
                   </div>
@@ -473,7 +512,7 @@ function SalesPage() {
                     Dispensed · {currency(pharmacyTotals.dispensed)}
                   </p>
                   <p className="mt-0.5 text-xs opacity-70">
-                    {pharmacyTotals.count} prescriptions · {PATIENT_RECORDS.length} registered patients
+                    {pharmacyTotals.count} sales · {PATIENT_RECORDS.length} registered patients
                   </p>
                 </div>
                 <div className="mt-4 flex gap-3">
@@ -494,7 +533,7 @@ function SalesPage() {
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <StatCard
-                label="Prescriptions"
+                label="Sales"
                 value={pharmacyTotals.count.toString()}
                 delta={12.4}
                 sub={`${PRESCRIPTIONS.filter((p) => p.status === "dispensed").length} dispensed`}
@@ -526,7 +565,7 @@ function SalesPage() {
               icon={Banknote}
             />
             <StatCard
-              label="Prescriptions"
+              label="Sales"
               value={pharmacyTotals.count.toString()}
               delta={7.2}
               sub={`${PRESCRIPTIONS.filter((p) => p.status === "pending").length} pending`}
@@ -551,10 +590,7 @@ function SalesPage() {
           <section className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-card p-3">
             <Filter className="size-4 text-muted-foreground" />
             <div className="flex flex-wrap gap-1.5">
-              <Chip
-                active={status === null}
-                onClick={() => setStatus(null)}
-              >
+              <Chip active={status === null} onClick={() => setStatus(null)}>
                 All Status
               </Chip>
               {pharmacyStatusOptions.map((s) => (
@@ -594,7 +630,7 @@ function SalesPage() {
               <div className="mb-4">
                 <h2 className="text-lg font-bold">Dispensing Trend</h2>
                 <p className="text-xs text-muted-foreground">
-                  Weekly prescription dispensing revenue across all branches
+                  Weekly sales revenue across all branches
                 </p>
               </div>
               <div className="h-64">
@@ -606,26 +642,45 @@ function SalesPage() {
                         <stop offset="100%" stopColor="#22c55e" stopOpacity={0.02} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
-                    <XAxis dataKey="day" tickLine={false} axisLine={false} fontSize={12} stroke="var(--color-muted-foreground)" />
-                    <YAxis tickFormatter={(v) => `${Math.round(v / 1000)}k`} tickLine={false} axisLine={false} fontSize={12} stroke="var(--color-muted-foreground)" />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="var(--color-border)"
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="day"
+                      tickLine={false}
+                      axisLine={false}
+                      fontSize={12}
+                      stroke="var(--color-muted-foreground)"
+                    />
+                    <YAxis
+                      tickFormatter={(v) => `${Math.round(v / 1000)}k`}
+                      tickLine={false}
+                      axisLine={false}
+                      fontSize={12}
+                      stroke="var(--color-muted-foreground)"
+                    />
                     <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => currency(v)} />
-                    <Area name="Revenue" type="monotone" dataKey="sales" stroke="#22c55e" strokeWidth={2} fill="url(#p-sales-trend)" activeDot={{ r: 5 }} />
+                    <Area
+                      name="Revenue"
+                      type="monotone"
+                      dataKey="sales"
+                      stroke="#22c55e"
+                      strokeWidth={2}
+                      fill="url(#p-sales-trend)"
+                      activeDot={{ r: 5 }}
+                    />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
             <div className="rounded-lg border border-border bg-card p-4">
-              <h2 className="text-lg font-bold">Insurance Mix</h2>
-              <p className="text-xs text-muted-foreground mb-4">Payor distribution</p>
+              <h2 className="text-lg font-bold">Payment Method</h2>
+              <p className="text-xs text-muted-foreground mb-4">Payment distribution</p>
               <ul className="space-y-3">
-                {[
-                  { method: "NHIS (National Health)", value: 45 },
-                  { method: "Private Cash", value: 28 },
-                  { method: "Glico Health", value: 15 },
-                  { method: "Enterprise Life", value: 12 },
-                ].map((m) => {
+                {paymentMethodData.map((m) => {
                   const active = method === m.method;
                   return (
                     <li key={m.method}>
@@ -640,7 +695,10 @@ function SalesPage() {
                         </div>
                         <div className="h-2 overflow-hidden rounded-full bg-secondary">
                           <div
-                            className={cn("h-full rounded-full transition-all", active ? "bg-foreground" : "bg-[#22c55e]")}
+                            className={cn(
+                              "h-full rounded-full transition-all",
+                              active ? "bg-foreground" : "bg-[#22c55e]",
+                            )}
                             style={{ width: `${m.value}%` }}
                           />
                         </div>
@@ -652,11 +710,11 @@ function SalesPage() {
             </div>
           </section>
 
-          {/* Transactions (pharmacy prescriptions) */}
+          {/* Transactions (pharmacy sales) */}
           <section className="rounded-lg border border-border bg-card">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-4">
               <div>
-                <h2 className="text-lg font-bold">Prescriptions</h2>
+                <h2 className="text-lg font-bold">Recent Sales</h2>
                 <p className="text-xs text-muted-foreground">
                   {pharmacyRows.length} records · click to view details
                 </p>
@@ -679,38 +737,30 @@ function SalesPage() {
                   <li
                     key={p.id}
                     className="px-4 py-3 space-y-1 cursor-pointer transition-colors hover:bg-secondary/50"
-                    onClick={() => setSelectedRx(p)}
+                    onClick={() => setSelectedSale(p)}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="num text-xs font-semibold text-muted-foreground">{p.rxNumber}</span>
-                      <span
-                        className={cn(
-                          "inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide",
-                          p.status === "dispensed"
-                            ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400"
-                            : p.status === "pending"
-                            ? "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400"
-                            : p.status === "partially_filled"
-                            ? "bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-400"
-                            : "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400"
-                        )}
-                      >
-                        {p.status.replace("_", " ")}
+                      <span className="num text-xs font-semibold text-muted-foreground">
+                        {p.rxNumber}
+                      </span>
+                      <span className="num text-xs font-semibold text-foreground">
+                        {currency(p.totalAmount)}
                       </span>
                     </div>
-                    <p className="text-sm font-medium leading-tight">{p.patientName}</p>
+                    <p className="text-sm font-medium leading-tight">
+                      {p.items[0]?.drugName || "N/A"}
+                    </p>
                     <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                      <span>{p.items.length} item{p.items.length > 1 ? "s" : ""} · {p.doctorName}</span>
-                      <span className="num font-semibold text-foreground">{currency(p.totalAmount)}</span>
+                      <span className="capitalize">{p.method || "N/A"}</span>
+                      <span>{p.branch || "N/A"}</span>
                     </div>
-                    <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
-                      <span className="underline-offset-2 hover:underline">{p.clinic}</span>
-                      <span>{p.pharmacist} · {p.date}</span>
-                    </div>
+                    <p className="text-[11px] text-muted-foreground">{p.timeAdded || "N/A"}</p>
                   </li>
                 ))}
                 {pharmacyRows.length === 0 && (
-                  <li className="px-4 py-8 text-center text-sm text-muted-foreground">No prescriptions match these filters.</li>
+                  <li className="px-4 py-8 text-center text-sm text-muted-foreground">
+                    No sales match these filters.
+                  </li>
                 )}
               </ul>
 
@@ -718,13 +768,11 @@ function SalesPage() {
                 <thead>
                   <tr className="border-b border-border text-left text-xs tracking-wide text-muted-foreground uppercase">
                     <th className="px-4 py-2.5 font-bold">Rx #</th>
-                    <th className="px-4 py-2.5 font-bold">Patient</th>
-                    <th className="px-4 py-2.5 font-bold">Prescriber</th>
-                    <th className="px-4 py-2.5 font-bold">Items</th>
-                    <th className="px-4 py-2.5 font-bold">Insurance</th>
+                    <th className="px-4 py-2.5 font-bold">Item Name</th>
                     <th className="px-4 py-2.5 text-right font-bold">Amount</th>
-                    <th className="px-4 py-2.5 font-bold">Status</th>
-                    <th className="px-4 py-2.5 text-right font-bold">Date</th>
+                    <th className="px-4 py-2.5 font-bold">Method</th>
+                    <th className="px-4 py-2.5 font-bold">Branch</th>
+                    <th className="px-4 py-2.5 font-bold">Time</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -732,37 +780,27 @@ function SalesPage() {
                     <tr
                       key={p.id}
                       className="transition-colors hover:bg-secondary/60 cursor-pointer"
-                      onClick={() => setSelectedRx(p)}
+                      onClick={() => setSelectedSale(p)}
                     >
                       <td className="num px-4 py-3 font-medium">{p.rxNumber}</td>
-                      <td className="px-4 py-3 font-medium">{p.patientName}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{p.doctorName}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{p.items.length} item{p.items.length > 1 ? "s" : ""}</td>
-                      <td className="px-4 py-3 text-xs">{p.insuranceProvider ?? "Cash"}</td>
-                      <td className="num px-4 py-3 text-right font-medium">{currency(p.totalAmount)}</td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={cn(
-                            "inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide",
-                            p.status === "dispensed"
-                              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400"
-                              : p.status === "pending"
-                              ? "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400"
-                              : p.status === "partially_filled"
-                              ? "bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-400"
-                              : "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400"
-                          )}
-                        >
-                          {p.status.replace("_", " ")}
-                        </span>
+                      <td className="px-4 py-3 font-medium">{p.items[0]?.drugName || "N/A"}</td>
+                      <td className="num px-4 py-3 text-right font-medium">
+                        {currency(p.totalAmount)}
                       </td>
-                      <td className="px-4 py-3 text-right text-muted-foreground">{p.date}</td>
+                      <td className="px-4 py-3 capitalize text-muted-foreground">
+                        {p.method || "N/A"}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">{p.branch || "N/A"}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{p.timeAdded || "N/A"}</td>
                     </tr>
                   ))}
                   {pharmacyRows.length === 0 && (
                     <tr>
-                      <td colSpan={8} className="px-4 py-10 text-center text-sm text-muted-foreground">
-                        No prescriptions match these filters.
+                      <td
+                        colSpan={6}
+                        className="px-4 py-10 text-center text-sm text-muted-foreground"
+                      >
+                        No sales match these filters.
                       </td>
                     </tr>
                   )}
@@ -785,9 +823,7 @@ function SalesPage() {
         </Button>
       }
     >
-      {selectedTxn && (
-        <TransactionModal row={selectedTxn} onClose={() => setSelectedTxn(null)} />
-      )}
+      {selectedTxn && <TransactionModal row={selectedTxn} onClose={() => setSelectedTxn(null)} />}
       <div className="space-y-6">
         {/* ── Mobile KPI Section (Green hero card + 3 stat cards underneath) ── */}
         <section className="space-y-3 lg:hidden">
@@ -805,19 +841,24 @@ function SalesPage() {
             {/* Foreground content layer (z-10) */}
             <div className="relative z-10">
               <div className="flex items-start justify-between">
-                <p className="text-[11px] font-bold uppercase tracking-widest opacity-80">Gross Sales</p>
+                <p className="text-[11px] font-bold uppercase tracking-widest opacity-80">
+                  Gross Sales
+                </p>
                 <div className="rounded-lg border border-white/40 bg-white/10 p-1.5 backdrop-blur-xs">
                   <Banknote className="size-5 text-white" />
                 </div>
               </div>
-              <p className="num mt-2 text-3xl font-extrabold tracking-tight">{currency(totals.sales)}</p>
+              <p className="num mt-2 text-3xl font-extrabold tracking-tight">
+                {currency(totals.sales)}
+              </p>
 
               <div className="mt-3">
                 <p className="text-[11px] font-bold uppercase tracking-widest opacity-80">
                   Settled · {currency(totals.settled)}
                 </p>
                 <p className="mt-0.5 text-xs opacity-70">
-                  {Math.round((totals.settled / Math.max(1, totals.sales)) * 100)}% of gross · {totals.txns.toLocaleString()} transactions
+                  {Math.round((totals.settled / Math.max(1, totals.sales)) * 100)}% of gross ·{" "}
+                  {totals.txns.toLocaleString()} transactions
                 </p>
               </div>
 
@@ -947,11 +988,35 @@ function SalesPage() {
                       <stop offset="100%" stopColor="var(--color-accent)" stopOpacity={0.02} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
-                  <XAxis dataKey="day" tickLine={false} axisLine={false} fontSize={12} stroke="var(--color-muted-foreground)" />
-                  <YAxis tickFormatter={(v) => `${Math.round(v / 1000)}k`} tickLine={false} axisLine={false} fontSize={12} stroke="var(--color-muted-foreground)" />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="var(--color-border)"
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="day"
+                    tickLine={false}
+                    axisLine={false}
+                    fontSize={12}
+                    stroke="var(--color-muted-foreground)"
+                  />
+                  <YAxis
+                    tickFormatter={(v) => `${Math.round(v / 1000)}k`}
+                    tickLine={false}
+                    axisLine={false}
+                    fontSize={12}
+                    stroke="var(--color-muted-foreground)"
+                  />
                   <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => currency(v)} />
-                  <Area name="Sales" type="monotone" dataKey="sales" stroke="var(--color-accent)" strokeWidth={2} fill="url(#g-sales-trend)" activeDot={{ r: 5 }} />
+                  <Area
+                    name="Sales"
+                    type="monotone"
+                    dataKey="sales"
+                    stroke="var(--color-accent)"
+                    strokeWidth={2}
+                    fill="url(#g-sales-trend)"
+                    activeDot={{ r: 5 }}
+                  />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -976,7 +1041,10 @@ function SalesPage() {
                       </div>
                       <div className="h-2 overflow-hidden rounded-full bg-secondary">
                         <div
-                          className={cn("h-full rounded-full transition-all", active ? "bg-foreground" : "bg-accent")}
+                          className={cn(
+                            "h-full rounded-full transition-all",
+                            active ? "bg-foreground" : "bg-accent",
+                          )}
                           style={{ width: `${m.value}%` }}
                         />
                       </div>
@@ -1020,23 +1088,47 @@ function SalesPage() {
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span className="num text-xs font-semibold text-muted-foreground">{a.id}</span>
-                    <button onClick={(e) => { e.stopPropagation(); setStatus(status === a.status ? null : a.status); }}>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setStatus(status === a.status ? null : a.status);
+                      }}
+                    >
                       <StatusBadge tone={payTone[a.status] ?? "neutral"}>{a.status}</StatusBadge>
                     </button>
                   </div>
                   <p className="text-sm font-medium leading-tight">{a.what}</p>
                   <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
                     <span>{a.who}</span>
-                    <span className={cn("num font-semibold", a.amount < 0 ? "text-destructive" : "text-foreground")}>{currency(a.amount)}</span>
+                    <span
+                      className={cn(
+                        "num font-semibold",
+                        a.amount < 0 ? "text-destructive" : "text-foreground",
+                      )}
+                    >
+                      {currency(a.amount)}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
-                    <button onClick={(e) => { e.stopPropagation(); setBranchId(a.branchId); }} className="underline-offset-2 hover:underline">{a.where}</button>
-                    <span>{a.method} · {a.when}</span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setBranchId(a.branchId);
+                      }}
+                      className="underline-offset-2 hover:underline"
+                    >
+                      {a.where}
+                    </button>
+                    <span>
+                      {a.method} · {a.when}
+                    </span>
                   </div>
                 </li>
               ))}
               {saleRows.length === 0 && (
-                <li className="px-4 py-8 text-center text-sm text-muted-foreground">No transactions match these filters.</li>
+                <li className="px-4 py-8 text-center text-sm text-muted-foreground">
+                  No transactions match these filters.
+                </li>
               )}
             </ul>
 
@@ -1066,19 +1158,30 @@ function SalesPage() {
                     <td className="px-4 py-3 text-muted-foreground">{a.who}</td>
                     <td className="px-4 py-3">
                       <button
-                        onClick={(e) => { e.stopPropagation(); setBranchId(a.branchId); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setBranchId(a.branchId);
+                        }}
                         className="text-muted-foreground underline-offset-2 hover:underline"
                       >
                         {a.where}
                       </button>
                     </td>
                     <td className="px-4 py-3">{a.method}</td>
-                    <td className={cn("num px-4 py-3 text-right font-medium", a.amount < 0 && "text-destructive")}>
+                    <td
+                      className={cn(
+                        "num px-4 py-3 text-right font-medium",
+                        a.amount < 0 && "text-destructive",
+                      )}
+                    >
                       {currency(a.amount)}
                     </td>
                     <td className="px-4 py-3">
                       <button
-                        onClick={(e) => { e.stopPropagation(); setStatus(status === a.status ? null : a.status); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setStatus(status === a.status ? null : a.status);
+                        }}
                       >
                         <StatusBadge tone={payTone[a.status] ?? "neutral"}>{a.status}</StatusBadge>
                       </button>
@@ -1088,7 +1191,10 @@ function SalesPage() {
                 ))}
                 {saleRows.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="px-4 py-10 text-center text-sm text-muted-foreground">
+                    <td
+                      colSpan={8}
+                      className="px-4 py-10 text-center text-sm text-muted-foreground"
+                    >
                       No transactions match these filters.
                     </td>
                   </tr>
@@ -1109,7 +1215,8 @@ export const Route = createFileRoute("/_authenticated/sales")({
       { title: "Trite Merchant OS — Sales" },
       {
         name: "description",
-        content: "View all sales transactions across branches, filtered by date range, payment method, and status.",
+        content:
+          "View all sales transactions across branches, filtered by date range, payment method, and status.",
       },
       { property: "og:title", content: "Trite Merchant OS — Sales" },
     ],

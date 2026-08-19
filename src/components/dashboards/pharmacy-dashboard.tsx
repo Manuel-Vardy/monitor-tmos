@@ -1,13 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import type { DateRange } from "react-day-picker";
-import {
-  format,
-  differenceInDays,
-  addDays,
-  subDays,
-  startOfDay,
-} from "date-fns";
+import { format, differenceInDays, addDays, subDays, startOfDay } from "date-fns";
 import {
   Bell,
   Plus,
@@ -37,11 +31,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { currency } from "@/lib/mos-data";
-import {
-  PHARMACY_MEDICATIONS,
-  PRESCRIPTIONS,
-  type PharmacyMedication,
-} from "@/lib/pharmacy-data";
+import { PHARMACY_MEDICATIONS, PRESCRIPTIONS, type PharmacyMedication } from "@/lib/pharmacy-data";
 import { cn } from "@/lib/utils";
 
 function isExpiringWithin(days: number, expiryStr: string): boolean {
@@ -80,7 +70,7 @@ function generateSalesTrendData(dateRange: DateRange | undefined): {
 
     const avgDaily = totalDays <= 7 ? 6800 : totalDays <= 30 ? 7400 : 7900;
     const revenue = Math.round(avgDaily * pattern * trend * wobble * (isWeekend ? 1.15 : 1));
-    const sales = Math.round(revenue / (280 + ((i % 5) * 12)));
+    const sales = Math.round(revenue / (280 + (i % 5) * 12));
 
     const showFullLabel = points <= 7;
     return {
@@ -100,13 +90,16 @@ type StyledKpiProps = {
   accent: "revenue" | "collected" | "outstanding" | "catalog";
 };
 
-const ACCENT_STYLES: Record<StyledKpiProps["accent"], {
-  border: string;
-  iconBg: string;
-  iconColor: string;
-  semicircle: string;
-  labelColor: string;
-}> = {
+const ACCENT_STYLES: Record<
+  StyledKpiProps["accent"],
+  {
+    border: string;
+    iconBg: string;
+    iconColor: string;
+    semicircle: string;
+    labelColor: string;
+  }
+> = {
   revenue: {
     border: "border-l-[#22c55e]",
     iconBg: "bg-[#22c55e]/10",
@@ -146,10 +139,7 @@ function StyledKpi({ label, value, sub, icon: Icon, accent }: StyledKpiProps) {
           <div className={cn("grid size-9 place-items-center rounded-xl", s.iconBg)}>
             <Icon className={cn("size-4.5", s.iconColor)} />
           </div>
-          <p className={cn(
-            "text-[11px] font-semibold uppercase tracking-widest",
-            s.labelColor
-          )}>
+          <p className={cn("text-[11px] font-semibold uppercase tracking-widest", s.labelColor)}>
             {label}
           </p>
         </div>
@@ -165,13 +155,10 @@ function StyledKpi({ label, value, sub, icon: Icon, accent }: StyledKpiProps) {
 export function PharmacyDashboard() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [salesStatusFilter, setSalesStatusFilter] = useState<
-    "all" | "dispensed" | "cancelled"
+    "all" | "pending" | "dispensed" | "partially_filled" | "cancelled"
   >("all");
 
-  const salesTrendData = useMemo(
-    () => generateSalesTrendData(dateRange),
-    [dateRange]
-  );
+  const salesTrendData = useMemo(() => generateSalesTrendData(dateRange), [dateRange]);
 
   const trendTotals = useMemo(() => {
     const totalRevenue = salesTrendData.reduce((s, r) => s + r.revenue, 0);
@@ -191,59 +178,45 @@ export function PharmacyDashboard() {
       salesStatusFilter === "all"
         ? PRESCRIPTIONS
         : PRESCRIPTIONS.filter((p) => p.status === salesStatusFilter),
-    [salesStatusFilter]
+    [salesStatusFilter],
   );
   const totalStockValue = PHARMACY_MEDICATIONS.reduce(
     (acc, m) => acc + m.unitPrice * m.stockLevel,
-    0
+    0,
   );
 
-  const belowReorder = PHARMACY_MEDICATIONS.filter(
-    (m) => m.stockLevel <= m.reorderLevel
-  ).length;
+  const belowReorder = PHARMACY_MEDICATIONS.filter((m) => m.stockLevel <= m.reorderLevel).length;
 
   const criticalStock = PHARMACY_MEDICATIONS.filter(
-    (m) => m.stockLevel <= Math.max(10, Math.floor(m.reorderLevel / 2))
+    (m) => m.stockLevel <= Math.max(10, Math.floor(m.reorderLevel / 2)),
   ).length;
 
-  const prescriptionOnly = PHARMACY_MEDICATIONS.filter(
-    (m) => m.prescriptionRequired
-  ).length;
+  const prescriptionOnly = PHARMACY_MEDICATIONS.filter((m) => m.prescriptionRequired).length;
 
-  const otcCount = PHARMACY_MEDICATIONS.filter(
-    (m) => !m.prescriptionRequired
-  ).length;
+  const otcCount = PHARMACY_MEDICATIONS.filter((m) => !m.prescriptionRequired).length;
 
-  const expiring30 = PHARMACY_MEDICATIONS.filter((m) =>
-    isExpiringWithin(30, m.expiryDate)
-  ).length;
-  const expiring90 = PHARMACY_MEDICATIONS.filter((m) =>
-    isExpiringWithin(90, m.expiryDate)
-  ).length;
-  const expiredCount = PHARMACY_MEDICATIONS.filter((m) =>
-    isExpired(m.expiryDate)
-  ).length;
+  const expiring30 = PHARMACY_MEDICATIONS.filter((m) => isExpiringWithin(30, m.expiryDate)).length;
+  const expiring90 = PHARMACY_MEDICATIONS.filter((m) => isExpiringWithin(90, m.expiryDate)).length;
+  const expiredCount = PHARMACY_MEDICATIONS.filter((m) => isExpired(m.expiryDate)).length;
 
-  const dispensedRevenue = PRESCRIPTIONS
-    .filter((p) => p.status === "dispensed")
-    .reduce((acc, p) => acc + p.totalAmount, 0);
-
-  const totalRevenue = PRESCRIPTIONS
-    .filter((p) => p.status !== "cancelled")
-    .reduce((acc, p) => acc + p.totalAmount, 0);
-
-  const outstandingBalance = PRESCRIPTIONS
-    .filter((p) => p.status === "pending")
-    .reduce((acc, p) => acc + p.totalAmount, 0);
-
-  const totalUnitsOnHand = PHARMACY_MEDICATIONS.reduce(
-    (acc, m) => acc + m.stockLevel,
-    0
+  const dispensedRevenue = PRESCRIPTIONS.filter((p) => p.status === "dispensed").reduce(
+    (acc, p) => acc + p.totalAmount,
+    0,
   );
 
-  const completedSales = PRESCRIPTIONS.filter(
-    (p) => p.status === "dispensed"
-  ).length;
+  const totalRevenue = PRESCRIPTIONS.filter((p) => p.status !== "cancelled").reduce(
+    (acc, p) => acc + p.totalAmount,
+    0,
+  );
+
+  const outstandingBalance = PRESCRIPTIONS.filter((p) => p.status === "pending").reduce(
+    (acc, p) => acc + p.totalAmount,
+    0,
+  );
+
+  const totalUnitsOnHand = PHARMACY_MEDICATIONS.reduce((acc, m) => acc + m.stockLevel, 0);
+
+  const completedSales = PRESCRIPTIONS.filter((p) => p.status === "dispensed").length;
 
   return (
     <AppShell
@@ -293,7 +266,9 @@ export function PharmacyDashboard() {
             <div className="relative z-10">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-[11px] font-bold tracking-widest uppercase text-white/80">Total Medication Value</p>
+                  <p className="text-[11px] font-bold tracking-widest uppercase text-white/80">
+                    Total Medication Value
+                  </p>
                   <p className="num mt-2 text-3xl font-extrabold leading-none tracking-tight">
                     {currency(totalStockValue)}
                   </p>
@@ -304,15 +279,23 @@ export function PharmacyDashboard() {
               </div>
               <div className="mt-4 grid grid-cols-3 gap-3">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/70">SKUs</p>
-                  <p className="text-lg font-bold leading-none mt-1">{PHARMACY_MEDICATIONS.length}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/70">
+                    SKUs
+                  </p>
+                  <p className="text-lg font-bold leading-none mt-1">
+                    {PHARMACY_MEDICATIONS.length}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/70">Rx Only</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/70">
+                    Rx Only
+                  </p>
                   <p className="text-lg font-bold leading-none mt-1">{prescriptionOnly}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/70">Low Stock</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/70">
+                    Low Stock
+                  </p>
                   <p className="text-lg font-bold leading-none mt-1">{belowReorder}</p>
                 </div>
               </div>
@@ -403,7 +386,8 @@ export function PharmacyDashboard() {
               <div>
                 <h2 className="text-base font-semibold">Sales Trend</h2>
                 <p className="text-xs text-muted-foreground">
-                  {rangeLabel} · {salesTrendData.length} data points · Avg daily {currency(trendTotals.avgDaily)}
+                  {rangeLabel} · {salesTrendData.length} data points · Avg daily{" "}
+                  {currency(trendTotals.avgDaily)}
                 </p>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
@@ -418,14 +402,21 @@ export function PharmacyDashboard() {
             </div>
             <div className="h-[240px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={salesTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <AreaChart
+                  data={salesTrendData}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                >
                   <defs>
                     <linearGradient id="pharmacySalesGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#22c55e" stopOpacity={0.32} />
                       <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="var(--color-border)"
+                  />
                   <XAxis
                     dataKey="day"
                     axisLine={false}
@@ -480,12 +471,9 @@ export function PharmacyDashboard() {
             </div>
             <ul className="mt-3 divide-y divide-border">
               {PHARMACY_MEDICATIONS.filter(
-                (m) => isExpiringWithin(90, m.expiryDate) || isExpired(m.expiryDate)
+                (m) => isExpiringWithin(90, m.expiryDate) || isExpired(m.expiryDate),
               )
-                .sort(
-                  (a, b) =>
-                    new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime()
-                )
+                .sort((a, b) => new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime())
                 .slice(0, 6)
                 .map((m) => {
                   const expSoon = isExpiringWithin(30, m.expiryDate);
@@ -506,8 +494,8 @@ export function PharmacyDashboard() {
                           expired
                             ? "bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400 border border-rose-200 dark:border-rose-900"
                             : expSoon
-                            ? "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200 dark:border-amber-900"
-                            : "bg-orange-50 text-orange-700 dark:bg-orange-950/60 dark:text-orange-400 border border-orange-200 dark:border-orange-900"
+                              ? "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200 dark:border-amber-900"
+                              : "bg-orange-50 text-orange-700 dark:bg-orange-950/60 dark:text-orange-400 border border-orange-200 dark:border-orange-900"
                         }`}
                       >
                         {expired ? "Expired" : m.expiryDate}
@@ -515,7 +503,7 @@ export function PharmacyDashboard() {
                     </li>
                   );
                 })}
-              {(expiring90 + expiredCount) === 0 && (
+              {expiring90 + expiredCount === 0 && (
                 <li className="py-6 text-center text-sm text-muted-foreground">
                   No expiring medications in the next 90 days.
                 </li>
@@ -534,7 +522,10 @@ export function PharmacyDashboard() {
                 <h2 className="text-sm font-semibold">Low Stock — Reorder Priority</h2>
               </div>
               <Link to="/purchasing">
-                <Button size="sm" className="h-7 px-2.5 text-xs bg-[#22c55e] hover:bg-[#16a34a] text-white">
+                <Button
+                  size="sm"
+                  className="h-7 px-2.5 text-xs bg-[#22c55e] hover:bg-[#16a34a] text-white"
+                >
                   <Plus className="size-3.5" /> Create PO
                 </Button>
               </Link>
@@ -550,19 +541,14 @@ export function PharmacyDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {PHARMACY_MEDICATIONS.filter(
-                    (m) => m.stockLevel <= m.reorderLevel
-                  )
+                  {PHARMACY_MEDICATIONS.filter((m) => m.stockLevel <= m.reorderLevel)
                     .sort((a, b) => a.stockLevel / a.reorderLevel - b.stockLevel / b.reorderLevel)
                     .slice(0, 7)
                     .map((m) => {
                       const ratio = m.stockLevel / Math.max(1, m.reorderLevel);
                       const urgent = ratio < 0.5;
                       return (
-                        <tr
-                          key={m.id}
-                          className="transition-colors hover:bg-secondary/40"
-                        >
+                        <tr key={m.id} className="transition-colors hover:bg-secondary/40">
                           <td className="px-2 py-3">
                             <p className="font-medium text-foreground truncate max-w-[160px]">
                               {m.brandName}
@@ -572,7 +558,9 @@ export function PharmacyDashboard() {
                             </p>
                           </td>
                           <td className="px-2 py-3 num">
-                            <span className={`font-bold ${urgent ? "text-rose-600 dark:text-rose-400" : "text-amber-600 dark:text-amber-400"}`}>
+                            <span
+                              className={`font-bold ${urgent ? "text-rose-600 dark:text-rose-400" : "text-amber-600 dark:text-amber-400"}`}
+                            >
                               {m.stockLevel}
                             </span>
                           </td>
@@ -682,18 +670,16 @@ export function PharmacyDashboard() {
             </div>
           </div>
 
-          {/* Status filter chips (All / Dispensed / Cancelled) */}
+          {/* Status filter chips (Dispensed / Cancelled) */}
           <div className="px-5 md:px-6 pt-3 flex items-center gap-1.5 flex-wrap justify-end">
             {(
               [
-                { key: "all", label: "All" },
                 { key: "dispensed", label: "Dispensed" },
                 { key: "cancelled", label: "Cancelled" },
               ] as const
             ).map((chip) => {
               const active = salesStatusFilter === chip.key;
-              const isDispensedChip = chip.key === "dispensed";
-              const isCancelledChip = chip.key === "cancelled";
+              const count = PRESCRIPTIONS.filter((p) => p.status === chip.key).length;
               return (
                 <button
                   key={chip.key}
@@ -702,15 +688,14 @@ export function PharmacyDashboard() {
                   className={cn(
                     "inline-flex items-center rounded-full border px-3.5 py-1.5 text-xs font-semibold capitalize transition-all",
                     active
-                      ? isDispensedChip
+                      ? chip.key === "dispensed"
                         ? "border-emerald-300 dark:border-emerald-800 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400"
-                        : isCancelledChip
-                        ? "border-rose-300 dark:border-rose-800 bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400"
-                        : "border-emerald-300 dark:border-emerald-800 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400"
-                      : "border-border bg-background text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+                        : "border-rose-300 dark:border-rose-800 bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400"
+                      : "border-border bg-background text-muted-foreground hover:bg-secondary/60 hover:text-foreground",
                   )}
                 >
                   {chip.label}
+                  <span className="ml-1.5 opacity-70">({count})</span>
                 </button>
               );
             })}
@@ -722,19 +707,17 @@ export function PharmacyDashboard() {
               <thead>
                 <tr className="border-b border-border bg-transparent text-left text-xs font-bold uppercase tracking-widest text-muted-foreground">
                   <th className="px-5 md:px-6 py-3.5 font-extrabold">Rx #</th>
-                  <th className="px-5 md:px-6 py-3.5 font-extrabold">Patient</th>
-                  <th className="px-5 md:px-6 py-3.5 font-extrabold">Prescriber</th>
-                  <th className="px-5 md:px-6 py-3.5 font-extrabold">Items</th>
+                  <th className="px-5 md:px-6 py-3.5 font-extrabold">Item Name</th>
                   <th className="px-5 md:px-6 py-3.5 text-right font-extrabold">Amount</th>
-                  <th className="px-5 md:px-6 py-3.5 font-extrabold">Status</th>
-                  <th className="px-5 md:px-6 py-3.5 text-right font-extrabold">Date</th>
+                  <th className="px-5 md:px-6 py-3.5 font-extrabold">Method</th>
+                  <th className="px-5 md:px-6 py-3.5 font-extrabold">Branch</th>
+                  <th className="px-5 md:px-6 py-3.5 font-extrabold">Time</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {filteredSalesPrescriptions.slice(0, 8).map((p) => {
-                  const isDispensed = p.status === "dispensed";
-                  const isPending = p.status === "pending";
-                  const isPartial = p.status === "partially_filled";
+                  const firstItem = p.items[0];
+
                   return (
                     <tr
                       key={p.id}
@@ -744,42 +727,29 @@ export function PharmacyDashboard() {
                         {p.rxNumber}
                       </td>
                       <td className="px-5 md:px-6 py-4 font-semibold text-foreground whitespace-nowrap">
-                        {p.patientName}
-                      </td>
-                      <td className="px-5 md:px-6 py-4 text-muted-foreground whitespace-nowrap">
-                        {p.doctorName}
-                      </td>
-                      <td className="px-5 md:px-6 py-4 text-muted-foreground whitespace-nowrap">
-                        {p.items.length} item{p.items.length > 1 ? "s" : ""}
+                        {firstItem?.drugName || "N/A"}
                       </td>
                       <td className="px-5 md:px-6 py-4 text-right num font-bold text-foreground whitespace-nowrap">
                         {currency(p.totalAmount)}
                       </td>
-                      <td className="px-5 md:px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={cn(
-                            "inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider",
-                            isDispensed
-                              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400"
-                              : isPending
-                              ? "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400"
-                              : isPartial
-                              ? "bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-400"
-                              : "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400"
-                          )}
-                        >
-                          {p.status.replace("_", " ")}
-                        </span>
+                      <td className="px-5 md:px-6 py-4 capitalize text-muted-foreground whitespace-nowrap">
+                        {p.method || "N/A"}
                       </td>
-                      <td className="px-5 md:px-6 py-4 text-right text-muted-foreground whitespace-nowrap">
-                        {p.date}
+                      <td className="px-5 md:px-6 py-4 text-muted-foreground whitespace-nowrap">
+                        {p.branch || "N/A"}
+                      </td>
+                      <td className="px-5 md:px-6 py-4 text-muted-foreground whitespace-nowrap">
+                        {p.timeAdded || "N/A"}
                       </td>
                     </tr>
                   );
                 })}
                 {filteredSalesPrescriptions.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-sm text-muted-foreground">
+                    <td
+                      colSpan={6}
+                      className="px-6 py-12 text-center text-sm text-muted-foreground"
+                    >
                       No {salesStatusFilter === "all" ? "sales" : salesStatusFilter} records found.
                     </td>
                   </tr>
@@ -789,7 +759,7 @@ export function PharmacyDashboard() {
           </div>
 
           {/* Summary footer */}
-          <div className="mx-5 md:mx-6 my-4 grid grid-cols-2 md:grid-cols-4 gap-px rounded-xl border border-border overflow-hidden bg-border">
+          <div className="mx-5 md:mx-6 my-4 grid grid-cols-1 md:grid-cols-3 gap-px rounded-xl border border-border overflow-hidden bg-border">
             <div className="bg-background p-4">
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                 Total Sales
@@ -798,16 +768,8 @@ export function PharmacyDashboard() {
                 {currency(
                   filteredSalesPrescriptions
                     .filter((p) => p.status !== "cancelled")
-                    .reduce((s, p) => s + p.totalAmount, 0)
+                    .reduce((s, p) => s + p.totalAmount, 0),
                 )}
-              </p>
-            </div>
-            <div className="bg-background p-4">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                Prescriptions
-              </p>
-              <p className="num text-lg font-extrabold mt-0.5">
-                {filteredSalesPrescriptions.length}
               </p>
             </div>
             <div className="bg-background p-4">

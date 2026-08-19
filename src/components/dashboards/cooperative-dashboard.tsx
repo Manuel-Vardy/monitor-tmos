@@ -16,21 +16,20 @@ import { Card } from "@/components/ui/card";
 import { currency } from "@/lib/mos-data";
 import {
   COOP_MEMBERS,
-  COOP_DISBURSEMENTS,
   COOP_SUMMARY,
 } from "@/lib/cooperative-data";
 
 // --- Chart Data ---------------------------------------------------------------
 
 const contributionData = [
-  { month: "Jan", contributions: 68000, disbursements: 42000 },
-  { month: "Feb", contributions: 72000, disbursements: 38000 },
-  { month: "Mar", contributions: 69000, disbursements: 51000 },
-  { month: "Apr", contributions: 75000, disbursements: 44000 },
-  { month: "May", contributions: 71000, disbursements: 47000 },
-  { month: "Jun", contributions: 80000, disbursements: 55000 },
-  { month: "Jul", contributions: 74000, disbursements: 40000 },
-  { month: "Aug", contributions: 78000, disbursements: 48000 },
+  { month: "Jan", contributions: 68000 },
+  { month: "Feb", contributions: 72000 },
+  { month: "Mar", contributions: 69000 },
+  { month: "Apr", contributions: 75000 },
+  { month: "May", contributions: 71000 },
+  { month: "Jun", contributions: 80000 },
+  { month: "Jul", contributions: 74000 },
+  { month: "Aug", contributions: 78000 },
 ];
 
 const tooltipStyle = {
