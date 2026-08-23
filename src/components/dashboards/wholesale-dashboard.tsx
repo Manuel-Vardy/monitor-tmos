@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
+import type { DateRange } from "react-day-picker";
 import {
   ShoppingCart,
   Truck,
   Users,
   CreditCard,
   Package,
-  AlertCircle,
   Plus,
   ArrowUpRight,
   TrendingUp,
@@ -31,6 +31,7 @@ import { AppShell } from "@/components/app-shell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { DateRangePicker } from "@/components/date-range-picker";
 import {
   WHOLESALE_CUSTOMERS,
   WHOLESALE_DELIVERY_ROUTES,
@@ -53,23 +54,47 @@ const chartData = [
   { day: "Sun", revenue: 63_300, orders: 19 },
 ];
 
-const ROUTE_STATUS_STYLES: Record<string, string> = {
-  "In transit": "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
-  "Loading":    "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
-  "Delayed":    "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
-  "Scheduled":  "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400",
+// ── Wholesale-specific status pill helper (kept local, independent of other dashboards) ──
+function WholesaleStatusPill({ status, styleMap }: {
+  status: string;
+  styleMap: Record<string, { bg: string; text: string; dot: string }>;
+}) {
+  const s = styleMap[status] ?? { bg: "bg-muted border-border", text: "text-muted-foreground", dot: "bg-muted-foreground" };
+  return (
+    <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold", s.bg, s.text)}>
+      <span className={cn("size-1.5 rounded-full shrink-0", s.dot)} />
+      {status.charAt(0).toUpperCase() + status.slice(1)}
+    </span>
+  );
+}
+
+const ORDER_STATUS_STYLES: Record<string, { bg: string; text: string; dot: string }> = {
+  pending:    { bg: "bg-amber-50 dark:bg-amber-950/40 border-amber-200",   text: "text-amber-700 dark:text-amber-400",   dot: "bg-amber-500" },
+  processing: { bg: "bg-blue-50 dark:bg-blue-950/40 border-blue-200",      text: "text-blue-700 dark:text-blue-400",      dot: "bg-blue-500" },
+  dispatched: { bg: "bg-purple-50 dark:bg-purple-950/40 border-purple-200",text: "text-purple-700 dark:text-purple-400",  dot: "bg-purple-500" },
+  delivered:  { bg: "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200", text: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500" },
+  cancelled:  { bg: "bg-rose-50 dark:bg-rose-950/40 border-rose-200",      text: "text-rose-700 dark:text-rose-400",      dot: "bg-rose-500" },
+  default:    { bg: "bg-muted border-border",                               text: "text-muted-foreground",                 dot: "bg-muted-foreground" },
 };
 
-const ORDER_STATUS_STYLES: Record<string, { bg: string; text: string }> = {
-  pending:    { bg: "bg-amber-50 dark:bg-amber-950/40 border-amber-200", text: "text-amber-600 dark:text-amber-400" },
-  processing: { bg: "bg-blue-50 dark:bg-blue-950/40 border-blue-200", text: "text-blue-600 dark:text-blue-400" },
-  dispatched: { bg: "bg-purple-50 dark:bg-purple-950/40 border-purple-200", text: "text-purple-600 dark:text-purple-400" },
-  delivered:  { bg: "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200", text: "text-emerald-600 dark:text-emerald-400" },
-  cancelled:  { bg: "bg-rose-50 dark:bg-rose-950/40 border-rose-200", text: "text-rose-600 dark:text-rose-400" },
-  default:    { bg: "bg-muted", text: "text-muted-foreground" },
+const ROUTE_STATUS_STYLES: Record<string, { bg: string; text: string; dot: string }> = {
+  "In transit": { bg: "bg-blue-50 dark:bg-blue-900/40 border-blue-200",    text: "text-blue-700 dark:text-blue-300",    dot: "bg-blue-500" },
+  "Loading":    { bg: "bg-amber-50 dark:bg-amber-900/40 border-amber-200",  text: "text-amber-700 dark:text-amber-300",  dot: "bg-amber-500" },
+  "Delayed":    { bg: "bg-rose-50 dark:bg-rose-900/40 border-rose-200",     text: "text-rose-700 dark:text-rose-300",    dot: "bg-rose-500" },
+  "Scheduled":  { bg: "bg-slate-50 dark:bg-slate-800 border-slate-200",     text: "text-slate-600 dark:text-slate-400",  dot: "bg-slate-400" },
+};
+
+const PO_STATUS_STYLES: Record<string, { bg: string; text: string; dot: string }> = {
+  submitted:  { bg: "bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200", text: "text-indigo-700 dark:text-indigo-400", dot: "bg-indigo-500" },
+  approved:   { bg: "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200", text: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500" },
+  received:   { bg: "bg-blue-50 dark:bg-blue-950/40 border-blue-200",       text: "text-blue-700 dark:text-blue-400",     dot: "bg-blue-500" },
+  cancelled:  { bg: "bg-rose-50 dark:bg-rose-950/40 border-rose-200",       text: "text-rose-700 dark:text-rose-400",     dot: "bg-rose-500" },
+  default:    { bg: "bg-muted border-border",                                text: "text-muted-foreground",                dot: "bg-muted-foreground" },
 };
 
 export function WholesaleDashboard() {
+  const [trendDateRange, setTrendDateRange] = useState<DateRange | undefined>(undefined);
+
   return (
     <AppShell
       title="Wholesale Dashboard"
@@ -212,6 +237,7 @@ export function WholesaleDashboard() {
               <h2 className="text-base font-semibold">Wholesale Revenue & Orders Trend</h2>
               <p className="text-xs text-muted-foreground">Weekly gross fulfilled order volume across branches</p>
             </div>
+            <DateRangePicker value={trendDateRange} onChange={setTrendDateRange} />
           </div>
 
           <div className="h-[240px] w-full">
@@ -338,16 +364,13 @@ export function WholesaleDashboard() {
               </thead>
               <tbody className="divide-y divide-border">
                 {WHOLESALE_ORDERS.slice(0, 5).map((order) => {
-                  const style = ORDER_STATUS_STYLES[order.status] ?? ORDER_STATUS_STYLES["default"]!;
                   return (
                     <tr key={order.id} className="hover:bg-muted/30 transition-colors">
                       <td className="px-5 py-3 font-mono text-xs font-semibold">{order.id}</td>
                       <td className="px-4 py-3 font-medium">{order.customerName}</td>
                       <td className="px-4 py-3 font-semibold">{formatGhs(order.total)}</td>
                       <td className="px-4 py-3">
-                        <span className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold border", style.bg, style.text)}>
-                          {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                        </span>
+                        <WholesaleStatusPill status={order.status} styleMap={ORDER_STATUS_STYLES} />
                       </td>
                     </tr>
                   );
@@ -385,9 +408,7 @@ export function WholesaleDashboard() {
                     <td className="px-4 py-3 font-medium">{po.supplier}</td>
                     <td className="px-4 py-3 font-semibold">{formatGhs(po.totalCost)}</td>
                     <td className="px-4 py-3">
-                      <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-[11px] font-semibold text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400">
-                        {po.status.replace("_", " ").toUpperCase()}
-                      </span>
+                      <WholesaleStatusPill status={po.status} styleMap={PO_STATUS_STYLES} />
                     </td>
                   </tr>
                 ))}
@@ -425,17 +446,7 @@ export function WholesaleDashboard() {
                       {route.customerName} <span className="text-xs text-muted-foreground font-normal">({route.destination})</span>
                     </td>
                     <td className="px-4 py-3">
-                      <span
-                        className={cn(
-                          "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold",
-                          ROUTE_STATUS_STYLES[route.status] ?? "bg-muted text-muted-foreground",
-                        )}
-                      >
-                        {route.status === "Delayed" && (
-                          <AlertCircle className="mr-1 size-3 shrink-0" />
-                        )}
-                        {route.status}
-                      </span>
+                      <WholesaleStatusPill status={route.status} styleMap={ROUTE_STATUS_STYLES} />
                     </td>
                     <td className="px-4 py-3 text-right font-semibold">{route.eta}</td>
                   </tr>

@@ -98,13 +98,13 @@ function TransactionModal({ row, onClose }: { row: ActivityRow; onClose: () => v
             { label: "Amount", value: currency(Math.abs(row.amount)) },
           ].map(({ label, value }) => (
             <div key={label} className="bg-card px-4 py-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[#22c55e]">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                 {label}
               </p>
               <p
                 className={cn(
-                  "mt-0.5 text-sm font-semibold",
-                  label === "Amount" && isRefund && "text-red-500",
+                  "mt-0.5 text-sm font-semibold text-foreground",
+                  label === "Amount" && isRefund && "text-destructive",
                 )}
               >
                 {label === "Amount" && isRefund ? `−${currency(Math.abs(row.amount))}` : value}
@@ -117,7 +117,7 @@ function TransactionModal({ row, onClose }: { row: ActivityRow; onClose: () => v
         <div className="px-6 py-4">
           {items.length > 0 ? (
             <>
-              <h3 className="mb-3 text-sm font-bold text-[#22c55e] uppercase tracking-wide">
+              <h3 className="mb-3 text-sm font-bold text-foreground uppercase tracking-wide">
                 Items
               </h3>
               <ul className="divide-y divide-border">
@@ -132,18 +132,18 @@ function TransactionModal({ row, onClose }: { row: ActivityRow; onClose: () => v
                         {item.sku} · {currency(item.unitPrice)} each
                       </p>
                     </div>
-                    <div className="shrink-0 text-right">
-                      <p className="num font-bold text-[#22c55e]">
-                        {currency(item.qty * item.unitPrice)}
-                      </p>
+                      <div className="shrink-0 text-right">
+                       <p className="num font-bold text-foreground">
+                         {currency(item.qty * item.unitPrice)}
+                       </p>
                       <p className="text-xs text-muted-foreground">× {item.qty}</p>
                     </div>
                   </li>
                 ))}
               </ul>
-              <div className="mt-3 flex items-center justify-between rounded-xl bg-emerald-50 dark:bg-emerald-950/40 px-4 py-3 text-sm font-bold">
-                <span className="text-[#22c55e]">Total</span>
-                <span className="num text-[#22c55e]">{currency(subtotal)}</span>
+              <div className="mt-3 flex items-center justify-between rounded-xl bg-secondary/40 px-4 py-3 text-sm font-bold">
+                <span className="text-foreground">Total</span>
+                <span className="num text-foreground">{currency(subtotal)}</span>
               </div>
             </>
           ) : (
@@ -179,11 +179,6 @@ function SalesModal({ sale, onClose }: { sale: Prescription; onClose: () => void
               <p className="mt-1 text-base text-white/60">
                 {sale.doctorName} · {sale.clinic}
               </p>
-              {sale.insuranceClaimNumber && (
-                <p className="mt-0.5 text-xs text-white/45">
-                  Claim · {sale.insuranceClaimNumber}
-                </p>
-              )}
             </div>
             <button
               onClick={onClose}
@@ -203,7 +198,7 @@ function SalesModal({ sale, onClose }: { sale: Prescription; onClose: () => void
               { label: "Time", value: sale.timeAdded },
             ].map(({ label, value }) => (
               <div key={label} className="bg-card px-5 py-4">
-                <p className="text-xs font-bold uppercase tracking-wider text-[#22c55e]">
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                   {label}
                 </p>
                 <p className="mt-1.5 text-lg font-semibold capitalize leading-tight">{value}</p>
@@ -212,7 +207,7 @@ function SalesModal({ sale, onClose }: { sale: Prescription; onClose: () => void
           </div>
           <div className="mt-px grid grid-cols-1">
             <div className="bg-card px-5 py-4">
-              <p className="text-xs font-bold uppercase tracking-wider text-[#22c55e]">Amount</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Amount</p>
               <p className="mt-1.5 text-xl font-semibold num leading-tight">
                 {currency(sale.totalAmount)}
               </p>
@@ -221,7 +216,7 @@ function SalesModal({ sale, onClose }: { sale: Prescription; onClose: () => void
         </div>
 
         <div className="px-6 pt-5 pb-6">
-          <h3 className="mb-4 text-base font-bold text-[#22c55e] uppercase tracking-wide">
+          <h3 className="mb-4 text-base font-bold text-foreground uppercase tracking-wide">
             Sale Items
           </h3>
           <ul className="divide-y divide-border space-y-1">
@@ -237,7 +232,7 @@ function SalesModal({ sale, onClose }: { sale: Prescription; onClose: () => void
                   </p>
                 </div>
                 <div className="shrink-0 text-right">
-                  <p className="num font-bold text-[#22c55e] text-base">
+                  <p className="num font-bold text-foreground text-base">
                     {currency(it.totalPrice)}
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">× {it.quantity}</p>
@@ -246,30 +241,9 @@ function SalesModal({ sale, onClose }: { sale: Prescription; onClose: () => void
             ))}
           </ul>
 
-          {sale.insuranceProvider && (
-            <div className="mt-5 grid grid-cols-2 gap-4">
-              <div className="rounded-xl bg-sky-50 dark:bg-sky-950/40 px-4 py-3">
-                <p className="font-bold text-sky-700 dark:text-sky-400 uppercase tracking-wider text-xs">
-                  Insurance
-                </p>
-                <p className="mt-1 font-semibold text-sky-800 dark:text-sky-300 text-base">
-                  {sale.insuranceProvider}
-                </p>
-              </div>
-              <div className="rounded-xl bg-amber-50 dark:bg-amber-950/40 px-4 py-3">
-                <p className="font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider text-xs">
-                  Patient Copay
-                </p>
-                <p className="mt-1 num font-bold text-amber-800 dark:text-amber-300 text-lg">
-                  {currency(sale.copayAmount)}
-                </p>
-              </div>
-            </div>
-          )}
-
-          <div className="mt-5 flex items-center justify-between rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 px-5 py-4 text-base font-bold">
-            <span className="text-[#22c55e] text-lg">Total</span>
-            <span className="num text-[#22c55e] text-xl">
+          <div className="mt-5 flex items-center justify-between rounded-2xl bg-secondary/40 px-5 py-4 text-base font-bold">
+            <span className="text-foreground text-lg">Total</span>
+            <span className="num text-foreground text-xl">
               {currency(sale.totalAmount)}
             </span>
           </div>
@@ -427,7 +401,12 @@ function SalesPage() {
     }));
   }, []);
 
-  const pharmacyStatusOptions = ["dispensed", "pending", "partially_filled", "cancelled"];
+  const pharmacyStatusOptions = [
+    { key: "dispensed", label: "Dispensed", activeClass: "bg-emerald-600 text-white border-emerald-600" },
+    { key: "pending", label: "Pending", activeClass: "bg-amber-500 text-white border-amber-500" },
+    { key: "partially_filled", label: "Partially Filled", activeClass: "bg-blue-600 text-white border-blue-600" },
+    { key: "cancelled", label: "Cancelled", activeClass: "bg-rose-600 text-white border-rose-600" },
+  ] as const;
 
   // ── Retail / general data ───────────────────────────────────────
   const series = useMemo(() => seriesFor(branchId, "30d"), [branchId]);
@@ -593,13 +572,14 @@ function SalesPage() {
               <Chip active={status === null} onClick={() => setStatus(null)}>
                 All Status
               </Chip>
-              {pharmacyStatusOptions.map((s) => (
+              {pharmacyStatusOptions.map(({ key, label, activeClass }) => (
                 <Chip
-                  key={s}
-                  active={status === s}
-                  onClick={() => setStatus(status === s ? null : s)}
+                  key={key}
+                  active={status === key}
+                  onClick={() => setStatus(status === key ? null : key)}
+                  activeClass={activeClass}
                 >
-                  {s.replace("_", " ")}
+                  {label}
                 </Chip>
               ))}
             </div>
@@ -720,13 +700,14 @@ function SalesPage() {
                 </p>
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {pharmacyStatusOptions.map((s) => (
+                {pharmacyStatusOptions.map(({ key, label, activeClass }) => (
                   <Chip
-                    key={s}
-                    active={status === s}
-                    onClick={() => setStatus(status === s ? null : s)}
+                    key={key}
+                    active={status === key}
+                    onClick={() => setStatus(status === key ? null : key)}
+                    activeClass={activeClass}
                   >
-                    {s.replace("_", " ")}
+                    {label}
                   </Chip>
                 ))}
               </div>
@@ -766,13 +747,13 @@ function SalesPage() {
 
               <table className="hidden w-full text-base sm:table">
                 <thead>
-                  <tr className="border-b border-border text-left text-xs tracking-wide text-muted-foreground uppercase">
-                    <th className="px-4 py-2.5 font-bold">Rx #</th>
-                    <th className="px-4 py-2.5 font-bold">Item Name</th>
-                    <th className="px-4 py-2.5 text-right font-bold">Amount</th>
-                    <th className="px-4 py-2.5 font-bold">Method</th>
-                    <th className="px-4 py-2.5 font-bold">Branch</th>
-                    <th className="px-4 py-2.5 font-bold">Time</th>
+                  <tr className="border-b border-border text-left text-[15px] tracking-wide text-foreground/70 uppercase bg-muted/60">
+                    <th className="px-4 py-3 font-bold">Rx #</th>
+                    <th className="px-4 py-3 font-bold">Item Name</th>
+                    <th className="px-4 py-3 text-right font-bold">Amount</th>
+                    <th className="px-4 py-3 font-bold">Method</th>
+                    <th className="px-4 py-3 font-bold">Branch</th>
+                    <th className="px-4 py-3 font-bold">Time</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -1135,15 +1116,15 @@ function SalesPage() {
             {/* ── Desktop: full table ── */}
             <table className="hidden w-full text-base sm:table">
               <thead>
-                <tr className="border-b border-border text-left text-xs tracking-wide text-muted-foreground uppercase">
-                  <th className="px-4 py-2.5 font-bold">Reference</th>
-                  <th className="px-4 py-2.5 font-bold">Event</th>
-                  <th className="px-4 py-2.5 font-bold">Cashier</th>
-                  <th className="px-4 py-2.5 font-bold">Branch</th>
-                  <th className="px-4 py-2.5 font-bold">Method</th>
-                  <th className="px-4 py-2.5 text-right font-bold">Amount</th>
-                  <th className="px-4 py-2.5 font-bold">Status</th>
-                  <th className="px-4 py-2.5 text-right font-bold">When</th>
+                <tr className="border-b border-border text-left text-[15px] tracking-wide text-foreground/70 uppercase bg-muted/60">
+                  <th className="px-4 py-3 font-bold">Reference</th>
+                  <th className="px-4 py-3 font-bold">Event</th>
+                  <th className="px-4 py-3 font-bold">Cashier</th>
+                  <th className="px-4 py-3 font-bold">Branch</th>
+                  <th className="px-4 py-3 font-bold">Method</th>
+                  <th className="px-4 py-3 text-right font-bold">Amount</th>
+                  <th className="px-4 py-3 font-bold">Status</th>
+                  <th className="px-4 py-3 text-right font-bold">When</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">

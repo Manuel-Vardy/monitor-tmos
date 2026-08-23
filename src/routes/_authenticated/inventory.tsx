@@ -959,6 +959,7 @@ function Inventory() {
   const [q, setQ] = useState("");
   const [items, setItems] = useState<Product[]>(seedProducts);
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [stockFilter, setStockFilter] = useState<"all" | "healthy" | "low" | "out" | "expiring">("all");
   const { branches } = useBranches();
   const { institutionType } = useInstitution();
   const isPharmacy = institutionType === "pharmacy";
@@ -987,11 +988,25 @@ function Inventory() {
   }, [isPharmacy, items, pharmacyAsProducts]);
 
   const rows = useMemo(() => {
-    if (isPharmacy) return PHARMACY_MEDICATIONS;
-    return items.filter((p) =>
+    if (isPharmacy) {
+      let filtered = PHARMACY_MEDICATIONS.filter((m) =>
+        (m.brandName + m.drugName + m.batchNumber + m.category).toLowerCase().includes(q.toLowerCase()),
+      );
+      if (stockFilter === "healthy") filtered = filtered.filter((m) => m.stockLevel > m.reorderLevel);
+      if (stockFilter === "low")     filtered = filtered.filter((m) => m.stockLevel > 0 && m.stockLevel <= m.reorderLevel);
+      if (stockFilter === "out")     filtered = filtered.filter((m) => m.stockLevel === 0);
+      if (stockFilter === "expiring") filtered = filtered.filter((m) => isExpiringWithin(90, m.expiryDate));
+      return filtered;
+    }
+    let filtered = items.filter((p) =>
       (p.name + p.sku + p.category).toLowerCase().includes(q.toLowerCase()),
     );
-  }, [isPharmacy, items, q]);
+    if (stockFilter === "healthy")  filtered = filtered.filter((p) => p.stock > p.threshold);
+    if (stockFilter === "low")      filtered = filtered.filter((p) => p.stock > 0 && p.stock <= p.threshold);
+    if (stockFilter === "out")      filtered = filtered.filter((p) => p.stock === 0);
+    if (stockFilter === "expiring") filtered = filtered.filter((p) => !!p.expiry && isExpiringWithin(90, p.expiry));
+    return filtered;
+  }, [isPharmacy, items, q, stockFilter]);
 
   const stockValue = useMemo(() => {
     if (isPharmacy)
@@ -1066,6 +1081,31 @@ function Inventory() {
               </div>
               <CsvDropdown items={rows as unknown as Product[]} isPharmacy={isPharmacy} />
             </div>
+          </div>
+
+          {/* Stock filter chips */}
+          <div className="flex flex-wrap gap-1.5 px-3 py-2 border-b border-border">
+            {([
+              { key: "all",      label: "All",       activeClass: "bg-foreground text-background" },
+              { key: "healthy",  label: "Healthy",   activeClass: "bg-emerald-600 text-white" },
+              { key: "low",      label: "Low",       activeClass: "bg-amber-500 text-white" },
+              { key: "out",      label: "Out",       activeClass: "bg-red-600 text-white" },
+              { key: "expiring", label: "Expiring",  activeClass: "bg-orange-500 text-white" },
+            ] as const).map(({ key, label, activeClass }) => (
+              <button
+                key={key}
+                onClick={() => setStockFilter(key)}
+                aria-pressed={stockFilter === key}
+                className={cn(
+                  "rounded-full px-3 py-1 text-xs font-semibold transition-all shadow-xs border",
+                  stockFilter === key
+                    ? cn(activeClass, "border-transparent")
+                    : "bg-card text-foreground border-border hover:bg-secondary",
+                )}
+              >
+                {label}
+              </button>
+            ))}
           </div>
 
           {/* Mobile Card List View */}
@@ -1353,10 +1393,12 @@ function Inventory() {
                 <Boxes className="size-8 text-muted-foreground" />
               )}
               <p className="text-sm font-medium">
-                {isPharmacy ? "No medications match" : "No products match"} "{q}"
+                {stockFilter !== "all"
+                  ? `No ${stockFilter} stock items found`
+                  : isPharmacy ? `No medications match "${q}"` : `No products match "${q}"`}
               </p>
-              <Button variant="outline" size="sm" onClick={() => setQ("")}>
-                Clear search
+              <Button variant="outline" size="sm" onClick={() => { setQ(""); setStockFilter("all"); }}>
+                Clear filters
               </Button>
             </div>
           )}

@@ -131,7 +131,7 @@ export const NAV_PROFILE_MAP: Record<InstitutionType, NavProfile> = {
     {
       group: "Operations",
       items: [
-        { to: "/menu", label: "Menu & Recipes", icon: FileText, priority: 2 },
+        { to: "/menu", label: "Menu & Checkout", icon: FileText, priority: 2 },
         { to: "/eatery-inventory", label: "Inventory", icon: Boxes, priority: 3 },
       ],
     },

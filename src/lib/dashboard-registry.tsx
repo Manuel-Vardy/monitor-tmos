@@ -8,7 +8,7 @@ import { RetailDashboard } from "@/components/dashboards/retail-dashboard";
 import { RestaurantDashboard } from "@/components/dashboards/restaurant-dashboard";
 import { PharmacyDashboard } from "@/components/dashboards/pharmacy-dashboard";
 import { SchoolDashboard } from "@/components/dashboards/school-dashboard";
-import { NgoDashboard } from "@/components/dashboards/ngo-dashboard";
+import { ChurchDashboard } from "@/components/dashboards/church-dashboard";
 // import { SalonDashboard } from "@/components/dashboards/salon-dashboard"; // temporarily removed
 import { HotelDashboard } from "@/components/dashboards/hotel-dashboard";
 import { ProfessionalServicesDashboard } from "@/components/dashboards/professional-services-dashboard";
@@ -23,7 +23,7 @@ export const DASHBOARD_REGISTRY: Record<InstitutionType, DashboardComponent> = {
   restaurant: RestaurantDashboard,
   pharmacy: PharmacyDashboard,
   school: SchoolDashboard,
-  ngo: NgoDashboard,
+  ngo: ChurchDashboard,
   // salon: SalonDashboard, // temporarily removed
   hotel: HotelDashboard,
   professional_services: ProfessionalServicesDashboard,

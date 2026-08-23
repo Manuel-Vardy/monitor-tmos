@@ -382,6 +382,7 @@ function Reports() {
   const [activeTab, setActiveTab] = useState<"today" | "products" | "range" | "interbranch">(
     "today",
   );
+  const [productStockFilter, setProductStockFilter] = useState<"all" | "healthy" | "low" | "out">("all");
   const { branches } = useBranches();
   const branchOptions = branches.filter((b) => b.id !== "all");
   const branchChartData = branchOptions.map((b) => ({
@@ -671,10 +672,36 @@ function Reports() {
               {/* Product table */}
               <div className="rounded-xl border border-border bg-card shadow-2xs">
                 <div className="border-b border-border px-5 py-4">
-                  <h2 className="text-lg font-bold">Product Performance</h2>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    Ranked by stock value · {productReport.length} SKUs
-                  </p>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <h2 className="text-lg font-bold">Product Performance</h2>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        Ranked by stock value · {productReport.filter((p) =>
+                          productStockFilter === "all" || p.stockHealth === productStockFilter
+                        ).length} SKUs
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {([
+                        { key: "all",     label: "All",     activeClass: "bg-foreground text-background border-transparent" },
+                        { key: "healthy", label: "Healthy", activeClass: "bg-emerald-600 text-white border-transparent" },
+                        { key: "low",     label: "Low",     activeClass: "bg-amber-500 text-white border-transparent" },
+                        { key: "out",     label: "Out",     activeClass: "bg-red-600 text-white border-transparent" },
+                      ] as const).map(({ key, label, activeClass }) => (
+                        <button
+                          key={key}
+                          onClick={() => setProductStockFilter(key)}
+                          aria-pressed={productStockFilter === key}
+                          className={cn(
+                            "rounded-full px-3 py-1 text-xs font-semibold transition-all shadow-xs border",
+                            productStockFilter === key ? activeClass : "bg-card text-foreground border-border hover:bg-secondary",
+                          )}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[560px] text-sm">
@@ -691,7 +718,9 @@ function Reports() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
-                      {productReport.map((p, i) => (
+                      {productReport
+                        .filter((p) => productStockFilter === "all" || p.stockHealth === productStockFilter)
+                        .map((p, i) => (
                         <tr key={p.sku} className="transition-colors hover:bg-secondary/60">
                           <td className="px-5 py-3 text-xs font-bold text-muted-foreground">
                             {i + 1}

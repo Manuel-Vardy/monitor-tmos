@@ -13,6 +13,14 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useBranches } from "@/lib/branches-context";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -102,6 +110,12 @@ export function AppShell({
   const { institutionType, linkedAccounts, accountId, setInstitution } = useInstitution();
   const navProfile = resolveNavProfile(institutionType);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [logoutOpen, setLogoutOpen] = useState(false);
+
+  // Track collapsed state per section group — all expanded by default
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const toggleSection = (group: string) =>
+    setCollapsed((prev) => ({ ...prev, [group]: !prev[group] }));
 
   function handleLogout() {
     localStorage.removeItem("tmos_session_v1");
@@ -123,46 +137,62 @@ export function AppShell({
           <Wordmark />
         </div>
         <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-2">
-          {navProfile.map((section) => (
-            <div key={section.group}>
-              <p className="px-2 pb-2 text-[10px] font-semibold tracking-[0.14em] uppercase opacity-50">
-                {section.group}
-              </p>
-              <ul className="space-y-0.5">
-                {section.items.map((item) => {
-                  const active = pathname === item.to;
-                  return (
-                    <li key={item.to}>
-                      {item.locked ? (
-                        <span
-                          className="group flex items-center gap-3 rounded-md px-2.5 py-2 text-sm opacity-40 cursor-not-allowed select-none"
-                          title="Coming soon"
-                        >
-                          <item.icon className="size-4 shrink-0" />
-                          <span className="flex-1">{item.label}</span>
-                          <Lock className="size-3 shrink-0" />
-                        </span>
-                      ) : (
-                        <Link
-                          to={item.to}
-                          className={cn(
-                            "group flex items-center gap-3 rounded-md px-2.5 py-2 text-sm transition-colors",
-                            active
-                              ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
-                              : "hover:bg-sidebar-accent/60",
+          {navProfile.map((section) => {
+            const isCollapsed = !!collapsed[section.group];
+            return (
+              <div key={section.group}>
+                <button
+                  onClick={() => toggleSection(section.group)}
+                  className="flex w-full items-center justify-between px-2 pb-2 group"
+                >
+                  <span className="text-[11px] font-bold tracking-[0.14em] uppercase text-white">
+                    {section.group}
+                  </span>
+                  <ChevronDown
+                    className={cn(
+                      "size-3 text-white/60 transition-transform duration-200",
+                      isCollapsed ? "-rotate-90" : "rotate-0",
+                    )}
+                  />
+                </button>
+                {!isCollapsed && (
+                  <ul className="space-y-0.5">
+                    {section.items.map((item) => {
+                      const active = pathname === item.to;
+                      return (
+                        <li key={item.to}>
+                          {item.locked ? (
+                            <span
+                              className="group flex items-center gap-3 rounded-md px-2.5 py-2 text-[13px] opacity-40 cursor-not-allowed select-none"
+                              title="Coming soon"
+                            >
+                              <item.icon className="size-4 shrink-0" />
+                              <span className="flex-1">{item.label}</span>
+                              <Lock className="size-3 shrink-0" />
+                            </span>
+                          ) : (
+                            <Link
+                              to={item.to}
+                              className={cn(
+                                "group flex items-center gap-3 rounded-md px-2.5 py-2 text-[13px] transition-colors",
+                                active
+                                  ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
+                                  : "hover:bg-sidebar-accent/60",
+                              )}
+                            >
+                              <item.icon className="size-4 shrink-0 opacity-80" />
+                              <span className="flex-1">{item.label}</span>
+                              {active && <span className="size-1.5 rounded-full bg-sidebar-primary" />}
+                            </Link>
                           )}
-                        >
-                          <item.icon className="size-4 shrink-0 opacity-80" />
-                          <span className="flex-1">{item.label}</span>
-                          {active && <span className="size-1.5 rounded-full bg-sidebar-primary" />}
-                        </Link>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ))}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
         </nav>
         <div className="border-t border-sidebar-border p-3">
           <div className="flex items-center gap-3 rounded-md px-2 py-2">
@@ -177,7 +207,7 @@ export function AppShell({
             </div>
           </div>
           <button
-            onClick={handleLogout}
+            onClick={() => setLogoutOpen(true)}
             className="mt-1 flex w-full items-center gap-3 rounded-md px-2 py-2 text-sm text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent/60 hover:text-red-400"
           >
             <LogOut className="size-4 shrink-0" />
@@ -300,36 +330,52 @@ export function AppShell({
 
             {/* All nav sections */}
             <div className="flex-1 px-3 py-3 space-y-4 overflow-y-auto">
-              {navProfile.map((section) => (
-                <div key={section.group}>
-                  <p className="px-2 pb-1.5 text-[10px] font-bold tracking-[0.14em] uppercase text-muted-foreground">
-                    {section.group}
-                  </p>
-                  <ul className="space-y-0.5">
-                    {section.items.map((item) => {
-                      const active = pathname === item.to;
-                      return (
-                        <li key={item.to}>
-                          <Link
-                            to={item.to}
-                            onClick={() => setMenuOpen(false)}
-                            className={cn(
-                              "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-                              active
-                                ? "bg-accent/15 font-medium text-accent"
-                                : "hover:bg-secondary text-foreground/85",
-                            )}
-                          >
-                            <item.icon className="size-4 shrink-0 opacity-80" />
-                            <span className="flex-1">{item.label}</span>
-                            {active && <span className="size-1.5 rounded-full bg-accent" />}
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              ))}
+              {navProfile.map((section) => {
+                const isCollapsed = !!collapsed[section.group];
+                return (
+                  <div key={section.group}>
+                    <button
+                      onClick={() => toggleSection(section.group)}
+                      className="flex w-full items-center justify-between px-2 pb-1.5"
+                    >
+                      <span className="text-[11px] font-bold tracking-[0.14em] uppercase text-foreground">
+                        {section.group}
+                      </span>
+                      <ChevronDown
+                        className={cn(
+                          "size-3 text-foreground/50 transition-transform duration-200",
+                          isCollapsed ? "-rotate-90" : "rotate-0",
+                        )}
+                      />
+                    </button>
+                    {!isCollapsed && (
+                      <ul className="space-y-0.5">
+                        {section.items.map((item) => {
+                          const active = pathname === item.to;
+                          return (
+                            <li key={item.to}>
+                              <Link
+                                to={item.to}
+                                onClick={() => setMenuOpen(false)}
+                                className={cn(
+                                  "flex items-center gap-3 rounded-md px-3 py-2 text-[13px] transition-colors",
+                                  active
+                                    ? "bg-accent/15 font-medium text-accent"
+                                    : "hover:bg-secondary text-foreground/90",
+                                )}
+                              >
+                                <item.icon className="size-4 shrink-0 opacity-80" />
+                                <span className="flex-1">{item.label}</span>
+                                {active && <span className="size-1.5 rounded-full bg-accent" />}
+                              </Link>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             {/* User profile & Logout */}
@@ -349,7 +395,7 @@ export function AppShell({
                 type="button"
                 onClick={() => {
                   setMenuOpen(false);
-                  handleLogout();
+                  setLogoutOpen(true);
                 }}
                 className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-red-500"
               >
@@ -359,6 +405,34 @@ export function AppShell({
             </div>
           </SheetContent>
         </Sheet>
+        {/* ── Logout confirmation dialog ── */}
+        <Dialog open={logoutOpen} onOpenChange={setLogoutOpen}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <LogOut className="size-4 text-red-500" />
+                Log out
+              </DialogTitle>
+              <DialogDescription>
+                Are you sure you want to log out?
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="mt-2 flex gap-2 sm:flex-row">
+              <button
+                onClick={() => setLogoutOpen(false)}
+                className="flex-1 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium transition-colors hover:bg-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700"
+              >
+                Yes, log out
+              </button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

@@ -169,11 +169,14 @@ function EaterySales() {
           <Stat label="Avg Check Value"   value={currency(avgCheck)}        delta={3.1}  sub="per guest"             icon={Receipt}    accent="purple" />
         </section>
 
-        {/* Weekly sales trend */}
+        {/* Sales trend */}
         <section className="rounded-xl border border-border bg-card p-5 shadow-xs">
-          <div className="mb-4">
-            <h2 className="text-sm font-semibold">Weekly Sales Trend</h2>
-            <p className="text-xs text-muted-foreground">Revenue & covers over the last 7 days</p>
+          <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-semibold">Sales Trend</h2>
+              <p className="text-xs text-muted-foreground">Revenue & covers over the selected period</p>
+            </div>
+            <DateRangePicker value={dateRange} onChange={setDateRange} />
           </div>
           <div className="h-60">
             <ResponsiveContainer width="100%" height="100%">

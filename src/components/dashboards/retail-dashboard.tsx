@@ -201,8 +201,8 @@ function TransactionModal({
             { label: "Amount", value: currency(Math.abs(row.amount)) },
           ].map(({ label, value }) => (
             <div key={label} className="bg-card px-4 py-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[#22c55e]">{label}</p>
-              <p className={cn("mt-0.5 text-sm font-semibold", label === "Amount" && isRefund && "text-red-500")}>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-foreground/50">{label}</p>
+              <p className={cn("mt-0.5 text-sm font-semibold text-foreground", label === "Amount" && isRefund && "text-red-500")}>
                 {label === "Amount" && isRefund ? `−${currency(Math.abs(row.amount))}` : value}
               </p>
             </div>
@@ -213,7 +213,7 @@ function TransactionModal({
         <div className="px-6 py-4">
           {items.length > 0 ? (
             <>
-              <h3 className="mb-3 text-sm font-bold text-[#22c55e] uppercase tracking-wide">Items</h3>
+              <h3 className="mb-3 text-sm font-bold text-foreground/50 uppercase tracking-wide">Items</h3>
               <ul className="divide-y divide-border">
                 {items.map((item) => (
                   <li key={item.sku} className="flex items-center justify-between gap-3 py-2.5 text-sm">
@@ -222,15 +222,15 @@ function TransactionModal({
                       <p className="text-xs text-muted-foreground">{item.sku} · {currency(item.unitPrice)} each</p>
                     </div>
                     <div className="shrink-0 text-right">
-                      <p className="num font-bold text-[#22c55e]">{currency(item.qty * item.unitPrice)}</p>
+                      <p className="num font-bold text-foreground">{currency(item.qty * item.unitPrice)}</p>
                       <p className="text-xs text-muted-foreground">× {item.qty}</p>
                     </div>
                   </li>
                 ))}
               </ul>
-              <div className="mt-3 flex items-center justify-between rounded-xl bg-emerald-50 dark:bg-emerald-950/40 px-4 py-3 text-sm font-bold">
-                <span className="text-[#22c55e]">Total</span>
-                <span className="num text-[#22c55e]">{currency(subtotal)}</span>
+              <div className="mt-3 flex items-center justify-between rounded-xl bg-muted/60 px-4 py-3 text-sm font-bold border border-border">
+                <span className="text-foreground">Total</span>
+                <span className="num text-foreground">{currency(subtotal)}</span>
               </div>
             </>
           ) : (
@@ -463,21 +463,24 @@ export function RetailDashboard() {
                 Click a point to drill into a single day · {branchName(branchId)}
               </p>
             </div>
-            <div className="flex gap-1.5">
-              <Chip
-                active={showSales}
-                onClick={() => setShowSales((v) => !v)}
-                activeClass="bg-emerald-600 text-white border-emerald-600"
-              >
-                Sold
-              </Chip>
-              <Chip
-                active={showSettled}
-                onClick={() => setShowSettled((v) => !v)}
-                activeClass="bg-blue-600 text-white border-blue-600"
-              >
-                Settled
-              </Chip>
+            <div className="flex flex-wrap items-center gap-2">
+              <DateRangePicker value={dateRange} onChange={setDateRange} />
+              <div className="flex gap-1.5">
+                <Chip
+                  active={showSales}
+                  onClick={() => setShowSales((v) => !v)}
+                  activeClass="bg-emerald-600 text-white border-emerald-600"
+                >
+                  Sold
+                </Chip>
+                <Chip
+                  active={showSettled}
+                  onClick={() => setShowSettled((v) => !v)}
+                  activeClass="bg-blue-600 text-white border-blue-600"
+                >
+                  Settled
+                </Chip>
+              </div>
             </div>
           </div>
           <div className="h-64">
@@ -742,15 +745,15 @@ export function RetailDashboard() {
             {/* ── Desktop: full table ── */}
             <table className="hidden w-full text-base sm:table">
               <thead>
-                <tr className="border-b border-border text-left text-sm tracking-wide text-muted-foreground uppercase">
-                  <th className="px-4 py-2.5 font-bold">Reference</th>
-                  <th className="px-4 py-2.5 font-bold">Event</th>
-                  <th className="px-4 py-2.5 font-bold">Who</th>
-                  <th className="px-4 py-2.5 font-bold">Branch</th>
-                  <th className="px-4 py-2.5 font-bold">Method</th>
-                  <th className="px-4 py-2.5 text-right font-bold">Amount</th>
-                  <th className="px-4 py-2.5 font-bold">Status</th>
-                  <th className="px-4 py-2.5 text-right font-bold">When</th>
+                <tr className="border-b border-border text-left text-[15px] tracking-wide text-foreground/70 uppercase bg-muted/60">
+                  <th className="px-4 py-3 font-bold">Reference</th>
+                  <th className="px-4 py-3 font-bold">Event</th>
+                  <th className="px-4 py-3 font-bold">Who</th>
+                  <th className="px-4 py-3 font-bold">Branch</th>
+                  <th className="px-4 py-3 font-bold">Method</th>
+                  <th className="px-4 py-3 text-right font-bold">Amount</th>
+                  <th className="px-4 py-3 font-bold">Status</th>
+                  <th className="px-4 py-3 text-right font-bold">When</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">

@@ -85,6 +85,16 @@ const CATEGORY_COLORS: Record<DrinkCategory, string> = {
   "Spirits":      "bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-400",
 };
 
+const CATEGORY_CHIP_COLORS: Record<string, string> = {
+  "All":         "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900",
+  "Soft Drinks": "bg-blue-600 text-white",
+  "House-Made":  "bg-emerald-600 text-white",
+  "Beer & Malt": "bg-amber-500 text-white",
+  "Water":       "bg-cyan-500 text-white",
+  "Juices":      "bg-orange-500 text-white",
+  "Spirits":     "bg-purple-600 text-white",
+};
+
 // ─── Add Item Modal ───────────────────────────────────────────────────────────
 
 function AddItemModal({ onClose, onAdd }: {
@@ -202,7 +212,14 @@ function EateryInventory() {
   const [items, setItems]             = useState<InventoryItem[]>(SEED_INVENTORY);
   const [search, setSearch]           = useState("");
   const [catFilter, setCatFilter]     = useState<DrinkCategory | "All">("All");
+  const [stockFilter, setStockFilter] = useState<"all" | "healthy" | "low" | "out">("all");
   const [showAddModal, setShowAddModal] = useState(false);
+
+  const stockStatus = (item: InventoryItem): "out" | "low" | "ok" => {
+    if (item.quantity === 0) return "out";
+    if (item.quantity <= item.threshold) return "low";
+    return "ok";
+  };
 
   const filtered = items.filter((item) => {
     const matchCat = catFilter === "All" || item.category === catFilter;
@@ -210,7 +227,13 @@ function EateryInventory() {
       search === "" ||
       item.name.toLowerCase().includes(search.toLowerCase()) ||
       item.supplier.toLowerCase().includes(search.toLowerCase());
-    return matchCat && matchSearch;
+    const status = stockStatus(item);
+    const matchStock =
+      stockFilter === "all" ||
+      (stockFilter === "healthy" && status === "ok") ||
+      (stockFilter === "low"     && status === "low") ||
+      (stockFilter === "out"     && status === "out");
+    return matchCat && matchSearch && matchStock;
   });
 
   const totalValue = items.reduce((s, i) => s + i.unitCost * i.quantity, 0);
@@ -219,12 +242,6 @@ function EateryInventory() {
 
   const handleAdd = (item: InventoryItem) => setItems((prev) => [item, ...prev]);
   const handleDelete = (id: string) => setItems((prev) => prev.filter((i) => i.id !== id));
-
-  const stockStatus = (item: InventoryItem) => {
-    if (item.quantity === 0) return "out";
-    if (item.quantity <= item.threshold) return "low";
-    return "ok";
-  };
 
   return (
     <AppShell
@@ -308,11 +325,32 @@ function EateryInventory() {
               onClick={() => setCatFilter(cat)}
               className={`shrink-0 rounded-full px-3.5 py-1 text-xs font-semibold transition-all ${
                 catFilter === cat
-                  ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                  ? CATEGORY_CHIP_COLORS[cat] ?? "bg-zinc-900 text-white"
                   : "bg-secondary text-muted-foreground hover:bg-border"
               }`}
             >
               {cat}
+            </button>
+          ))}
+        </div>
+        {/* Stock level filter chips */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {([
+            { key: "all",     label: "All stock",  activeClass: "bg-foreground text-background border-transparent" },
+            { key: "healthy", label: "Healthy",    activeClass: "bg-emerald-600 text-white border-transparent" },
+            { key: "low",     label: "Low",        activeClass: "bg-amber-500 text-white border-transparent" },
+            { key: "out",     label: "Out",        activeClass: "bg-red-600 text-white border-transparent" },
+          ] as const).map(({ key, label, activeClass }) => (
+            <button
+              key={key}
+              onClick={() => setStockFilter(key)}
+              aria-pressed={stockFilter === key}
+              className={cn(
+                "rounded-full px-3 py-1 text-xs font-semibold transition-all shadow-xs border",
+                stockFilter === key ? activeClass : "bg-card text-foreground border-border hover:bg-secondary",
+              )}
+            >
+              {label}
             </button>
           ))}
         </div>
@@ -321,7 +359,15 @@ function EateryInventory() {
       {/* Mobile cards */}
       <div className="divide-y divide-border rounded-xl border border-border bg-card sm:hidden">
         {filtered.length === 0 ? (
-          <div className="py-10 text-center text-sm text-muted-foreground">No items found.</div>
+          <div className="py-10 text-center text-sm text-muted-foreground">
+            No items found.{" "}
+            <button
+              className="underline"
+              onClick={() => { setSearch(""); setCatFilter("All"); setStockFilter("all"); }}
+            >
+              Clear filters
+            </button>
+          </div>
         ) : (
           filtered.map((item) => {
             const status = stockStatus(item);
@@ -374,7 +420,13 @@ function EateryInventory() {
             {filtered.length === 0 && (
               <tr>
                 <td colSpan={9} className="px-5 py-10 text-center text-sm text-muted-foreground">
-                  No items found.
+                  No items found.{" "}
+                  <button
+                    className="underline"
+                    onClick={() => { setSearch(""); setCatFilter("All"); setStockFilter("all"); }}
+                  >
+                    Clear filters
+                  </button>
                 </td>
               </tr>
             )}

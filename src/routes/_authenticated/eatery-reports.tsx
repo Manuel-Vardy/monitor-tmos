@@ -15,6 +15,9 @@ import {
   BarChart2,
   Receipt,
   Flame,
+  GitCompare,
+  Boxes,
+  ShoppingCart,
 } from "lucide-react";
 import {
   Area,
@@ -37,6 +40,7 @@ import { Button } from "@/components/ui/button";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { currency } from "@/lib/mos-data";
 import { MENU_ITEMS, WASTAGE_LOGS } from "@/lib/restaurant-data";
+import { useBranches } from "@/lib/branches-context";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/eatery-reports")({
@@ -150,7 +154,7 @@ function KpiCard({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 function EateryReports() {
-  const [activeTab, setActiveTab] = useState<"today" | "menu" | "range">("today");
+  const [activeTab, setActiveTab] = useState<"today" | "menu" | "range" | "interbranch">("today");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
   const rangeLabel = dateRange?.from
@@ -163,6 +167,7 @@ function EateryReports() {
     { key: "today"   as const, label: "Today's Report",   icon: CalendarDays },
     { key: "menu"    as const, label: "Menu Report",       icon: UtensilsCrossed },
     { key: "range"   as const, label: "Date Range Report", icon: BarChart2 },
+    { key: "interbranch" as const, label: "Inter-Branch Report", icon: GitCompare },
   ];
 
   return (
@@ -399,7 +404,297 @@ function EateryReports() {
           </div>
         )}
 
-        {/* ══ TAB 3 — DATE RANGE REPORT ══ */}
+        {/* ══ TAB 4 — INTER-BRANCH REPORT ══ */}
+        {activeTab === "interbranch" && (
+          <div className="space-y-6">
+            {(() => {
+              const { branches } = useBranches();
+              const branchOptions = branches.filter((b) => b.id !== "all");
+              const totalRev = branchOptions.reduce((s, b) => s + b.revenue, 0);
+              const totalStock = branchOptions.reduce((s, b) => s + b.stockValue, 0);
+              const totalStaff = branchOptions.reduce((s, b) => s + b.staff, 0);
+              const branchChartData = branchOptions.map((b) => ({
+                name: b.name.split(" ")[0],
+                revenue: b.revenue,
+                stockValue: b.stockValue,
+              }));
+              return (
+                <>
+                  {/* KPI cards */}
+                  <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                    {[
+                      {
+                        label: "Total Branches",
+                        value: branchOptions.length.toString(),
+                        sub: "active locations",
+                        icon: GitCompare,
+                        color: "text-emerald-600 dark:text-emerald-400",
+                        bg: "bg-emerald-50 dark:bg-emerald-950/60",
+                      },
+                      {
+                        label: "Combined Revenue",
+                        value: currency(totalRev),
+                        sub: "all branches",
+                        icon: Banknote,
+                        color: "text-blue-600 dark:text-blue-400",
+                        bg: "bg-blue-50 dark:bg-blue-950/60",
+                      },
+                      {
+                        label: "Combined Stock",
+                        value: currency(totalStock),
+                        sub: "total inventory value",
+                        icon: Boxes,
+                        color: "text-violet-600 dark:text-violet-400",
+                        bg: "bg-violet-50 dark:bg-violet-950/60",
+                      },
+                      {
+                        label: "Total Staff",
+                        value: totalStaff.toString(),
+                        sub: "across all locations",
+                        icon: Users,
+                        color: "text-amber-600 dark:text-amber-400",
+                        bg: "bg-amber-50 dark:bg-amber-950/60",
+                      },
+                    ].map((c) => (
+                      <div
+                        key={c.label}
+                        className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-xs"
+                      >
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                            {c.label}
+                          </p>
+                          <span className={cn("rounded-full p-1.5 sm:p-2", c.bg, c.color)}>
+                            <c.icon className="size-3.5 sm:size-4" />
+                          </span>
+                        </div>
+                        <p className={cn("mt-2 text-xl sm:text-2xl font-bold", c.color)}>{c.value}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">{c.sub}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Side-by-side branch comparison chart */}
+                  <div className="rounded-xl border border-border bg-card p-4 sm:p-5 shadow-xs">
+                    <div className="mb-4">
+                      <h2 className="text-sm font-semibold">Branch Comparison</h2>
+                      <p className="text-xs text-muted-foreground">
+                        Revenue vs stock value across all branches
+                      </p>
+                    </div>
+                    <div className="h-72">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={branchChartData}
+                          margin={{ left: -18, right: 4 }}
+                          barCategoryGap="30%"
+                        >
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="var(--color-border)"
+                            vertical={false}
+                          />
+                          <XAxis
+                            dataKey="name"
+                            tickLine={false}
+                            axisLine={false}
+                            fontSize={11}
+                            stroke="var(--color-muted-foreground)"
+                          />
+                          <YAxis
+                            tickFormatter={(v) => `${Math.round(v / 1000)}k`}
+                            tickLine={false}
+                            axisLine={false}
+                            fontSize={11}
+                            stroke="var(--color-muted-foreground)"
+                          />
+                          <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => currency(v)} />
+                          <Legend wrapperStyle={{ fontSize: 12 }} />
+                          <Bar name="Revenue" dataKey="revenue" fill="#22c55e" radius={[4, 4, 0, 0]} />
+                          <Bar
+                            name="Stock Value"
+                            dataKey="stockValue"
+                            fill="#8b5cf6"
+                            radius={[4, 4, 0, 0]}
+                            opacity={0.8}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  {/* Detailed inter-branch comparison table */}
+                  <div className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
+                    <div className="border-b border-border px-5 py-4">
+                      <h2 className="text-sm font-semibold">Branch-by-Branch Breakdown</h2>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        Full comparative view — revenue share, stock efficiency, and growth per branch
+                      </p>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full min-w-[700px] text-sm">
+                        <thead>
+                          <tr className="border-b border-border bg-secondary/40 text-left text-xs tracking-wide text-muted-foreground uppercase">
+                            <th className="px-5 py-3 font-bold">Branch</th>
+                            <th className="px-5 py-3 text-right font-bold">Revenue</th>
+                            <th className="px-5 py-3 font-bold">Rev. Share</th>
+                            <th className="px-5 py-3 text-right font-bold">Growth</th>
+                            <th className="px-5 py-3 text-right font-bold">Stock Value</th>
+                            <th className="px-5 py-3 font-bold">Stock Share</th>
+                            <th className="px-5 py-3 text-right font-bold">Staff</th>
+                            <th className="px-5 py-3 text-right font-bold">Rev/Staff</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                          {[...branchOptions]
+                            .sort((a, b) => b.revenue - a.revenue)
+                            .map((b) => {
+                              const revShare = Math.round((b.revenue / totalRev) * 100);
+                              const stockShare = Math.round((b.stockValue / totalStock) * 100);
+                              const revPerStaff = Math.round(b.revenue / b.staff);
+                              return (
+                                <tr key={b.id} className="transition-colors hover:bg-secondary/30">
+                                  <td className="px-5 py-3">
+                                    <p className="font-semibold">{b.name}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {b.city} · {b.settlement}
+                                    </p>
+                                  </td>
+                                  <td className="px-5 py-3 text-right font-bold text-accent">
+                                    {currency(b.revenue)}
+                                  </td>
+                                  <td className="px-5 py-3">
+                                    <div className="flex items-center gap-2">
+                                      <div className="h-1.5 w-16 overflow-hidden rounded-full bg-secondary">
+                                        <div
+                                          className="h-full rounded-full bg-accent"
+                                          style={{ width: `${revShare}%` }}
+                                        />
+                                      </div>
+                                      <span className="text-xs text-muted-foreground">
+                                        {revShare}%
+                                      </span>
+                                    </div>
+                                  </td>
+                                  <td className="px-5 py-3 text-right">
+                                    <span
+                                      className={cn(
+                                        "inline-flex items-center gap-0.5 font-semibold text-xs",
+                                        b.growth >= 0
+                                          ? "text-emerald-600 dark:text-emerald-400"
+                                          : "text-rose-600 dark:text-rose-400",
+                                      )}
+                                    >
+                                      {b.growth >= 0 ? (
+                                        <ArrowUpRight className="size-3.5" />
+                                      ) : (
+                                        <ArrowDownRight className="size-3.5" />
+                                      )}
+                                      {Math.abs(b.growth)}%
+                                    </span>
+                                  </td>
+                                  <td className="px-5 py-3 text-right font-medium">
+                                    {currency(b.stockValue)}
+                                  </td>
+                                  <td className="px-5 py-3">
+                                    <div className="flex items-center gap-2">
+                                      <div className="h-1.5 w-16 overflow-hidden rounded-full bg-secondary">
+                                        <div
+                                          className="h-full rounded-full bg-violet-500"
+                                          style={{ width: `${stockShare}%` }}
+                                        />
+                                      </div>
+                                      <span className="text-xs text-muted-foreground">
+                                        {stockShare}%
+                                      </span>
+                                    </div>
+                                  </td>
+                                  <td className="px-5 py-3 text-right text-muted-foreground">
+                                    {b.staff}
+                                  </td>
+                                  <td className="px-5 py-3 text-right font-semibold">
+                                    {currency(revPerStaff)}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          <tr className="bg-secondary/30 border-t-2 border-border font-bold">
+                            <td className="px-5 py-3">All Branches</td>
+                            <td className="px-5 py-3 text-right text-emerald-600 dark:text-emerald-400">
+                              {currency(totalRev)}
+                            </td>
+                            <td className="px-5 py-3 text-xs text-muted-foreground">100%</td>
+                            <td className="px-5 py-3 text-right">
+                              <span className="text-xs text-emerald-600 dark:text-emerald-400">
+                                +
+                                {(
+                                  branchOptions.reduce((s, b) => s + b.growth, 0) / branchOptions.length
+                                ).toFixed(1)}
+                                % avg
+                              </span>
+                            </td>
+                            <td className="px-5 py-3 text-right">
+                              {currency(totalStock)}
+                            </td>
+                            <td className="px-5 py-3 text-xs text-muted-foreground">100%</td>
+                            <td className="px-5 py-3 text-right">
+                              {totalStaff}
+                            </td>
+                            <td className="px-5 py-3 text-right">
+                              {currency(
+                                Math.round(
+                                  totalRev / totalStaff,
+                                ),
+                              )}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Covers & efficiency per branch */}
+                  <div className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
+                    <div className="border-b border-border px-5 py-4">
+                      <h2 className="text-sm font-semibold">Covers & Efficiency per Branch</h2>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        Weekly covers and average check value by location
+                      </p>
+                    </div>
+                    <ul className="divide-y divide-border">
+                      {branchOptions.map((b) => {
+                        const covers = Math.round(b.revenue / 50);
+                        const avgCheck = 50;
+                        return (
+                          <li key={b.id} className="flex items-center gap-4 px-5 py-3.5">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-semibold truncate">{b.name}</p>
+                              <p className="text-xs text-muted-foreground">{b.city}</p>
+                            </div>
+                            <div className="flex items-center gap-6 text-xs">
+                              <div className="text-right">
+                                <p className="text-muted-foreground">Covers</p>
+                                <p className="num font-bold text-foreground">{covers.toLocaleString()}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-muted-foreground">Avg Check</p>
+                                <p className="num font-bold text-foreground">{currency(avgCheck)}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-muted-foreground">Revenue</p>
+                                <p className="num font-bold text-accent">{currency(b.revenue)}</p>
+                              </div>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        )}
         {activeTab === "range" && (
           <div className="space-y-6">
             <div className="flex flex-wrap items-center gap-3">

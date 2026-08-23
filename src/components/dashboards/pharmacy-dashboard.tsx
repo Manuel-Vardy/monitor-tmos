@@ -144,7 +144,7 @@ function StyledKpi({ label, value, sub, icon: Icon, accent }: StyledKpiProps) {
           </p>
         </div>
       </div>
-      <p className="mt-3 text-3xl sm:text-[32px] font-semibold leading-none tracking-tight num">
+      <p className="mt-3 text-2xl lg:text-3xl font-semibold leading-none tracking-tight num">
         {value}
       </p>
       <p className="mt-2.5 text-xs text-muted-foreground">{sub}</p>

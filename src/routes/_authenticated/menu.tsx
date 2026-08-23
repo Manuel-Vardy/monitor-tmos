@@ -41,6 +41,17 @@ export const Route = createFileRoute("/_authenticated/menu")({
 });
 
 type Category = "All Categories" | MenuItem["category"];
+
+// ── Per-category active color for filter chips ────────────────────────────────
+const CATEGORY_CHIP_COLORS: Record<string, string> = {
+  "All Categories": "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900",
+  "Mains":          "bg-orange-500 text-white",
+  "Starters":       "bg-emerald-600 text-white",
+  "Grill":          "bg-red-600 text-white",
+  "Seafood":        "bg-blue-600 text-white",
+  "Drinks":         "bg-cyan-500 text-white",
+  "Desserts":       "bg-pink-500 text-white",
+};
 type IngredientRow = { name: string; qty: string };
 
 // ─── Payment methods ──────────────────────────────────────────────────────────
@@ -295,7 +306,11 @@ function MenuAndRecipes() {
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
               {(["All Categories","Mains","Starters","Grill","Seafood","Drinks"] as Category[]).map((cat) => (
                 <button key={cat} onClick={() => setCategoryFilter(cat)}
-                  className={`shrink-0 rounded-full px-3.5 py-1 text-xs font-semibold transition-all ${categoryFilter === cat ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900" : "bg-secondary text-muted-foreground hover:bg-border"}`}>
+                  className={`shrink-0 rounded-full px-3.5 py-1 text-xs font-semibold transition-all ${
+                    categoryFilter === cat
+                      ? CATEGORY_CHIP_COLORS[cat] ?? "bg-zinc-900 text-white"
+                      : "bg-secondary text-muted-foreground hover:bg-border"
+                  }`}>
                   {cat}
                 </button>
               ))}

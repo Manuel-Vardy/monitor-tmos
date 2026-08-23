@@ -130,9 +130,6 @@ function SignInPage() {
                   <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl text-black dark:text-white">
                     What type of business are you?
                   </h1>
-                  <p className="mt-1 text-sm text-black/50 dark:text-white/50">
-                    Choose the one that best describes you
-                  </p>
                 </div>
 
                 <div className="flex flex-wrap items-center justify-center gap-2.5">
