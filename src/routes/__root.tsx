@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { InstitutionProvider } from "@/contexts/institution-context";
+import { AcademicYearProvider } from "@/contexts/academic-year-context";
 import { BranchesProvider } from "@/lib/branches-context";
 import { useInstitution } from "@/hooks/use-institution";
 
@@ -152,15 +153,17 @@ function RootComponent() {
 
   return (
     <InstitutionProvider>
-      <BranchesProvider>
-        <QueryClientProvider client={queryClient}>
-          <RehydrationGate>
-            {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-            <Outlet />
-          </RehydrationGate>
-          <Toaster />
-        </QueryClientProvider>
-      </BranchesProvider>
+      <AcademicYearProvider>
+        <BranchesProvider>
+          <QueryClientProvider client={queryClient}>
+            <RehydrationGate>
+              {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+              <Outlet />
+            </RehydrationGate>
+            <Toaster />
+          </QueryClientProvider>
+        </BranchesProvider>
+      </AcademicYearProvider>
     </InstitutionProvider>
   );
 }

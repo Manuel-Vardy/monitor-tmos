@@ -30,8 +30,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useInstitution } from "@/hooks/use-institution";
 import { resolveNavProfile } from "@/lib/nav-profiles";
-// InstitutionSwitcher will be created in task 12.1
 import { InstitutionSwitcher } from "@/components/institution-switcher";
+import { AcademicYearSelector } from "@/components/academic-year-selector";
 import {
   Sheet,
   SheetContent,
@@ -251,6 +251,7 @@ export function AppShell({
               )}
             </div>
             <div className="flex items-center gap-2">
+              {institutionType === "school" && <AcademicYearSelector />}
               <button className="relative grid size-9 place-items-center rounded-md border border-border bg-card transition-colors hover:bg-secondary">
                 <Bell className="size-4" />
                 <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-accent" />
@@ -280,9 +281,12 @@ export function AppShell({
                   />
                 )}
               </div>
-              {actions && (
-                <div className="flex flex-wrap items-center gap-2">{actions}</div>
-              )}
+              <div className="flex flex-wrap items-center gap-2">
+                {institutionType === "school" && <AcademicYearSelector />}
+                {actions && (
+                  <div className="flex flex-wrap items-center gap-2">{actions}</div>
+                )}
+              </div>
             </div>
           </div>
 

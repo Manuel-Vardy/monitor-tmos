@@ -18,10 +18,9 @@ import {
   Coins,
 } from "lucide-react";
 import {
-  Bar,
-  BarChart,
+  Area,
+  AreaChart,
   CartesianGrid,
-  Cell,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -35,6 +34,7 @@ import { Button } from "@/components/ui/button";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { currency } from "@/lib/mos-data";
 import { SCHOOL_STUDENTS, FEE_TRANSACTIONS, SCHOOL_SUMMARY } from "@/lib/school-data";
+import { useAcademicYear } from "@/contexts/academic-year-context";
 
 type PaymentMethodKey = "Mobile Money (MTN)" | "Bank Transfer" | "Cash Deposit" | "Stablecoin";
 
@@ -128,13 +128,18 @@ export function SchoolDashboard() {
       .sort((a, b) => b.amount - a.amount);
   }, []);
 
-  const totalExpected = useMemo(() => SCHOOL_STUDENTS.reduce((s, st) => s + st.tuitionFee, 0), []);
-  const collectionRate =
-    totalExpected > 0 ? Math.round((SCHOOL_SUMMARY.totalFeesCollected / totalExpected) * 100) : 0;
+  const { filterStudentsByYear } = useAcademicYear();
+  const yearFilteredStudents = useMemo(() => filterStudentsByYear(SCHOOL_STUDENTS), [filterStudentsByYear]);
 
-  const overdueStudents = SCHOOL_STUDENTS.filter((s) => s.status === "Overdue").length;
-  const partialStudents = SCHOOL_STUDENTS.filter((s) => s.status === "Partial Payment").length;
-  const fullyPaidStudents = SCHOOL_STUDENTS.filter((s) => s.status === "Paid Full").length;
+  const totalExpected = useMemo(() => yearFilteredStudents.reduce((s, st) => s + st.tuitionFee, 0), [yearFilteredStudents]);
+  const totalCollected = useMemo(() => yearFilteredStudents.reduce((s, st) => s + st.paidAmount, 0), [yearFilteredStudents]);
+  const totalOutstanding = useMemo(() => yearFilteredStudents.reduce((s, st) => s + st.balanceDue, 0), [yearFilteredStudents]);
+  const collectionRate =
+    totalExpected > 0 ? Math.round((totalCollected / totalExpected) * 100) : 0;
+
+  const overdueStudents = yearFilteredStudents.filter((s) => s.status === "Overdue").length;
+  const partialStudents = yearFilteredStudents.filter((s) => s.status === "Partial Payment").length;
+  const fullyPaidStudents = yearFilteredStudents.filter((s) => s.status === "Paid Full").length;
 
   return (
     <AppShell
@@ -204,50 +209,35 @@ export function SchoolDashboard() {
                   <p className="text-[10px] font-bold uppercase tracking-widest text-white/70">
                     Receipts
                   </p>
-                  <p className="text-lg font-bold leading-none mt-1 num">{trendTotals.totalTx}</p>
+                  <p className="text-lg font-bold leading-none mt-1 num">
+                    {trendTotals.totalTx}
+                  </p>
                 </div>
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-widest text-white/70">
-                    Collected
+                    Collection
                   </p>
                   <p className="text-lg font-bold leading-none mt-1">{collectionRate}%</p>
                 </div>
-              </div>
-              <div className="mt-4 flex gap-3">
-                <Link to="/fees" className="flex-1">
-                  <span className="block rounded-xl bg-white text-[#166534] py-2.5 text-center text-sm font-semibold transition hover:bg-white/90">
-                    Collect Fee
-                  </span>
-                </Link>
-                <Link to="/receipts" className="flex-1">
-                  <span className="block rounded-xl bg-white/15 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-white/25 backdrop-blur">
-                    Receipts
-                  </span>
-                </Link>
               </div>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-2.5">
-            <KpiCard
-              label="Fees Collected"
-              value={currency(SCHOOL_SUMMARY.totalFeesCollected)}
-              delta={15}
-              sub={`${fullyPaidStudents} students fully cleared`}
-              icon={GraduationCap}
-            />
-            <KpiCard
-              label="Fee Arrears"
-              value={currency(SCHOOL_SUMMARY.totalOutstandingFees)}
-              sub={`${overdueStudents + partialStudents} with balance due`}
-              icon={AlertCircle}
-            />
-            <KpiCard
-              label="Collection Rate"
-              value={`${collectionRate}%`}
-              sub="Term 3 · billed vs received"
-              icon={TrendingUp}
-            />
+            <div className="rounded-xl border border-border bg-card p-3 shadow-2xs">
+              <p className="text-xs text-muted-foreground">Total Arrears</p>
+              <p className="mt-1 font-bold text-lg text-rose-600 dark:text-rose-400 num">
+                {currency(totalOutstanding)}
+              </p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">{overdueStudents} overdue</p>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-3 shadow-2xs">
+              <p className="text-xs text-muted-foreground">Cleared Students</p>
+              <p className="mt-1 font-bold text-lg text-emerald-600 dark:text-emerald-400">
+                {fullyPaidStudents}/{SCHOOL_STUDENTS.length}
+              </p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Fully paid fees</p>
+            </div>
           </div>
         </div>
 
@@ -255,14 +245,14 @@ export function SchoolDashboard() {
         <div className="hidden lg:grid grid-cols-3 gap-3">
           <KpiCard
             label="Fees Collected"
-            value={currency(SCHOOL_SUMMARY.totalFeesCollected)}
+            value={currency(totalCollected)}
             delta={15}
             sub={`${fullyPaidStudents} students fully cleared`}
             icon={GraduationCap}
           />
           <KpiCard
             label="Fee Arrears"
-            value={currency(SCHOOL_SUMMARY.totalOutstandingFees)}
+            value={currency(totalOutstanding)}
             sub={`${overdueStudents + partialStudents} accounts with balance due`}
             icon={AlertCircle}
           />
@@ -297,11 +287,11 @@ export function SchoolDashboard() {
             </div>
             <div className="h-[240px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="schoolFeeGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#22c55e" stopOpacity={0.38} />
-                      <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#22c55e" stopOpacity={0.35} />
+                      <stop offset="95%" stopColor="#22c55e" stopOpacity={0.0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid
@@ -329,16 +319,17 @@ export function SchoolDashboard() {
                     }}
                     contentStyle={tooltipStyle}
                   />
-                  <Bar
+                  <Area
                     type="monotone"
                     dataKey="collected"
                     stroke="#22c55e"
                     strokeWidth={2.5}
                     fillOpacity={1}
                     fill="url(#schoolFeeGrad)"
-                    activeDot={{ r: 5, fill: "#22c55e", stroke: "#fff", strokeWidth: 2 }}
+                    dot={{ r: 3, fill: "#22c55e" }}
+                    activeDot={{ r: 6, fill: "#22c55e", stroke: "#fff", strokeWidth: 2 }}
                   />
-                </BarChart>
+                </AreaChart>
               </ResponsiveContainer>
             </div>
           </Card>
@@ -410,7 +401,7 @@ export function SchoolDashboard() {
                   <div>
                     <p className="font-semibold text-sm">{s.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {s.studentId} · Guardian: {s.guardianName}
+                      {s.studentId} · {s.guardianPhone}
                     </p>
                   </div>
                   <div className="text-right">

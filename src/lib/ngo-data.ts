@@ -1,28 +1,106 @@
-export type Donation = {
+export type ChurchPaymentType = {
   id: string;
-  donorId: string;
-  donorName: string;
-  donorType: "Individual Partner" | "Corporate Sponsor" | "International Grant" | "Community Foundation";
-  amount: number;
-  currency: "GHS" | "USD";
-  allocatedProject: string;
-  date: string;
-  paymentMethod: "Mobile Money (MTN)" | "Wire Transfer" | "Credit Card" | "Cheque";
-  status: "Received" | "Pledged";
-  receiptNo: string;
+  name: string;
+  category: "Tithe" | "Offering" | "Welfare" | "Project" | "Dues" | "Special";
+  defaultAmount: number;
+  frequency: "Weekly" | "Monthly" | "Quarterly" | "Annual" | "One-Time";
+  isProject: boolean;
+  projectName?: string | undefined;
+  description?: string | undefined;
 };
+
+export const DEFAULT_CHURCH_PAYMENT_TYPES: ChurchPaymentType[] = [
+  {
+    id: "cpay-tithe",
+    name: "Tithe",
+    category: "Tithe",
+    defaultAmount: 600,
+    frequency: "Monthly",
+    isProject: false,
+    description: "Ten percent covenant tithe offering for ministry advancement",
+  },
+  {
+    id: "cpay-offering",
+    name: "Sunday General Offering",
+    category: "Offering",
+    defaultAmount: 150,
+    frequency: "Weekly",
+    isProject: false,
+    description: "General Sunday service and midweek fellowship offerings",
+  },
+  {
+    id: "cpay-welfare",
+    name: "Welfare & Benevolence Dues",
+    category: "Welfare",
+    defaultAmount: 50,
+    frequency: "Monthly",
+    isProject: false,
+    description: "Member bereavement, emergency support, and hospital visitation fund",
+  },
+  {
+    id: "cpay-bldg",
+    name: "Cathedral Building Project Levy",
+    category: "Project",
+    defaultAmount: 1000,
+    frequency: "Annual",
+    isProject: true,
+    projectName: "Cathedral Building Project",
+    description: "New multi-purpose church auditorium and youth fellowship complex",
+  },
+  {
+    id: "cpay-harvest",
+    name: "Annual Harvest & Thanksgiving",
+    category: "Special",
+    defaultAmount: 500,
+    frequency: "Annual",
+    isProject: false,
+    description: "Annual church anniversary thanksgiving and harvest sacrifice",
+  },
+  {
+    id: "cpay-bus",
+    name: "Evangelism Bus Project",
+    category: "Project",
+    defaultAmount: 350,
+    frequency: "One-Time",
+    isProject: true,
+    projectName: "Evangelism Bus Acquisition",
+    description: "Purchase of a 32-seater coaster bus for church outreach and community evangelism",
+  },
+];
 
 export type NgoMember = {
   id: string;
   memberId: string;
   name: string;
-  role: "Board Member" | "Volunteer Leader" | "Executive Member" | "Patron Member";
+  role: "Pastor / Minister" | "Elder / Deacon" | "Board Member" | "Welfare Committee" | "Youth Leader" | "Member";
   email: string;
   phone: string;
+  assignedPaymentTypes?: string[] | undefined;
   annualDues: number;
   duesPaid: number;
   duesStatus: "Paid" | "Outstanding";
+  monthlyTithe?: number | undefined;
+  welfarePaid?: number | undefined;
+  projectContributions?: number | undefined;
+  totalPaid: number;
+  balanceDue: number;
   joinedDate: string;
+};
+
+export type ChurchPaymentRecord = {
+  id: string;
+  receiptNo: string;
+  memberId: string;
+  memberName: string;
+  paymentType: string;
+  category: "Tithe" | "Offering" | "Welfare" | "Project" | "Dues" | "Special";
+  isProject: boolean;
+  projectName?: string | undefined;
+  amount: number;
+  paymentMethod: "Mobile Money" | "Bank Transfer" | "Cash Deposit";
+  date: string;
+  receivedBy?: string | undefined;
+  status: "Confirmed";
 };
 
 export type NgoProject = {
@@ -52,151 +130,231 @@ export type BudgetApproval = {
   status: "Approved" | "Pending Approval";
 };
 
-export const NGO_DONATIONS: Donation[] = [
+export const CHURCH_PAYMENT_RECORDS: ChurchPaymentRecord[] = [
   {
-    id: "DON-001",
-    donorId: "DNR-501",
-    donorName: "MTN Ghana Foundation",
-    donorType: "Corporate Sponsor",
-    amount: 75000,
-    currency: "GHS",
-    allocatedProject: "Clean Water Borehole Initiative",
+    id: "TX-CH-101",
+    receiptNo: "RCP-CH-2026-001",
+    memberId: "CHU-MBR-001",
+    memberName: "Rev. Prof. Emmanuel Osei",
+    paymentType: "Tithe",
+    category: "Tithe",
+    isProject: false,
+    amount: 1500,
+    paymentMethod: "Bank Transfer",
+    date: "14 Aug 2026",
+    receivedBy: "Finance Deacon",
+    status: "Confirmed",
+  },
+  {
+    id: "TX-CH-102",
+    receiptNo: "RCP-CH-2026-002",
+    memberId: "CHU-MBR-002",
+    memberName: "Elder Clara Mensah",
+    paymentType: "Cathedral Building Project Levy",
+    category: "Project",
+    isProject: true,
+    projectName: "Cathedral Building Project",
+    amount: 1000,
+    paymentMethod: "Mobile Money",
+    date: "12 Aug 2026",
+    receivedBy: "Project Treasurer",
+    status: "Confirmed",
+  },
+  {
+    id: "TX-CH-103",
+    receiptNo: "RCP-CH-2026-003",
+    memberId: "CHU-MBR-004",
+    memberName: "Dr. Hannah Quartey",
+    paymentType: "Tithe",
+    category: "Tithe",
+    isProject: false,
+    amount: 2000,
+    paymentMethod: "Bank Transfer",
     date: "11 Aug 2026",
-    paymentMethod: "Wire Transfer",
-    status: "Received",
-    receiptNo: "REC-NGO-901",
+    receivedBy: "Finance Deacon",
+    status: "Confirmed",
   },
   {
-    id: "DON-002",
-    donorId: "DNR-502",
-    donorName: "Dr. Kwesi Appiah",
-    donorType: "Individual Partner",
-    amount: 12000,
-    currency: "GHS",
-    allocatedProject: "Rural Health & Maternal Care Outreach",
-    date: "10 Aug 2026",
-    paymentMethod: "Mobile Money (MTN)",
-    status: "Received",
-    receiptNo: "REC-NGO-902",
+    id: "TX-CH-104",
+    receiptNo: "RCP-CH-2026-004",
+    memberId: "CHU-MBR-003",
+    memberName: "Michael Kobby Addo",
+    paymentType: "Evangelism Bus Project",
+    category: "Project",
+    isProject: true,
+    projectName: "Evangelism Bus Acquisition",
+    amount: 350,
+    paymentMethod: "Mobile Money",
+    date: "09 Aug 2026",
+    receivedBy: "Youth Treasurer",
+    status: "Confirmed",
   },
   {
-    id: "DON-003",
-    donorId: "DNR-503",
-    donorName: "Global Literacy Alliance (USA)",
-    donorType: "International Grant",
-    amount: 15000,
-    currency: "USD",
-    allocatedProject: "Digital Libraries for Basic Schools",
+    id: "TX-CH-105",
+    receiptNo: "RCP-CH-2026-005",
+    memberId: "CHU-MBR-005",
+    memberName: "Deacon Samuel Frimpong",
+    paymentType: "Welfare & Benevolence Dues",
+    category: "Welfare",
+    isProject: false,
+    amount: 200,
+    paymentMethod: "Cash Deposit",
     date: "08 Aug 2026",
-    paymentMethod: "Wire Transfer",
-    status: "Pledged",
-    receiptNo: "PLG-NGO-903",
-  },
-  {
-    id: "DON-004",
-    donorId: "DNR-504",
-    donorName: "Stanbic Bank CSR Fund",
-    donorType: "Corporate Sponsor",
-    amount: 45000,
-    currency: "GHS",
-    allocatedProject: "Youth Vocational Skills Empowerment",
-    date: "05 Aug 2026",
-    paymentMethod: "Cheque",
-    status: "Received",
-    receiptNo: "REC-NGO-904",
+    receivedBy: "Welfare Head",
+    status: "Confirmed",
   },
 ];
 
 export const NGO_MEMBERS: NgoMember[] = [
   {
     id: "MEM-001",
-    memberId: "NGO-MBR-01",
+    memberId: "CHU-MBR-001",
     name: "Rev. Prof. Emmanuel Osei",
-    role: "Board Member",
-    email: "e.osei@foundation.org",
+    role: "Pastor / Minister",
+    email: "e.osei@churchministry.org",
     phone: "+233 24 411 9002",
-    annualDues: 2000,
-    duesPaid: 2000,
+    assignedPaymentTypes: ["Tithe", "Cathedral Building Project Levy", "Welfare & Benevolence Dues"],
+    annualDues: 2500,
+    duesPaid: 2500,
     duesStatus: "Paid",
+    monthlyTithe: 1500,
+    welfarePaid: 200,
+    projectContributions: 1000,
+    totalPaid: 2700,
+    balanceDue: 0,
     joinedDate: "15 Jan 2022",
   },
   {
     id: "MEM-002",
-    memberId: "NGO-MBR-04",
-    name: "Lawyer Clara Mensah",
-    role: "Executive Member",
+    memberId: "CHU-MBR-002",
+    name: "Elder Clara Mensah",
+    role: "Elder / Deacon",
     email: "c.mensah@chambers.gh",
     phone: "+233 20 881 2299",
-    annualDues: 1500,
-    duesPaid: 1500,
+    assignedPaymentTypes: ["Tithe", "Cathedral Building Project Levy", "Welfare & Benevolence Dues"],
+    annualDues: 2000,
+    duesPaid: 2000,
     duesStatus: "Paid",
+    monthlyTithe: 1200,
+    welfarePaid: 200,
+    projectContributions: 1000,
+    totalPaid: 2400,
+    balanceDue: 0,
     joinedDate: "10 Mar 2023",
   },
   {
     id: "MEM-003",
-    memberId: "NGO-MBR-12",
+    memberId: "CHU-MBR-003",
     name: "Michael Kobby Addo",
-    role: "Volunteer Leader",
+    role: "Youth Leader",
     email: "kobby.m@gmail.com",
     phone: "+233 27 550 4411",
-    annualDues: 500,
-    duesPaid: 0,
+    assignedPaymentTypes: ["Tithe", "Evangelism Bus Project", "Welfare & Benevolence Dues"],
+    annualDues: 900,
+    duesPaid: 350,
     duesStatus: "Outstanding",
+    monthlyTithe: 200,
+    welfarePaid: 50,
+    projectContributions: 350,
+    totalPaid: 600,
+    balanceDue: 300,
     joinedDate: "01 Feb 2025",
   },
   {
     id: "MEM-004",
-    memberId: "NGO-MBR-18",
+    memberId: "CHU-MBR-004",
     name: "Dr. Hannah Quartey",
-    role: "Patron Member",
+    role: "Board Member",
     email: "hannah.q@korlebu.edu.gh",
     phone: "+233 54 901 3322",
-    annualDues: 3000,
-    duesPaid: 3000,
+    assignedPaymentTypes: ["Tithe", "Cathedral Building Project Levy", "Welfare & Benevolence Dues", "Annual Harvest & Thanksgiving"],
+    annualDues: 3500,
+    duesPaid: 3500,
     duesStatus: "Paid",
+    monthlyTithe: 2000,
+    welfarePaid: 300,
+    projectContributions: 1200,
+    totalPaid: 3500,
+    balanceDue: 0,
     joinedDate: "20 Jun 2021",
+  },
+  {
+    id: "MEM-005",
+    memberId: "CHU-MBR-005",
+    name: "Deacon Samuel Frimpong",
+    role: "Welfare Committee",
+    email: "s.frimpong@welfare.org",
+    phone: "+233 24 991 8821",
+    assignedPaymentTypes: ["Tithe", "Welfare & Benevolence Dues", "Evangelism Bus Project"],
+    annualDues: 1200,
+    duesPaid: 950,
+    duesStatus: "Outstanding",
+    monthlyTithe: 600,
+    welfarePaid: 200,
+    projectContributions: 150,
+    totalPaid: 950,
+    balanceDue: 250,
+    joinedDate: "12 Apr 2023",
+  },
+  {
+    id: "MEM-006",
+    memberId: "CHU-MBR-006",
+    name: "Sister Abigail Darko",
+    role: "Member",
+    email: "abigail.darko@yahoo.com",
+    phone: "+233 20 114 7733",
+    assignedPaymentTypes: ["Tithe", "Welfare & Benevolence Dues", "Cathedral Building Project Levy"],
+    annualDues: 1500,
+    duesPaid: 1500,
+    duesStatus: "Paid",
+    monthlyTithe: 500,
+    welfarePaid: 150,
+    projectContributions: 850,
+    totalPaid: 1500,
+    balanceDue: 0,
+    joinedDate: "05 Sep 2024",
   },
 ];
 
 export const NGO_PROJECTS: NgoProject[] = [
   {
     id: "PRJ-01",
-    code: "PRJ-WTR-01",
-    title: "Clean Water Borehole Initiative",
-    location: "Akwapim North District, Eastern Region",
-    budgetAllocated: 120000,
-    fundsSpent: 78500,
-    leadCoordinator: "Eng. Kwame Asante",
-    startDate: "01 Mar 2026",
-    targetEndDate: "30 Oct 2026",
+    code: "PRJ-BLD-01",
+    title: "Cathedral Building Project",
+    location: "Main Sanctuary Complex, Accra",
+    budgetAllocated: 250000,
+    fundsSpent: 128500,
+    leadCoordinator: "Elder Clara Mensah",
+    startDate: "01 Jan 2026",
+    targetEndDate: "30 Dec 2026",
     status: "Active Implementation",
-    beneficiariesCount: 14500,
+    beneficiariesCount: 3500,
   },
   {
     id: "PRJ-02",
-    code: "PRJ-HLT-02",
-    title: "Rural Health & Maternal Care Outreach",
-    location: "Ada East & West Districts, Greater Accra",
-    budgetAllocated: 85000,
-    fundsSpent: 42000,
-    leadCoordinator: "Dr. Hannah Quartey",
-    startDate: "15 Apr 2026",
-    targetEndDate: "15 Dec 2026",
+    code: "PRJ-BUS-02",
+    title: "Evangelism Bus Acquisition",
+    location: "Community Outreach Missions",
+    budgetAllocated: 65000,
+    fundsSpent: 38000,
+    leadCoordinator: "Michael Kobby Addo",
+    startDate: "15 Mar 2026",
+    targetEndDate: "15 Oct 2026",
     status: "Active Implementation",
-    beneficiariesCount: 8200,
+    beneficiariesCount: 5000,
   },
   {
     id: "PRJ-03",
-    code: "PRJ-EDU-03",
-    title: "Digital Libraries for Basic Schools",
-    location: "Tamale Metro, Northern Region",
-    budgetAllocated: 150000,
+    code: "PRJ-WFR-03",
+    title: "Community Food & Welfare Outreach",
+    location: "Urban Welfare Centers",
+    budgetAllocated: 40000,
     fundsSpent: 15000,
-    leadCoordinator: "Michael Kobby Addo",
-    startDate: "01 Jun 2026",
+    leadCoordinator: "Deacon Samuel Frimpong",
+    startDate: "01 May 2026",
     targetEndDate: "28 Feb 2027",
     status: "Planning Phase",
-    beneficiariesCount: 22000,
+    beneficiariesCount: 2200,
   },
 ];
 
@@ -204,11 +362,11 @@ export const BUDGET_APPROVALS: BudgetApproval[] = [
   {
     id: "BGT-101",
     requestNo: "REQ-2026-401",
-    projectCode: "PRJ-WTR-01",
-    projectName: "Clean Water Borehole Initiative",
-    category: "Medical Supplies",
+    projectCode: "PRJ-BLD-01",
+    projectName: "Cathedral Building Project",
+    category: "Field Operations",
     amountRequested: 18500,
-    requestedBy: "Eng. Kwame Asante",
+    requestedBy: "Elder Clara Mensah",
     approvedBy: "Rev. Prof. Emmanuel Osei",
     date: "10 Aug 2026",
     status: "Approved",
@@ -216,34 +374,40 @@ export const BUDGET_APPROVALS: BudgetApproval[] = [
   {
     id: "BGT-102",
     requestNo: "REQ-2026-402",
-    projectCode: "PRJ-HLT-02",
-    projectName: "Rural Health & Maternal Care Outreach",
-    category: "Field Operations",
+    projectCode: "PRJ-BUS-02",
+    projectName: "Evangelism Bus Acquisition",
+    category: "Logistics",
     amountRequested: 12400,
-    requestedBy: "Dr. Hannah Quartey",
-    approvedBy: "Lawyer Clara Mensah",
+    requestedBy: "Michael Kobby Addo",
+    approvedBy: "Rev. Prof. Emmanuel Osei",
     date: "09 Aug 2026",
     status: "Approved",
   },
   {
     id: "BGT-103",
     requestNo: "REQ-2026-403",
-    projectCode: "PRJ-EDU-03",
-    projectName: "Digital Libraries for Basic Schools",
-    category: "Educational Materials",
-    amountRequested: 25000,
-    requestedBy: "Michael Kobby Addo",
+    projectCode: "PRJ-WFR-03",
+    projectName: "Community Food & Welfare Outreach",
+    category: "Community Training",
+    amountRequested: 7500,
+    requestedBy: "Deacon Samuel Frimpong",
     approvedBy: "Rev. Prof. Emmanuel Osei",
     date: "07 Aug 2026",
     status: "Pending Approval",
   },
 ];
 
+// Calculation helpers
 export const NGO_SUMMARY = {
-  totalDonationsRaised: NGO_DONATIONS.filter((d) => d.status === "Received" && d.currency === "GHS").reduce((a, d) => a + d.amount, 0),
-  totalActiveProjects: NGO_PROJECTS.filter((p) => p.status === "Active Implementation").length,
-  totalBeneficiariesReached: NGO_PROJECTS.reduce((a, p) => a + p.beneficiariesCount, 0),
+  totalChurchCollections: CHURCH_PAYMENT_RECORDS.reduce((a, t) => a + t.amount, 0),
+  totalTithesCollected: CHURCH_PAYMENT_RECORDS.filter((t) => t.category === "Tithe").reduce((a, t) => a + t.amount, 0),
+  totalOfferingsCollected: CHURCH_PAYMENT_RECORDS.filter((t) => t.category === "Offering").reduce((a, t) => a + t.amount, 0),
+  totalWelfareCollected: CHURCH_PAYMENT_RECORDS.filter((t) => t.category === "Welfare").reduce((a, t) => a + t.amount, 0),
+  totalProjectFundsCollected: CHURCH_PAYMENT_RECORDS.filter((t) => t.isProject).reduce((a, t) => a + t.amount, 0),
   totalMembersCount: NGO_MEMBERS.length,
   totalDuesCollected: NGO_MEMBERS.reduce((a, m) => a + m.duesPaid, 0),
+  totalOutstandingDues: NGO_MEMBERS.reduce((a, m) => a + m.balanceDue, 0),
+  totalActiveProjects: NGO_PROJECTS.filter((p) => p.status === "Active Implementation").length,
+  totalBeneficiariesReached: NGO_PROJECTS.reduce((a, p) => a + p.beneficiariesCount, 0),
   totalBudgetRequested: BUDGET_APPROVALS.reduce((a, b) => a + b.amountRequested, 0),
 };

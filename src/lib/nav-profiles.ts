@@ -213,15 +213,13 @@ export const NAV_PROFILE_MAP: Record<InstitutionType, NavProfile> = {
     {
       group: "Operations",
       items: [
-        { to: "/donations", label: "Donations", icon: HeartHandshake, priority: 2 },
-        { to: "/members", label: "Dues & Members", icon: Users, priority: 3 },
-        { to: "/projects", label: "Projects", icon: FolderKanban, priority: 4 },
+        { to: "/members", label: "Dues & Payment", icon: Wallet, priority: 2 },
+        { to: "/projects", label: "Projects", icon: FolderKanban, priority: 3 },
       ],
     },
     {
       group: "Money",
       items: [
-        { to: "/budget", label: "Budget & Approvals", icon: PiggyBank },
         { to: "/reports", label: "Reports", icon: BarChart3 },
       ],
     },

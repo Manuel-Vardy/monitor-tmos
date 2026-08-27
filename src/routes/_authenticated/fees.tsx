@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import type { DateRange } from "react-day-picker";
 import {
   Banknote,
@@ -11,6 +11,15 @@ import {
   Receipt,
   FileSpreadsheet,
   X,
+  Layers,
+  Check,
+  Building2,
+  Calendar,
+  CreditCard,
+  Phone,
+  Coins,
+  ArrowUpDown,
+  Filter,
 } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
@@ -20,19 +29,20 @@ import { currency } from "@/lib/mos-data";
 import {
   SCHOOL_STUDENTS,
   FEE_TRANSACTIONS,
-  SCHOOL_SUMMARY,
   type Student,
   type FeeTransaction,
 } from "@/lib/school-data";
+import { useAcademicYear } from "@/contexts/academic-year-context";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/fees")({
   head: () => ({
     meta: [
-      { title: "Fee Management — Trite Merchant OS" },
+      { title: "Fee Management & Fee Types — Trite Merchant OS" },
       {
         name: "description",
         content:
-          "School fee billing, tuition collection ledger, term payments, arrears tracking, and Mobile Money fee reconciliation.",
+          "Tertiary fee management: fees to be paid, fee schedules by type, and fee collection ledger.",
       },
       { property: "og:title", content: "Fee Management — Trite Merchant OS" },
     ],
@@ -40,85 +50,362 @@ export const Route = createFileRoute("/_authenticated/fees")({
   component: FeeManagementPage,
 });
 
-function CollectFeeModal({
-  students,
-  transactions,
+export type FeeTypeItem = {
+  id: string;
+  code: string;
+  name: string;
+  category: "Academic Core" | "Faculty & Lab" | "Assessment" | "Infrastructure" | "Statutory Dues" | "Services";
+  amount: number;
+  frequency: "Per Semester" | "Per Academic Year" | "One-Time";
+  isCompulsory: boolean;
+  description: string;
+};
+
+const INITIAL_FEE_TYPES: FeeTypeItem[] = [
+  {
+    id: "fee-tui",
+    code: "TUI-101",
+    name: "Tuition Fee (Core Academic)",
+    category: "Academic Core",
+    amount: 2400,
+    frequency: "Per Semester",
+    isCompulsory: true,
+    description: "Main faculty lecture instruction, course module materials, and academic syllabus",
+  },
+  {
+    id: "fee-lab",
+    code: "LAB-201",
+    name: "Faculty & Practical Laboratory Fee",
+    category: "Faculty & Lab",
+    amount: 350,
+    frequency: "Per Semester",
+    isCompulsory: true,
+    description: "Computing lab access, specialized software licenses, and technical workshop supplies",
+  },
+  {
+    id: "fee-exm",
+    code: "EXM-301",
+    name: "Examination & Assessment Levy",
+    category: "Assessment",
+    amount: 250,
+    frequency: "Per Semester",
+    isCompulsory: true,
+    description: "End-of-semester examination processing, invigilation, and transcript records",
+  },
+  {
+    id: "fee-ict",
+    code: "ICT-102",
+    name: "Library & ICT Infrastructure Levy",
+    category: "Infrastructure",
+    amount: 150,
+    frequency: "Per Semester",
+    isCompulsory: true,
+    description: "Campus high-speed Wi-Fi, digital library database access, and e-learning portals",
+  },
+  {
+    id: "fee-src",
+    code: "SRC-101",
+    name: "SRC & Student Development Dues",
+    category: "Statutory Dues",
+    amount: 100,
+    frequency: "Per Semester",
+    isCompulsory: true,
+    description: "Student Representative Council activities, welfare fund, and student union dues",
+  },
+];
+
+function getStudentDept(s: Student): string {
+  if (s.department) return s.department;
+  const id = s.studentId || "";
+  if (id.includes("-IT") || id.includes("-C01") || id.includes("-P6") || id.includes("-J3"))
+    return "IT Department";
+  if (id.includes("-HR") || id.includes("-C02") || id.includes("-P5") || id.includes("-J2"))
+    return "HR Department";
+  if (id.includes("-SOC") || id.includes("-N101") || id.includes("-N102") || id.includes("-P4") || id.includes("-J1"))
+    return "Social Studies Department";
+  if (id.includes("-ART") || id.includes("-N201") || id.includes("-P3") || id.includes("-K101"))
+    return "Art Department";
+  if (id.includes("-BUS") || id.includes("-K102") || id.includes("-P2") || id.includes("-J202"))
+    return "Business Administration";
+  if (id.includes("-ACC") || id.includes("-K201") || id.includes("-P1"))
+    return "Accounting & Finance";
+  return "IT Department";
+}
+
+const TERTIARY_DEPTS = [
+  "IT Department",
+  "HR Department",
+  "Social Studies Department",
+  "Art Department",
+  "Business Administration",
+  "Accounting & Finance",
+] as const;
+
+function getTxDept(tx: FeeTransaction, students: Student[]): string {
+  const st = students.find((s) => s.studentId === tx.studentId || s.name === tx.studentName);
+  if (st) return getStudentDept(st);
+  const id = tx.studentId || "";
+  if (id.includes("-IT") || id.includes("-C01") || id.includes("-P6") || id.includes("-J3"))
+    return "IT Department";
+  if (id.includes("-HR") || id.includes("-C02") || id.includes("-P5") || id.includes("-J2"))
+    return "HR Department";
+  if (id.includes("-SOC") || id.includes("-N101") || id.includes("-N102") || id.includes("-P4") || id.includes("-J1"))
+    return "Social Studies Department";
+  if (id.includes("-ART") || id.includes("-N201") || id.includes("-P3") || id.includes("-K101"))
+    return "Art Department";
+  if (id.includes("-BUS") || id.includes("-K102") || id.includes("-P2") || id.includes("-J202"))
+    return "Business Administration";
+  if (id.includes("-ACC") || id.includes("-K201") || id.includes("-P1"))
+    return "Accounting & Finance";
+  return "IT Department";
+}
+
+// ── Modals ──
+
+function AddFeeTypeModal({
   onClose,
   onSubmit,
 }: {
-  students: Student[];
-  transactions: FeeTransaction[];
   onClose: () => void;
-  onSubmit: (tx: FeeTransaction) => void;
+  onSubmit: (feeType: FeeTypeItem) => void;
 }) {
-  const PAYMENT_METHODS = ["Mobile Money (MTN)", "Bank Transfer", "Cash Deposit"] as const;
+  const [name, setName] = useState("");
+  const [code, setCode] = useState("");
+  const [category, setCategory] = useState<FeeTypeItem["category"]>("Academic Core");
+  const [amount, setAmount] = useState("300");
+  const [frequency, setFrequency] = useState<FeeTypeItem["frequency"]>("Per Semester");
+  const [description, setDescription] = useState("");
 
-  const [studentId, setStudentId] = useState(students[0]?.studentId ?? "");
-  const selected = students.find((s) => s.studentId === studentId);
-  const [amount, setAmount] = useState(selected ? String(selected.balanceDue) : "");
-  const [method, setMethod] = useState<(typeof PAYMENT_METHODS)[number]>("Mobile Money (MTN)");
-  const [receivedBy, setReceivedBy] = useState("Bursar Mr. Mensah");
-
-  const inputClass =
-    "h-9 w-full rounded-md border border-border bg-card px-3 text-sm outline-none placeholder:text-muted-foreground focus:border-ring";
-
-  const handleStudentChange = (id: string) => {
-    setStudentId(id);
-    const stu = students.find((s) => s.studentId === id);
-    if (stu) setAmount(String(stu.balanceDue));
-  };
-
-  const handleSubmit = () => {
-    const paid = Number(amount) || 0;
-    if (!selected || paid <= 0) return;
-    const nextNum = transactions.length + 106;
-    const receiptNo = `RCP-2026-0${nextNum}`;
-    const today = new Date().toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !amount) return;
     onSubmit({
-      id: `REC-${Date.now()}`,
-      receiptNo,
-      studentId: selected.studentId,
-      schoolId: selected.schoolId,
-      studentName: selected.name,
-      amountPaid: paid,
-      paymentMethod: method,
-      date: today,
-      term: selected.term,
-      receivedBy,
+      id: `fee-${Date.now()}`,
+      code: code.trim().toUpperCase() || `FEE-${Math.floor(Math.random() * 900) + 100}`,
+      name: name.trim(),
+      category,
+      amount: Number(amount) || 0,
+      frequency,
+      isCompulsory: true,
+      description: description.trim() || "Institutional student fee item",
     });
+    onClose();
   };
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Collect Fee Payment"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
+      onClick={onClose}
     >
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-md rounded-2xl bg-card shadow-2xl">
-        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+      <div
+        className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl space-y-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-border pb-3">
           <div>
-            <h2 className="text-lg font-bold">Collect Fee Payment</h2>
-            <p className="text-xs text-muted-foreground">Record a tuition receipt</p>
+            <h2 className="text-base font-bold">Add Type of Fee to be Paid</h2>
+            <p className="text-xs text-muted-foreground">Define a new fee category or schedule</p>
           </div>
           <button
             onClick={onClose}
-            className="grid size-8 shrink-0 place-items-center rounded-full bg-secondary hover:bg-border transition-colors"
-            aria-label="Close"
+            className="rounded-full p-1.5 text-muted-foreground hover:bg-secondary transition-colors"
           >
             <X className="size-4" />
           </button>
         </div>
 
-        <div className="space-y-3 px-6 py-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1">
+              Fee Type Name *
+            </label>
+            <input
+              type="text"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Examination & Assessment Levy"
+              className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground mb-1">
+                Fee Code
+              </label>
+              <input
+                type="text"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="e.g. EXM-301"
+                className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground mb-1">
+                Amount to be Paid (GH₵) *
+              </label>
+              <input
+                type="number"
+                required
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="250"
+                className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground mb-1">
+                Fee Category
+              </label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value as any)}
+                className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              >
+                <option value="Academic Core">Academic Core</option>
+                <option value="Faculty & Lab">Faculty & Lab</option>
+                <option value="Assessment">Assessment</option>
+                <option value="Infrastructure">Infrastructure</option>
+                <option value="Statutory Dues">Statutory Dues</option>
+                <option value="Services">Services</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground mb-1">
+                Billing Frequency
+              </label>
+              <select
+                value={frequency}
+                onChange={(e) => setFrequency(e.target.value as any)}
+                className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              >
+                <option value="Per Semester">Per Semester</option>
+                <option value="Per Academic Year">Per Academic Year</option>
+                <option value="One-Time">One-Time</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1">
+              Description / Notes
+            </label>
+            <input
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="e.g. Covers practical modules, computing lab and resources"
+              className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-border">
+            <Button type="button" variant="outline" size="sm" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" size="sm" className="bg-[#22c55e] text-white hover:bg-[#16a34a] gap-1.5">
+              <Check className="size-4" /> Save Fee Type
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function CollectFeePaymentModal({
+  students,
+  feeTypes,
+  onClose,
+  onSubmit,
+}: {
+  students: Student[];
+  feeTypes: FeeTypeItem[];
+  onClose: () => void;
+  onSubmit: (tx: FeeTransaction, feeTypeId: string) => void;
+}) {
+  const PAYMENT_METHODS = ["Mobile Money (MTN)", "Bank Transfer", "Cash Deposit"] as const;
+
+  const [studentId, setStudentId] = useState(students[0]?.studentId ?? "");
+  const selectedStudent = students.find((s) => s.studentId === studentId) ?? students[0];
+  const [selectedFeeType, setSelectedFeeType] = useState(feeTypes[0]?.name ?? "Tuition Fee (Core Academic)");
+  const [amount, setAmount] = useState(
+    selectedStudent ? String(selectedStudent.balanceDue > 0 ? selectedStudent.balanceDue : selectedStudent.tuitionFee) : "500"
+  );
+  const [method, setMethod] = useState<(typeof PAYMENT_METHODS)[number]>("Mobile Money (MTN)");
+
+  const handleStudentChange = (id: string) => {
+    setStudentId(id);
+    const stu = students.find((s) => s.studentId === id);
+    if (stu) {
+      setAmount(String(stu.balanceDue > 0 ? stu.balanceDue : stu.tuitionFee));
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const paid = Number(amount) || 0;
+    if (!selectedStudent || paid <= 0) return;
+
+    const today = new Date().toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+
+    const tx: FeeTransaction = {
+      id: `REC-${Date.now()}`,
+      receiptNo: `RCP-2026-0${Math.floor(Math.random() * 9000) + 1000}`,
+      studentId: selectedStudent.studentId,
+      schoolId: selectedStudent.schoolId,
+      studentName: selectedStudent.name,
+      amountPaid: paid,
+      paymentMethod: method,
+      date: today,
+      term: selectedStudent.term,
+      receivedBy: "Bursar Department",
+    };
+
+    onSubmit(tx, selectedFeeType);
+    onClose();
+  };
+
+  const inputClass =
+    "h-9 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none focus:ring-1 focus:ring-accent";
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md rounded-2xl bg-card shadow-2xl border border-border p-6 space-y-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-border pb-3">
+          <div>
+            <h2 className="text-lg font-bold">Collect Fee Payment</h2>
+            <p className="text-xs text-muted-foreground">
+              Record fee collection for a student account
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-full p-1.5 text-muted-foreground hover:bg-secondary transition-colors"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <label className="mb-1 block text-xs font-semibold text-muted-foreground">
-              Student
+              Select Student *
             </label>
             <select
               value={studentId}
@@ -126,49 +413,65 @@ function CollectFeeModal({
               className={inputClass}
             >
               {students.map((s) => (
-                <option key={s.studentId} value={s.studentId}>
-                  {s.name} · {s.studentId}
+                <option key={s.id} value={s.studentId}>
+                  {s.name} ({s.studentId}) — Balance: {currency(s.balanceDue)}
                 </option>
               ))}
             </select>
           </div>
 
-          {selected && (
-            <div className="rounded-lg bg-secondary/50 px-3 py-2 text-xs text-muted-foreground">
-              Tuition: {currency(selected.tuitionFee)} · Paid: {currency(selected.paidAmount)} ·
-              Balance Due:{" "}
-              <span
-                className={
-                  selected.balanceDue > 0
-                    ? "text-amber-600 dark:text-amber-400 font-semibold"
-                    : "text-emerald-600 dark:text-emerald-400 font-semibold"
-                }
-              >
-                {currency(selected.balanceDue)}
+          {selectedStudent && (
+            <div className="rounded-lg bg-secondary/40 px-3 py-2 text-xs flex justify-between items-center text-muted-foreground">
+              <span>
+                Department: <strong className="text-foreground">{getStudentDept(selectedStudent)}</strong>
+              </span>
+              <span>
+                Balance:{" "}
+                <strong className={selectedStudent.balanceDue > 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}>
+                  {currency(selectedStudent.balanceDue)}
+                </strong>
               </span>
             </div>
           )}
 
           <div>
             <label className="mb-1 block text-xs font-semibold text-muted-foreground">
-              Amount Paid
+              Type of Fee to be Paid *
+            </label>
+            <select
+              value={selectedFeeType}
+              onChange={(e) => setSelectedFeeType(e.target.value)}
+              className={inputClass}
+            >
+              {feeTypes.map((ft) => (
+                <option key={ft.id} value={ft.name}>
+                  {ft.name} ({currency(ft.amount)})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+              Amount Collected (GH₵) *
             </label>
             <input
               type="number"
+              required
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              placeholder="0"
+              placeholder="0.00"
               className={inputClass}
             />
           </div>
 
           <div>
             <label className="mb-1 block text-xs font-semibold text-muted-foreground">
-              Payment Method
+              Payment Method *
             </label>
             <select
               value={method}
-              onChange={(e) => setMethod(e.target.value as (typeof PAYMENT_METHODS)[number])}
+              onChange={(e) => setMethod(e.target.value as any)}
               className={inputClass}
             >
               {PAYMENT_METHODS.map((m) => (
@@ -179,229 +482,477 @@ function CollectFeeModal({
             </select>
           </div>
 
-          <div>
-            <label className="mb-1 block text-xs font-semibold text-muted-foreground">
-              Received By
-            </label>
-            <input
-              value={receivedBy}
-              onChange={(e) => setReceivedBy(e.target.value)}
-              className={inputClass}
-            />
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">
+            <Button type="button" variant="ghost" size="sm" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              size="sm"
+              className="bg-[#22c55e] text-white hover:bg-[#16a34a] gap-1.5"
+              disabled={(Number(amount) || 0) <= 0}
+            >
+              <Check className="size-4" /> Record Payment
+            </Button>
           </div>
-        </div>
-
-        <div className="flex items-center justify-end gap-2 border-t border-border px-6 py-4">
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            size="sm"
-            className="bg-[#22c55e] text-white hover:bg-[#16a34a]"
-            onClick={handleSubmit}
-            disabled={!selected || (Number(amount) || 0) <= 0}
-          >
-            <Plus className="size-3.5" /> Record Payment
-          </Button>
-        </div>
+        </form>
       </div>
     </div>
   );
 }
 
+// ── Main Page Component ──
+
 function FeeManagementPage() {
+  const [tab, setTab] = useState<"fee-types" | "collected-ledger">("fee-types");
   const [search, setSearch] = useState("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [feeTypes, setFeeTypes] = useState<FeeTypeItem[]>(INITIAL_FEE_TYPES);
   const [students, setStudents] = useState<Student[]>(SCHOOL_STUDENTS);
   const [transactions, setTransactions] = useState<FeeTransaction[]>(FEE_TRANSACTIONS);
-  const [isCollectOpen, setIsCollectOpen] = useState(false);
+  const [selectedLedgerDept, setSelectedLedgerDept] = useState<string>("all");
+  const [isAddFeeTypeOpen, setIsAddFeeTypeOpen] = useState(false);
+  const { filterStudentsByYear } = useAcademicYear();
 
-  const filteredTransactions = transactions.filter((tx) => {
-    const matchSearch =
-      search === "" ||
-      tx.receiptNo.toLowerCase().includes(search.toLowerCase()) ||
-      tx.studentName.toLowerCase().includes(search.toLowerCase()) ||
-      tx.studentId.toLowerCase().includes(search.toLowerCase()) ||
-      tx.paymentMethod.toLowerCase().includes(search.toLowerCase());
-    return matchSearch;
-  });
+  const yearFilteredStudents = useMemo(() => filterStudentsByYear(students), [students, filterStudentsByYear]);
+
+  // ── Reactive Stats ──
+  const totalFeesExpected = useMemo(() => {
+    return yearFilteredStudents.reduce((sum, s) => sum + s.tuitionFee, 0);
+  }, [yearFilteredStudents]);
+
+  const totalFeesCollected = useMemo(() => {
+    return yearFilteredStudents.reduce((sum, s) => sum + s.paidAmount, 0);
+  }, [yearFilteredStudents]);
+
+  const totalFeesArrears = useMemo(() => {
+    return yearFilteredStudents.reduce((sum, s) => sum + s.balanceDue, 0);
+  }, [yearFilteredStudents]);
+
+  const collectionRate =
+    totalFeesExpected > 0 ? Math.round((totalFeesCollected / totalFeesExpected) * 100) : 0;
+  const clearedStudentsCount = yearFilteredStudents.filter((s) => s.status === "Paid Full").length;
+  const overdueStudentsCount = yearFilteredStudents.filter((s) => s.status === "Overdue").length;
+
+  // Per-department collected stats
+  const deptCollectionStats = useMemo(() => {
+    const stats: Record<string, { total: number; count: number }> = {};
+    TERTIARY_DEPTS.forEach((d) => {
+      stats[d] = { total: 0, count: 0 };
+    });
+    transactions.forEach((tx) => {
+      const d = getTxDept(tx, students);
+      if (!stats[d]) stats[d] = { total: 0, count: 0 };
+      stats[d].total += tx.amountPaid;
+      stats[d].count += 1;
+    });
+    return stats;
+  }, [transactions, students]);
+
+  // Ledger transactions filtered by selected department
+  const ledgerTransactions = useMemo(() => {
+    if (selectedLedgerDept === "all") return transactions;
+    return transactions.filter((tx) => getTxDept(tx, students) === selectedLedgerDept);
+  }, [transactions, students, selectedLedgerDept]);
+
+  const selectedDeptTotal = useMemo(() => {
+    if (selectedLedgerDept === "all") return totalFeesCollected;
+    return deptCollectionStats[selectedLedgerDept]?.total || 0;
+  }, [selectedLedgerDept, totalFeesCollected, deptCollectionStats]);
+
+  const handleRecordCollection = (tx: FeeTransaction, _feeTypeName: string) => {
+    setTransactions((prev) => [tx, ...prev]);
+    setStudents((prev) =>
+      prev.map((s) => {
+        if (s.studentId === tx.studentId) {
+          const newPaid = s.paidAmount + tx.amountPaid;
+          const newBalance = Math.max(0, s.tuitionFee - newPaid);
+          const newStatus: Student["status"] =
+            newBalance === 0 ? "Paid Full" : newPaid > 0 ? "Partial Payment" : "Overdue";
+          return {
+            ...s,
+            paidAmount: newPaid,
+            balanceDue: newBalance,
+            status: newStatus,
+          };
+        }
+        return s;
+      })
+    );
+  };
+
+  const handleAddFeeType = (newFt: FeeTypeItem) => {
+    setFeeTypes((prev) => [...prev, newFt]);
+  };
+
+  // Filtered Students Due
+  const filteredStudents = useMemo(() => {
+    if (!search.trim()) return yearFilteredStudents;
+    const q = search.toLowerCase();
+    return yearFilteredStudents.filter(
+      (s) =>
+        s.name.toLowerCase().includes(q) ||
+        s.studentId.toLowerCase().includes(q) ||
+        s.guardianPhone.toLowerCase().includes(q) ||
+        getStudentDept(s).toLowerCase().includes(q)
+    );
+  }, [yearFilteredStudents, search]);
+
+  // Filtered Ledger Transactions
+  const filteredTransactions = useMemo(() => {
+    if (!search.trim()) return transactions;
+    const q = search.toLowerCase();
+    return transactions.filter(
+      (tx) =>
+        tx.receiptNo.toLowerCase().includes(q) ||
+        tx.studentName.toLowerCase().includes(q) ||
+        tx.studentId.toLowerCase().includes(q) ||
+        tx.paymentMethod.toLowerCase().includes(q)
+    );
+  }, [transactions, search]);
 
   return (
     <AppShell
       title="Fee Management & Collection Ledger"
-      subtitle={`Term 3 Tuition: ${currency(SCHOOL_SUMMARY.totalFeesCollected)} collected · ${currency(SCHOOL_SUMMARY.totalOutstandingFees)} in outstanding fee arrears`}
+      subtitle={`${feeTypes.length} active fee schedules · ${currency(totalFeesCollected)} collected (${collectionRate}%) · ${currency(totalFeesArrears)} outstanding fees to be paid`}
       actions={
         <Button
           size="sm"
-          onClick={() => setIsCollectOpen(true)}
-          className="h-8 px-2.5 sm:h-9 sm:px-3 text-xs sm:text-sm bg-[#22c55e] text-white hover:bg-[#16a34a] shrink-0"
+          onClick={() => setIsAddFeeTypeOpen(true)}
+          className="h-8 px-3 text-xs bg-[#22c55e] text-white hover:bg-[#16a34a] gap-1.5"
         >
-          <Plus className="size-3.5 sm:size-4" />
-          <span className="hidden sm:inline">Collect Fee Payment</span>
-          <span className="sm:hidden">Collect Fee</span>
+          <Plus className="size-3.5" />
+          <span>Add Fee Type</span>
         </Button>
       }
     >
-      {/* Stat Summaries */}
-      <div className="mb-5 grid grid-cols-2 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs">
+      {/* ══════════════════════════════════════════════
+          1. TOP STATS: FEES TO BE PAID & COLLECTED
+      ══════════════════════════════════════════════ */}
+      <div className="mb-6 grid gap-3 grid-cols-2 lg:grid-cols-4">
+        {/* Card 1: Fees to be Paid (Expected Total) */}
+        <div className="rounded-xl border border-border bg-card p-4 shadow-2xs">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Total Collected
+              Fees to be Paid (Expected)
             </p>
-            <span className="rounded-full bg-emerald-50 p-1.5 sm:p-2 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
-              <Banknote className="size-3.5 sm:size-4" />
+            <span className="rounded-full bg-blue-50 p-2 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
+              <Banknote className="size-4" />
             </span>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-            {currency(SCHOOL_SUMMARY.totalFeesCollected)}
+          <p className="mt-2 text-xl sm:text-2xl font-bold text-foreground num">
+            {currency(totalFeesExpected)}
           </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">Term 3 fees received</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Total expected fees across {students.length} enrolled students
+          </p>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs">
+        {/* Card 2: Fees Collected */}
+        <div className="rounded-xl border border-border bg-card p-4 shadow-2xs">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Fee Arrears
+              Fees Collected
             </p>
-            <span className="rounded-full bg-rose-50 p-1.5 sm:p-2 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400">
-              <AlertCircle className="size-3.5 sm:size-4" />
+            <span className="rounded-full bg-emerald-50 p-2 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
+              <CheckCircle2 className="size-4" />
             </span>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-bold text-rose-600 dark:text-rose-400">
-            {currency(SCHOOL_SUMMARY.totalOutstandingFees)}
+          <p className="mt-2 text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400 num">
+            {currency(totalFeesCollected)}
           </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">Unpaid balance</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {clearedStudentsCount} students cleared · {collectionRate}% fulfillment rate
+          </p>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs">
+        {/* Card 3: Fee Arrears (To be Paid) */}
+        <div className="rounded-xl border border-border bg-card p-4 shadow-2xs">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Receipts
+              Fee Arrears (To be Paid)
             </p>
-            <span className="rounded-full bg-blue-50 p-1.5 sm:p-2 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
-              <Receipt className="size-3.5 sm:size-4" />
+            <span className="rounded-full bg-rose-50 p-2 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400">
+              <AlertCircle className="size-4" />
             </span>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">
-            {FEE_TRANSACTIONS.length}
+          <p className="mt-2 text-xl sm:text-2xl font-bold text-rose-600 dark:text-rose-400 num">
+            {currency(totalFeesArrears)}
           </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">Issued this term</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {overdueStudentsCount} overdue accounts with balance due
+          </p>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs">
+        {/* Card 4: Types of Fee */}
+        <div className="rounded-xl border border-border bg-card p-4 shadow-2xs">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Cleared Students
+              Active Fee Types
             </p>
-            <span className="rounded-full bg-purple-50 p-1.5 sm:p-2 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400">
-              <CheckCircle2 className="size-3.5 sm:size-4" />
+            <span className="rounded-full bg-purple-50 p-2 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400">
+              <Layers className="size-4" />
             </span>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-bold text-purple-600 dark:text-purple-400">
-            {SCHOOL_STUDENTS.filter((s) => s.status === "Paid Full").length}
+          <p className="mt-2 text-xl sm:text-2xl font-bold text-purple-600 dark:text-purple-400 num">
+            {feeTypes.length} Categories
           </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">100% fees paid</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Structured institutional fee schedules
+          </p>
         </div>
       </div>
 
-      {/* Toolbar */}
-      <div className="mb-4 space-y-2.5">
-        <div className="relative w-full">
-          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search receipt #, student name, ID or payment method…"
-            className="h-9 w-full rounded-md border border-border bg-card pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:border-ring"
-          />
-        </div>
-
-        {/* Action pills & date picker — horizontally scrollable in one row */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-          <div className="shrink-0">
-            <DateRangePicker value={dateRange} onChange={setDateRange} />
+      {/* ══════════════════════════════════════════════
+          2. NAVIGATION TABS: FEE TYPES | DUE | COLLECTED
+      ══════════════════════════════════════════════ */}
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
+          <div className="flex items-center gap-1.5 bg-secondary/50 p-1 rounded-xl">
+            <button
+              onClick={() => setTab("fee-types")}
+              className={cn(
+                "px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all",
+                tab === "fee-types"
+                  ? "bg-card text-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Types of Fee to be Paid ({feeTypes.length})
+            </button>
+            <button
+              onClick={() => setTab("collected-ledger")}
+              className={cn(
+                "px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all",
+                tab === "collected-ledger"
+                  ? "bg-card text-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Fees Collected Ledger ({transactions.length})
+            </button>
           </div>
-          <Button variant="outline" size="sm" className="shrink-0 h-8 text-xs">
-            <FileSpreadsheet className="size-3.5" /> Export Ledger
-          </Button>
         </div>
-      </div>
 
-      {/* Fee Payments Sliding Table (Horizontally Scrollable without Card Grouping) */}
-      <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-2xs">
-        <table className="w-full min-w-[700px] text-sm">
-          <thead>
-            <tr className="border-b border-border bg-secondary/40 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              <th className="px-4 py-3 whitespace-nowrap">Receipt No</th>
-              <th className="px-4 py-3 whitespace-nowrap">Date</th>
-              <th className="px-4 py-3 whitespace-nowrap">Student Name</th>
-              <th className="px-4 py-3 whitespace-nowrap">Payment Method</th>
-              <th className="px-4 py-3 font-bold whitespace-nowrap">Amount Paid</th>
-              <th className="px-4 py-3 whitespace-nowrap">Received By</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {filteredTransactions.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
-                  No fee transactions found matching your search.
-                </td>
-              </tr>
-            ) : (
-              filteredTransactions.map((tx) => (
-                <tr key={tx.id} className="transition-colors hover:bg-secondary/30">
-                  <td className="px-4 py-3 font-mono text-xs font-semibold text-foreground whitespace-nowrap">
-                    {tx.receiptNo}
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{tx.date}</td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <p className="font-semibold text-foreground">{tx.studentName}</p>
-                    <p className="text-xs text-muted-foreground">{tx.studentId}</p>
-                    {tx.schoolId && (
-                      <p className="text-[10px] text-muted-foreground">School ID: {tx.schoolId}</p>
+        {/* ══════════════════════════════════════════════
+            TAB 1: TYPES OF FEE TO BE PAID (SCHEDULES)
+        ══════════════════════════════════════════════ */}
+        {tab === "fee-types" && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-foreground">Institutional Fee Types & Schedules</h3>
+                <p className="text-xs text-muted-foreground">
+                  Categories of fees to be paid per student, billing amounts, and collection fulfillment
+                </p>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => setIsAddFeeTypeOpen(true)}
+                className="h-8 text-xs bg-[#22c55e] text-white hover:bg-[#16a34a] gap-1.5"
+              >
+                <Plus className="size-3.5" />
+                <span>Add Fee Type</span>
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {feeTypes.map((ft) => {
+                // Approximate collection metrics for each fee type based on student ratios
+                const targetBilling = ft.amount * students.length;
+                const collectedAmount = Math.round(targetBilling * (collectionRate / 100));
+                const remainingArrears = Math.max(0, targetBilling - collectedAmount);
+
+                return (
+                  <div
+                    key={ft.id}
+                    className="flex flex-col justify-between rounded-2xl border border-border bg-card p-5 shadow-xs transition-all hover:shadow-lg hover:bg-secondary/20 text-left"
+                  >
+                    <div>
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
+                            {ft.category}
+                          </span>
+                          <h4 className="text-base font-bold text-foreground mt-1.5">{ft.name}</h4>
+                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 min-h-[32px]">
+                            {ft.description}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 rounded-xl bg-secondary/40 p-3 space-y-2">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-muted-foreground font-medium">Fee to be Paid:</span>
+                          <span className="font-bold text-foreground">{currency(ft.amount)}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-muted-foreground font-medium">Frequency:</span>
+                          <span className="font-semibold text-muted-foreground">{ft.frequency}</span>
+                        </div>
+                        <div className="pt-2 border-t border-border/50 flex justify-between items-center text-xs">
+                          <span className="text-emerald-600 dark:text-emerald-400 font-medium">Fees Collected:</span>
+                          <span className="font-bold text-emerald-600 dark:text-emerald-400">{currency(collectedAmount)}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-rose-600 dark:text-rose-400 font-medium">Outstanding to be Paid:</span>
+                          <span className="font-bold text-rose-600 dark:text-rose-400">{currency(remainingArrears)}</span>
+                        </div>
+                      </div>
+
+                      <div className="mt-3">
+                        <div className="flex justify-between text-[10px] font-semibold mb-1">
+                          <span className="text-muted-foreground">Collection Settlement</span>
+                          <span className="font-bold text-foreground">{collectionRate}%</span>
+                        </div>
+                        <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
+                          <div
+                            className={cn(
+                              "h-full rounded-full transition-all",
+                              collectionRate >= 80 ? "bg-emerald-500" : collectionRate >= 40 ? "bg-amber-500" : "bg-rose-500"
+                            )}
+                            style={{ width: `${Math.min(100, collectionRate)}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════
+            TAB 2: FEES COLLECTED LEDGER (BY DEPARTMENT)
+        ══════════════════════════════════════════════ */}
+        {tab === "collected-ledger" && (
+          <div className="space-y-4">
+            {/* Department Header for Ledger */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-foreground">Fees Collected by Department</h3>
+                <p className="text-xs text-muted-foreground">
+                  Click any department below to view its specific fee collection transactions
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-muted-foreground">
+                  {selectedLedgerDept === "all" ? "Total Collected" : `${selectedLedgerDept} Total`}:
+                </p>
+                <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                  {currency(selectedDeptTotal)}
+                </p>
+              </div>
+            </div>
+
+            {/* Department Filter Pills */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+              <button
+                onClick={() => setSelectedLedgerDept("all")}
+                className={cn(
+                  "rounded-full px-3 py-1 text-xs font-semibold transition-all border shrink-0",
+                  selectedLedgerDept === "all"
+                    ? "bg-foreground text-background border-transparent"
+                    : "bg-card text-muted-foreground border-border hover:bg-secondary"
+                )}
+              >
+                All Departments ({transactions.length})
+              </button>
+
+              {(
+                [
+                  { dept: "IT Department",             activeBg: "bg-violet-600",  activeBorder: "border-violet-600",  activeText: "text-violet-100",  idleText: "text-violet-600 dark:text-violet-400" },
+                  { dept: "HR Department",             activeBg: "bg-sky-600",     activeBorder: "border-sky-600",     activeText: "text-sky-100",     idleText: "text-sky-600 dark:text-sky-400" },
+                  { dept: "Social Studies Department", activeBg: "bg-amber-600",   activeBorder: "border-amber-600",   activeText: "text-amber-100",   idleText: "text-amber-600 dark:text-amber-400" },
+                  { dept: "Art Department",            activeBg: "bg-pink-600",    activeBorder: "border-pink-600",    activeText: "text-pink-100",    idleText: "text-pink-600 dark:text-pink-400" },
+                  { dept: "Business Administration",   activeBg: "bg-orange-600",  activeBorder: "border-orange-600",  activeText: "text-orange-100",  idleText: "text-orange-600 dark:text-orange-400" },
+                  { dept: "Accounting & Finance",      activeBg: "bg-teal-600",    activeBorder: "border-teal-600",    activeText: "text-teal-100",    idleText: "text-teal-600 dark:text-teal-400" },
+                ] as const
+              ).map(({ dept, activeBg, activeBorder, activeText, idleText }) => {
+                const stats = deptCollectionStats[dept] || { total: 0, count: 0 };
+                const isSelected = selectedLedgerDept === dept;
+                return (
+                  <button
+                    key={dept}
+                    onClick={() => setSelectedLedgerDept(dept)}
+                    className={cn(
+                      "rounded-full px-3 py-1 text-xs font-semibold transition-all border shrink-0 flex items-center gap-1.5",
+                      isSelected
+                        ? `${activeBg} text-white ${activeBorder}`
+                        : "bg-card text-muted-foreground border-border hover:bg-secondary"
                     )}
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <span className="rounded bg-secondary px-2.5 py-0.5 text-xs font-medium text-foreground">
-                      {tx.paymentMethod}
+                  >
+                    <span>{dept.split(" ")[0]}</span>
+                    <span className={cn("text-[11px] font-bold", isSelected ? activeText : idleText)}>
+                      {currency(stats.total)}
                     </span>
-                  </td>
-                  <td className="px-4 py-3 font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
-                    {currency(tx.amountPaid)}
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                    {tx.receivedBy}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Ledger Table filtered by department */}
+            <div className="rounded-xl border border-border bg-card overflow-hidden shadow-xs">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-secondary/40 text-xs font-bold text-muted-foreground uppercase border-b border-border">
+                    <tr>
+                      <th className="px-5 py-3">Receipt No</th>
+                      <th className="px-5 py-3">Date</th>
+                      <th className="px-5 py-3">Student Name</th>
+                      <th className="px-5 py-3">Index Number</th>
+                      <th className="px-5 py-3">Department</th>
+                      <th className="px-5 py-3">Payment Method</th>
+                      <th className="px-5 py-3 text-right font-bold">Fees Collected</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {ledgerTransactions.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="py-8 text-center text-xs text-muted-foreground">
+                          No fee collection transactions recorded for{" "}
+                          {selectedLedgerDept === "all" ? "the institution" : selectedLedgerDept}.
+                        </td>
+                      </tr>
+                    ) : (
+                      ledgerTransactions.map((tx) => {
+                        const dept = getTxDept(tx, students);
+                        return (
+                          <tr key={tx.id} className="hover:bg-secondary/30 transition-colors">
+                            <td className="px-5 py-3 font-mono text-xs font-semibold text-foreground">
+                              {tx.receiptNo}
+                            </td>
+                            <td className="px-5 py-3 text-xs text-muted-foreground">{tx.date}</td>
+                            <td className="px-5 py-3 font-semibold text-foreground">{tx.studentName}</td>
+                            <td className="px-5 py-3 font-mono text-xs text-muted-foreground">{tx.studentId}</td>
+                            <td className="px-5 py-3 text-xs font-medium text-foreground">{dept}</td>
+                            <td className="px-5 py-3">
+                              <span className="rounded-md bg-secondary px-2.5 py-0.5 text-xs font-medium text-foreground">
+                                {tx.paymentMethod}
+                              </span>
+                            </td>
+                            <td className="px-5 py-3 text-right font-bold text-emerald-600 dark:text-emerald-400">
+                              {currency(tx.amountPaid)}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-      {isCollectOpen && (
-        <CollectFeeModal
-          students={students}
-          transactions={transactions}
-          onClose={() => setIsCollectOpen(false)}
-          onSubmit={(tx) => {
-            const student = students.find((s) => s.studentId === tx.studentId);
-            if (student) {
-              const newPaid = student.paidAmount + tx.amountPaid;
-              const newBalance = Math.max(0, student.tuitionFee - newPaid);
-              const newStatus: Student["status"] =
-                newBalance === 0 ? "Paid Full" : newPaid > 0 ? "Partial Payment" : "Overdue";
-              setStudents((prev) =>
-                prev.map((s) =>
-                  s.studentId === student.studentId
-                    ? { ...s, paidAmount: newPaid, balanceDue: newBalance, status: newStatus }
-                    : s,
-                ),
-              );
-            }
-            setTransactions((prev) => [tx, ...prev]);
-            setIsCollectOpen(false);
-          }}
+
+      {/* ── Dialog Modals ── */}
+
+      {isAddFeeTypeOpen && (
+        <AddFeeTypeModal
+          onClose={() => setIsAddFeeTypeOpen(false)}
+          onSubmit={handleAddFeeType}
         />
       )}
     </AppShell>

@@ -1,7 +1,85 @@
+export type FeeType = {
+  id: string;
+  code: string;
+  name: string;
+  category: "Academic Core" | "Faculty & Lab" | "Assessment" | "Infrastructure" | "Statutory Dues" | "Services";
+  amount: number;
+  frequency: "Per Semester" | "Per Academic Year" | "One-Time";
+  isCompulsory: boolean;
+  description: string;
+};
+
+export const DEFAULT_FEE_TYPES: FeeType[] = [
+  {
+    id: "fee-tui",
+    code: "TUI-101",
+    name: "Tuition Fee (Core Academic)",
+    category: "Academic Core",
+    amount: 2400,
+    frequency: "Per Semester",
+    isCompulsory: true,
+    description: "Main faculty lecture instruction, course module materials, and academic syllabus",
+  },
+  {
+    id: "fee-lab",
+    code: "LAB-201",
+    name: "Faculty & Practical Laboratory Fee",
+    category: "Faculty & Lab",
+    amount: 350,
+    frequency: "Per Semester",
+    isCompulsory: true,
+    description: "Computing lab access, specialized software licenses, and technical workshop supplies",
+  },
+  {
+    id: "fee-exm",
+    code: "EXM-301",
+    name: "Examination & Assessment Levy",
+    category: "Assessment",
+    amount: 250,
+    frequency: "Per Semester",
+    isCompulsory: true,
+    description: "End-of-semester examination processing, invigilation, and transcript records",
+  },
+  {
+    id: "fee-ict",
+    code: "ICT-102",
+    name: "Library & ICT Infrastructure Levy",
+    category: "Infrastructure",
+    amount: 150,
+    frequency: "Per Semester",
+    isCompulsory: true,
+    description: "Campus high-speed Wi-Fi, digital library database access, and e-learning portals",
+  },
+  {
+    id: "fee-src",
+    code: "SRC-101",
+    name: "SRC & Student Development Dues",
+    category: "Statutory Dues",
+    amount: 100,
+    frequency: "Per Semester",
+    isCompulsory: true,
+    description: "Student Representative Council activities, welfare fund, and student union dues",
+  },
+];
+
+export const DEFAULT_ACADEMIC_YEAR_RANGES = [
+  "2026 - 2029",
+  "2025 - 2028",
+  "2024 - 2027",
+  "2023 - 2026",
+  "2026 - 2030",
+  "2025 - 2029",
+] as const;
+
+export type AcademicYearRange = (typeof DEFAULT_ACADEMIC_YEAR_RANGES)[number] | (string & {});
+
 export type Student = {
   id: string;
   studentId: string;
   schoolId?: string | undefined;
+  department?: string | undefined;
+  academicYearRange?: string | undefined;
+  assignedFeeTypes?: string[] | undefined;
   name: string;
   guardianName: string;
   guardianPhone: string;
@@ -12,17 +90,22 @@ export type Student = {
   term: "Term 3, 2026";
 };
 
+export function getStudentYearRange(student: Student): string {
+  return student.academicYearRange || "2026 - 2029";
+}
+
 export type FeeTransaction = {
   id: string;
   receiptNo: string;
   studentId: string;
   schoolId?: string | undefined;
+  feeType?: string | undefined;
   studentName: string;
   amountPaid: number;
   paymentMethod: "Mobile Money (MTN)" | "Bank Transfer" | "Cash Deposit";
   date: string;
   term: string;
-  receivedBy: string;
+  receivedBy?: string | undefined;
 };
 
 export type StaffPayroll = {
@@ -67,6 +150,7 @@ export const SCHOOL_STUDENTS: Student[] = [
     name: "Abena Boateng",
     guardianName: "Dr. Nana Boateng",
     guardianPhone: "+233 24 100 2201",
+    academicYearRange: "2026 - 2029",
     tuitionFee: 800,
     paidAmount: 800,
     balanceDue: 0,
@@ -79,6 +163,7 @@ export const SCHOOL_STUDENTS: Student[] = [
     name: "Kofi Asante",
     guardianName: "Mrs. Adwoa Asante",
     guardianPhone: "+233 20 441 5512",
+    academicYearRange: "2026 - 2029",
     tuitionFee: 800,
     paidAmount: 500,
     balanceDue: 300,
@@ -91,6 +176,7 @@ export const SCHOOL_STUDENTS: Student[] = [
     name: "Ama Sarkodie",
     guardianName: "Mr. Kweku Sarkodie",
     guardianPhone: "+233 27 303 8890",
+    academicYearRange: "2025 - 2028",
     tuitionFee: 900,
     paidAmount: 900,
     balanceDue: 0,
@@ -103,6 +189,7 @@ export const SCHOOL_STUDENTS: Student[] = [
     name: "Bright Ofori",
     guardianName: "Mrs. Felicia Ofori",
     guardianPhone: "+233 54 820 1104",
+    academicYearRange: "2025 - 2028",
     tuitionFee: 900,
     paidAmount: 0,
     balanceDue: 900,
@@ -115,6 +202,7 @@ export const SCHOOL_STUDENTS: Student[] = [
     name: "Yaa Appiah",
     guardianName: "Capt. Eric Appiah",
     guardianPhone: "+233 24 552 0034",
+    academicYearRange: "2024 - 2027",
     tuitionFee: 950,
     paidAmount: 950,
     balanceDue: 0,
@@ -127,6 +215,7 @@ export const SCHOOL_STUDENTS: Student[] = [
     name: "Nana Esi Mensah",
     guardianName: "Dr. Ama Mensah",
     guardianPhone: "+233 20 990 1122",
+    academicYearRange: "2026 - 2029",
     tuitionFee: 1000,
     paidAmount: 1000,
     balanceDue: 0,
@@ -139,6 +228,7 @@ export const SCHOOL_STUDENTS: Student[] = [
     name: "Patrick Quaye",
     guardianName: "Mrs. Comfort Quaye",
     guardianPhone: "+233 27 400 3312",
+    academicYearRange: "2026 - 2029",
     tuitionFee: 1000,
     paidAmount: 600,
     balanceDue: 400,
@@ -151,6 +241,7 @@ export const SCHOOL_STUDENTS: Student[] = [
     name: "Adwoa Tetteh",
     guardianName: "Mr. Joseph Tetteh",
     guardianPhone: "+233 54 711 6600",
+    academicYearRange: "2025 - 2028",
     tuitionFee: 1050,
     paidAmount: 1050,
     balanceDue: 0,
@@ -163,6 +254,7 @@ export const SCHOOL_STUDENTS: Student[] = [
     name: "Kwame Boakye",
     guardianName: "Mr. Kwame Boakye Sr.",
     guardianPhone: "+233 24 224 4422",
+    academicYearRange: "2026 - 2030",
     tuitionFee: 1200,
     paidAmount: 1200,
     balanceDue: 0,
@@ -175,6 +267,7 @@ export const SCHOOL_STUDENTS: Student[] = [
     name: "Mercy Asiedu",
     guardianName: "Mrs. Grace Asiedu",
     guardianPhone: "+233 20 772 8834",
+    academicYearRange: "2026 - 2030",
     tuitionFee: 1200,
     paidAmount: 800,
     balanceDue: 400,
@@ -187,6 +280,7 @@ export const SCHOOL_STUDENTS: Student[] = [
     name: "Samuel Larbi",
     guardianName: "Mr. Robert Larbi",
     guardianPhone: "+233 27 110 5566",
+    academicYearRange: "2024 - 2027",
     tuitionFee: 1250,
     paidAmount: 1250,
     balanceDue: 0,
@@ -199,6 +293,7 @@ export const SCHOOL_STUDENTS: Student[] = [
     name: "Efua Nyarko",
     guardianName: "Dr. Frank Nyarko",
     guardianPhone: "+233 24 983 7712",
+    academicYearRange: "2023 - 2026",
     tuitionFee: 1300,
     paidAmount: 1300,
     balanceDue: 0,
@@ -211,6 +306,7 @@ export const SCHOOL_STUDENTS: Student[] = [
     name: "Michael Acheampong",
     guardianName: "Mrs. Helena Acheampong",
     guardianPhone: "+233 54 900 1123",
+    academicYearRange: "2023 - 2026",
     tuitionFee: 1300,
     paidAmount: 0,
     balanceDue: 1300,
@@ -223,6 +319,7 @@ export const SCHOOL_STUDENTS: Student[] = [
     name: "Abigail Amponsah",
     guardianName: "Mr. Isaac Amponsah",
     guardianPhone: "+233 20 556 2290",
+    academicYearRange: "2025 - 2028",
     tuitionFee: 1400,
     paidAmount: 1400,
     balanceDue: 0,
@@ -235,6 +332,7 @@ export const SCHOOL_STUDENTS: Student[] = [
     name: "Daniel Frimpong",
     guardianName: "Mrs. Akua Frimpong",
     guardianPhone: "+233 27 330 4450",
+    academicYearRange: "2026 - 2029",
     tuitionFee: 1500,
     paidAmount: 900,
     balanceDue: 600,
@@ -247,6 +345,7 @@ export const SCHOOL_STUDENTS: Student[] = [
     name: "Christiana Osei",
     guardianName: "Mr. Anthony Osei",
     guardianPhone: "+233 24 771 3321",
+    academicYearRange: "2026 - 2029",
     tuitionFee: 1500,
     paidAmount: 1500,
     balanceDue: 0,
@@ -259,6 +358,7 @@ export const SCHOOL_STUDENTS: Student[] = [
     name: "Francis Darko",
     guardianName: "Mrs. Vivian Darko",
     guardianPhone: "+233 20 882 7788",
+    academicYearRange: "2024 - 2027",
     tuitionFee: 1600,
     paidAmount: 1600,
     balanceDue: 0,
@@ -271,6 +371,7 @@ export const SCHOOL_STUDENTS: Student[] = [
     name: "Priscilla Nkrumah",
     guardianName: "Alhaji Nkrumah",
     guardianPhone: "+233 27 441 9920",
+    academicYearRange: "2024 - 2027",
     tuitionFee: 1600,
     paidAmount: 800,
     balanceDue: 800,
@@ -283,6 +384,7 @@ export const SCHOOL_STUDENTS: Student[] = [
     name: "Emmanuel Owusu",
     guardianName: "Grace Owusu",
     guardianPhone: "+233 20 882 1104",
+    academicYearRange: "2026 - 2029",
     tuitionFee: 2000,
     paidAmount: 1200,
     balanceDue: 800,
@@ -295,6 +397,7 @@ export const SCHOOL_STUDENTS: Student[] = [
     name: "Patricia Ampofo",
     guardianName: "Mr. Ben Ampofo",
     guardianPhone: "+233 24 660 2200",
+    academicYearRange: "2026 - 2029",
     tuitionFee: 2000,
     paidAmount: 2000,
     balanceDue: 0,
@@ -307,6 +410,7 @@ export const SCHOOL_STUDENTS: Student[] = [
     name: "Jessica Ansah",
     guardianName: "Captain Ansah",
     guardianPhone: "+233 27 334 0019",
+    academicYearRange: "2025 - 2028",
     tuitionFee: 2200,
     paidAmount: 1000,
     balanceDue: 1200,
@@ -319,6 +423,7 @@ export const SCHOOL_STUDENTS: Student[] = [
     name: "Kweku Asare",
     guardianName: "Mrs. Linda Asare",
     guardianPhone: "+233 54 551 7701",
+    academicYearRange: "2025 - 2028",
     tuitionFee: 2200,
     paidAmount: 2200,
     balanceDue: 0,
@@ -331,6 +436,7 @@ export const SCHOOL_STUDENTS: Student[] = [
     name: "David Kpakpo",
     guardianName: "Florence Kpakpo",
     guardianPhone: "+233 54 901 8832",
+    academicYearRange: "2026 - 2030",
     tuitionFee: 2400,
     paidAmount: 2400,
     balanceDue: 0,
@@ -343,6 +449,7 @@ export const SCHOOL_STUDENTS: Student[] = [
     name: "Akosua Frimpong",
     guardianName: "Dr. Samuel Frimpong",
     guardianPhone: "+233 24 551 9021",
+    academicYearRange: "2026 - 2030",
     tuitionFee: 2400,
     paidAmount: 2400,
     balanceDue: 0,
@@ -355,6 +462,7 @@ export const SCHOOL_STUDENTS: Student[] = [
     name: "Bernard Agyei",
     guardianName: "Mr. Collins Agyei",
     guardianPhone: "+233 27 990 5544",
+    academicYearRange: "2023 - 2026",
     tuitionFee: 2400,
     paidAmount: 1000,
     balanceDue: 1400,
