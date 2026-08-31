@@ -23,6 +23,8 @@ import {
   Tag,
   Receipt,
   Printer,
+  Edit,
+  Trash2,
 } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
@@ -47,7 +49,7 @@ export const Route = createFileRoute("/_authenticated/members")({
       {
         name: "description",
         content:
-          "Church dues, tithes, welfare collections, project funding levies, custom payment types, and bulk CSV member enrollment.",
+          "Church dues, tithes, welfare collections, project funding, custom payment types, and bulk CSV member enrollment.",
       },
       { property: "og:title", content: "Dues & Payment — Trite Merchant OS" },
     ],
@@ -100,6 +102,7 @@ function AddPaymentTypeModal({
 }) {
   const [name, setName] = useState("");
   const [category, setCategory] = useState<ChurchPaymentType["category"]>("Tithe");
+  const [customCategory, setCustomCategory] = useState("");
   const [defaultAmount, setDefaultAmount] = useState(100);
   const [frequency, setFrequency] = useState<ChurchPaymentType["frequency"]>("Monthly");
   const [isProject, setIsProject] = useState(false);
@@ -111,7 +114,9 @@ function AddPaymentTypeModal({
     if (!name.trim()) return;
     onSubmit({
       name: name.trim(),
-      category,
+      category: category === "Other" && customCategory.trim()
+        ? (customCategory.trim() as ChurchPaymentType["category"])
+        : category,
       defaultAmount: Number(defaultAmount) || 0,
       frequency,
       isProject,
@@ -151,7 +156,7 @@ function AddPaymentTypeModal({
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Cathedral Building Fund, Harvest Levy, Youth Bus"
+              placeholder="e.g. Cathedral Building Fund, Harvest, Youth Bus"
               className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
             />
           </div>
@@ -175,8 +180,17 @@ function AddPaymentTypeModal({
                 <option value="Welfare">Welfare</option>
                 <option value="Project">Church Project</option>
                 <option value="Dues">Membership Dues</option>
-                <option value="Special">Special Thanksgiving / Levy</option>
+                <option value="Special">Special Thanksgiving</option>
+                <option value="Other">Other (specify)</option>
               </select>
+              {category === "Other" && (
+                <input
+                  value={customCategory}
+                  onChange={(e) => setCustomCategory(e.target.value)}
+                  placeholder="Enter custom category"
+                  className="w-full h-9 px-3 rounded-lg border border-border bg-background text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent mt-1.5"
+                />
+              )}
             </div>
 
             <div>
@@ -207,6 +221,7 @@ function AddPaymentTypeModal({
               <option value="Quarterly">Quarterly</option>
               <option value="Annual">Annual / Once a Year</option>
               <option value="One-Time">One-Time Contribution</option>
+              <option value="None">None</option>
             </select>
           </div>
 
@@ -718,7 +733,7 @@ function RecordPaymentModal({
             <div>
               <h2 className="text-base font-bold text-foreground">Record Member Church Payment</h2>
               <p className="text-xs text-muted-foreground">
-                Receive and ledger Tithes, Offerings, Welfare, and Project levies
+                Receive and ledger Tithes, Offerings, Welfare, and Project funding
               </p>
             </div>
           </div>
@@ -878,6 +893,16 @@ function DuesAndPaymentPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<ChurchPaymentRecord["category"] | "all">("all");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [cardLabels, setCardLabels] = useState({
+    "Church Collections": "Church Collections",
+    "Tithe": "Tithe",
+    "Sunday Offering": "Sunday Offering",
+    "Welfare": "Welfare",
+  });
+  const [editingCard, setEditingCard] = useState<string | null>(null);
+  const [draftLabel, setDraftLabel] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [confirmText, setConfirmText] = useState("");
 
   // Modals
   const [isAddPaymentTypeOpen, setIsAddPaymentTypeOpen] = useState(false);
@@ -929,6 +954,28 @@ function DuesAndPaymentPage() {
     setIsAddPaymentTypeOpen(false);
   };
 
+  const handleDeletePaymentType = (id: string) => {
+    setConfirmDelete(id);
+    setConfirmText("");
+  };
+
+  const confirmDeleteHandler = () => {
+    if (!confirmDelete) return;
+    const pt = paymentTypes.find((p) => p.id === confirmDelete);
+    if (!pt) return;
+    const displayName =
+      pt.category === "Offering"
+        ? "Sunday Offering"
+        : pt.category === "Welfare"
+          ? "Welfare"
+          : pt.name;
+    if (confirmText.trim() === displayName) {
+      setPaymentTypes((prev) => prev.filter((p) => p.id !== confirmDelete));
+    }
+    setConfirmDelete(null);
+    setConfirmText("");
+  };
+
   const handleCsvImportSuccess = (newMembers: NgoMember[]) => {
     setMembers([...newMembers, ...members]);
     setIsCsvImportOpen(false);
@@ -968,10 +1015,10 @@ function DuesAndPaymentPage() {
       ══════════════════════════════════════════════ */}
       <div className="mb-5 grid grid-cols-2 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
         {/* Card 1: Church Collections */}
-        <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs">
+        <div className="relative rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Church Collections
+              {cardLabels["Church Collections"]}
             </p>
             <span className="rounded-full bg-emerald-50 p-1.5 sm:p-2 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
               <CheckCircle2 className="size-3.5 sm:size-4" />
@@ -980,14 +1027,23 @@ function DuesAndPaymentPage() {
           <p className="mt-2 text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400">
             {currency(totalCollected)}
           </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">Tithes, Welfare & Dues</p>
+          <button
+            onClick={() => {
+              setEditingCard("Church Collections");
+              setDraftLabel(cardLabels["Church Collections"]);
+            }}
+            className="absolute bottom-3 right-3 grid size-6 place-items-center rounded-lg bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            aria-label="Edit label"
+          >
+            <Edit className="size-3" />
+          </button>
         </div>
 
         {/* Card 2: Tithe */}
-        <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs">
+        <div className="relative rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Tithe
+              {cardLabels["Tithe"]}
             </p>
             <span className="rounded-full bg-violet-50 p-1.5 sm:p-2 text-violet-600 dark:bg-violet-950/60 dark:text-violet-400">
               <Coins className="size-3.5 sm:size-4" />
@@ -996,14 +1052,23 @@ function DuesAndPaymentPage() {
           <p className="mt-2 text-xl sm:text-2xl font-bold text-violet-600 dark:text-violet-400">
             {currency(totalTithes)}
           </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">Tithes received</p>
+          <button
+            onClick={() => {
+              setEditingCard("Tithe");
+              setDraftLabel(cardLabels["Tithe"]);
+            }}
+            className="absolute bottom-3 right-3 grid size-6 place-items-center rounded-lg bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            aria-label="Edit label"
+          >
+            <Edit className="size-3" />
+          </button>
         </div>
 
         {/* Card 3: Sunday Offering */}
-        <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs">
+        <div className="relative rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Sunday Offering
+              {cardLabels["Sunday Offering"]}
             </p>
             <span className="rounded-full bg-amber-50 p-1.5 sm:p-2 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
               <Receipt className="size-3.5 sm:size-4" />
@@ -1012,14 +1077,23 @@ function DuesAndPaymentPage() {
           <p className="mt-2 text-xl sm:text-2xl font-bold text-amber-600 dark:text-amber-400">
             {currency(totalSundayOfferings)}
           </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">Offerings received</p>
+          <button
+            onClick={() => {
+              setEditingCard("Sunday Offering");
+              setDraftLabel(cardLabels["Sunday Offering"]);
+            }}
+            className="absolute bottom-3 right-3 grid size-6 place-items-center rounded-lg bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            aria-label="Edit label"
+          >
+            <Edit className="size-3" />
+          </button>
         </div>
 
         {/* Card 4: Welfare */}
-        <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs">
+        <div className="relative rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Welfare
+              {cardLabels["Welfare"]}
             </p>
             <span className="rounded-full bg-teal-50 p-1.5 sm:p-2 text-teal-600 dark:bg-teal-950/60 dark:text-teal-400">
               <Wallet className="size-3.5 sm:size-4" />
@@ -1028,9 +1102,81 @@ function DuesAndPaymentPage() {
           <p className="mt-2 text-xl sm:text-2xl font-bold text-teal-600 dark:text-teal-400">
             {currency(totalWelfare)}
           </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">Welfare received</p>
+          <button
+            onClick={() => {
+              setEditingCard("Welfare");
+              setDraftLabel(cardLabels["Welfare"]);
+            }}
+            className="absolute bottom-3 right-3 grid size-6 place-items-center rounded-lg bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            aria-label="Edit label"
+          >
+            <Edit className="size-3" />
+          </button>
         </div>
       </div>
+
+      {editingCard && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-150"
+          onClick={() => setEditingCard(null)}
+        >
+          <div
+            className="relative w-full max-w-sm rounded-2xl bg-card shadow-2xl border border-border p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setEditingCard(null)}
+              className="absolute top-4 right-4 grid size-7 place-items-center rounded-full hover:bg-secondary transition-colors"
+              aria-label="Close"
+            >
+              <X className="size-4 text-muted-foreground" />
+            </button>
+            <h3 className="text-lg font-bold mb-4 text-foreground">Edit Card Label</h3>
+            <input
+              type="text"
+              value={draftLabel}
+              onChange={(e) => setDraftLabel(e.target.value)}
+              className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  if (draftLabel.trim()) {
+                    setCardLabels((p) => ({ ...p, [editingCard]: draftLabel.trim() }));
+                    setEditingCard(null);
+                  }
+                }
+                if (e.key === "Escape") setEditingCard(null);
+              }}
+            />
+            <div className="mt-5 flex justify-end gap-2 border-t border-border pt-4">
+              <button
+                onClick={() => setEditingCard(null)}
+                className="px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (draftLabel.trim()) {
+                    setCardLabels((p) => ({ ...p, [editingCard]: draftLabel.trim() }));
+                    setEditingCard(null);
+                  }
+                }}
+                disabled={!draftLabel.trim()}
+                className={cn(
+                  "px-4 py-1.5 text-sm font-semibold rounded-lg transition-colors",
+                  draftLabel.trim()
+                    ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                    : "bg-muted text-muted-foreground cursor-not-allowed",
+                )}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ══════════════════════════════════════════════
           2. ACTIVE PAYMENT TYPES TILES (4 PER ROW)
@@ -1065,7 +1211,7 @@ function DuesAndPaymentPage() {
               <div
                 key={pt.id}
                 className={cn(
-                  "flex items-center justify-between p-2.5 rounded-xl border transition-colors",
+                  "relative flex items-center justify-between p-2.5 rounded-xl border transition-colors",
                   isProj
                     ? "bg-amber-50/40 dark:bg-amber-950/20 border-amber-200/70 dark:border-amber-800/50"
                     : "bg-secondary/30 border-border hover:bg-secondary/50",
@@ -1083,11 +1229,83 @@ function DuesAndPaymentPage() {
                     )}
                   </div>
                 </div>
+                <button
+                  onClick={() => handleDeletePaymentType(pt.id)}
+                  className="ml-2 grid size-6 shrink-0 place-items-center rounded-lg bg-muted/30 text-muted-foreground hover:bg-rose-100 hover:text-rose-600 dark:hover:bg-rose-950/50 dark:hover:text-rose-400 transition-colors"
+                  aria-label={`Delete ${displayName}`}
+                >
+                  <Trash2 className="size-3" />
+                </button>
               </div>
             );
           })}
         </div>
       </div>
+
+      {confirmDelete && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-150"
+          onClick={() => setConfirmDelete(null)}
+        >
+          <div
+            className="relative w-full max-w-md rounded-2xl bg-card shadow-2xl border border-border p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setConfirmDelete(null)}
+              className="absolute top-4 right-4 grid size-7 place-items-center rounded-full hover:bg-secondary transition-colors"
+              aria-label="Close"
+            >
+              <X className="size-4 text-muted-foreground" />
+            </button>
+            <h3 className="text-lg font-bold mb-2 text-foreground">
+              Are you sure you want to delete this payment type?
+            </h3>
+            {(() => {
+              const pt = paymentTypes.find((p) => p.id === confirmDelete);
+              if (!pt) return null;
+              const displayName =
+                pt.category === "Offering"
+                  ? "Sunday Offering"
+                  : pt.category === "Welfare"
+                    ? "Welfare"
+                    : pt.name;
+              return (
+                <p className="text-xs text-muted-foreground mb-4">
+                  Type{" "}
+                  <span className="font-semibold text-foreground">"{displayName}"</span> to confirm.
+                </p>
+              );
+            })()}
+            <input
+              type="text"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent mb-5"
+              placeholder="Type the payment type name..."
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === "Escape") setConfirmDelete(null);
+              }}
+            />
+            <div className="flex justify-end gap-2 border-t border-border pt-4">
+              <button
+                onClick={() => setConfirmDelete(null)}
+                className="px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteHandler}
+                className="px-4 py-1.5 text-sm font-semibold rounded-lg bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                disabled={!confirmText.trim()}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ══════════════════════════════════════════════
           3. SEARCH & FILTER TOOLBAR

@@ -99,6 +99,18 @@ const tooltipStyle = {
 export function ChurchDashboard() {
   const members = NGO_MEMBERS;
   const transactions = CHURCH_PAYMENT_RECORDS;
+  const [mobileLabels, setMobileLabels] = useState({
+    "Church Collections": "Church Collections",
+    "Pledges": "Pledges",
+    "Welfare Collections": "Welfare Collections",
+    "Outstanding Arrears": "Outstanding Arrears",
+  });
+  const [desktopLabels, setDesktopLabels] = useState({
+    "Total Church Collections": "Total Church Collections",
+    "Pledges": "Pledges",
+    "Welfare & Dues Collected": "Welfare & Dues Collected",
+    "Collection Rate": "Collection Rate",
+  });
 
   const totalCollected = useMemo(() => members.reduce((a, m) => a + m.totalPaid, 0), [members]);
   const outstandingDues = useMemo(() => members.reduce((a, m) => a + m.balanceDue, 0), [members]);
@@ -124,7 +136,7 @@ export function ChurchDashboard() {
   return (
     <AppShell
       title="Church Operations & Finance"
-      subtitle="Tithes, Sunday offerings, welfare dues, project funding levies, and budget approvals"
+      subtitle="Tithes, Sunday offerings, welfare dues, project funding, and budget approvals"
       actions={
         <div className="hidden lg:flex flex-wrap items-center gap-2">
           <Link to="/members">
@@ -200,60 +212,62 @@ export function ChurchDashboard() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-2 gap-2.5">
             <KpiCard
-              label="Church Collections"
-              value={currency(totalCollected)}
-              delta={18}
-              icon={Coins}
+              label={mobileLabels["Church Collections"]}
+              onEditLabel={(v) => setMobileLabels((p) => ({ ...p, "Church Collections": v }))}
+             value={currency(totalCollected)}
+             delta={18}
+             icon={Coins}
             />
             <KpiCard
-              label="Pledges"
-              value={currency(projectFunds)}
-              sub="Current pledge commitments"
-              icon={FolderKanban}
-            />
+              label={mobileLabels["Pledges"]}
+              onEditLabel={(v) => setMobileLabels((p) => ({ ...p, "Pledges": v }))}
+             value={currency(projectFunds)}
+             icon={FolderKanban}
+           />
             <KpiCard
-              label="Welfare Collections"
-              value={currency(welfareFunds)}
-              sub="Member support fund"
-              icon={Wallet}
-            />
+              label={mobileLabels["Welfare Collections"]}
+              onEditLabel={(v) => setMobileLabels((p) => ({ ...p, "Welfare Collections": v }))}
+             value={currency(welfareFunds)}
+             icon={Wallet}
+           />
             <KpiCard
-              label="Outstanding Arrears"
-              value={currency(outstandingDues)}
-              sub={`${members.filter((m) => m.balanceDue > 0).length} pending payments`}
-              icon={Clock}
-            />
+              label={mobileLabels["Outstanding Arrears"]}
+              onEditLabel={(v) => setMobileLabels((p) => ({ ...p, "Outstanding Arrears": v }))}
+             value={currency(outstandingDues)}
+             icon={Clock}
+           />
           </div>
         </div>
 
         {/* Desktop: standard 4-column KPI grid */}
         <section className="hidden lg:grid grid-cols-4 gap-3">
           <KpiCard
-            label="Total Church Collections"
-            value={currency(totalCollected)}
-            delta={18}
-            icon={Coins}
-          />
+            label={desktopLabels["Total Church Collections"]}
+            onEditLabel={(v) => setDesktopLabels((p) => ({ ...p, "Total Church Collections": v }))}
+             value={currency(totalCollected)}
+             delta={18}
+             icon={Coins}
+           />
           <KpiCard
-            label="Pledges"
-            value={currency(projectFunds)}
-            sub="Current pledge commitments"
-            icon={FolderKanban}
-          />
+            label={desktopLabels["Pledges"]}
+            onEditLabel={(v) => setDesktopLabels((p) => ({ ...p, "Pledges": v }))}
+             value={currency(projectFunds)}
+             icon={FolderKanban}
+           />
           <KpiCard
-            label="Welfare & Dues Collected"
-            value={currency(welfareFunds)}
-            sub={`${paidDues.length} cleared members`}
-            icon={Wallet}
-          />
+            label={desktopLabels["Welfare & Dues Collected"]}
+            onEditLabel={(v) => setDesktopLabels((p) => ({ ...p, "Welfare & Dues Collected": v }))}
+             value={currency(welfareFunds)}
+             icon={Wallet}
+           />
           <KpiCard
-            label="Collection Rate"
-            value={`${collectionRate}%`}
-            sub={`${paidDues.length} of ${members.length} fully settled`}
-            icon={Award}
-          />
+            label={desktopLabels["Collection Rate"]}
+            onEditLabel={(v) => setDesktopLabels((p) => ({ ...p, "Collection Rate": v }))}
+             value={`${collectionRate}%`}
+             icon={Award}
+           />
         </section>
 
         {/* Collections Trend + Recent Church Collections */}
@@ -266,7 +280,7 @@ export function ChurchDashboard() {
                 <div>
                   <h2 className="text-sm font-semibold">Church Collections & Revenue Trend</h2>
                   <p className="text-xs text-muted-foreground">
-                    Tithes, Sunday offerings, welfare dues, and project levies
+                    Tithes, Sunday offerings, welfare dues, and project funding
                   </p>
                 </div>
               </div>

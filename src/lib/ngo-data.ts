@@ -1,9 +1,9 @@
 export type ChurchPaymentType = {
   id: string;
   name: string;
-  category: "Tithe" | "Offering" | "Welfare" | "Project" | "Dues" | "Special";
+  category: "Tithe" | "Offering" | "Welfare" | "Project" | "Dues" | "Special" | "Other";
   defaultAmount: number;
-  frequency: "Weekly" | "Monthly" | "Quarterly" | "Annual" | "One-Time";
+  frequency: "Weekly" | "Monthly" | "Quarterly" | "Annual" | "One-Time" | "None";
   isProject: boolean;
   projectName?: string | undefined;
   description?: string | undefined;
@@ -39,7 +39,7 @@ export const DEFAULT_CHURCH_PAYMENT_TYPES: ChurchPaymentType[] = [
   },
   {
     id: "cpay-bldg",
-    name: "Cathedral Building Project Levy",
+    name: "Cathedral Building Project",
     category: "Project",
     defaultAmount: 1000,
     frequency: "Annual",
@@ -93,7 +93,7 @@ export type ChurchPaymentRecord = {
   memberId: string;
   memberName: string;
   paymentType: string;
-  category: "Tithe" | "Offering" | "Welfare" | "Project" | "Dues" | "Special";
+  category: "Tithe" | "Offering" | "Welfare" | "Project" | "Dues" | "Special" | "Other";
   isProject: boolean;
   projectName?: string | undefined;
   amount: number;
@@ -150,7 +150,7 @@ export const CHURCH_PAYMENT_RECORDS: ChurchPaymentRecord[] = [
     receiptNo: "RCP-CH-2026-002",
     memberId: "CHU-MBR-002",
     memberName: "Elder Clara Mensah",
-    paymentType: "Cathedral Building Project Levy",
+    paymentType: "Cathedral Building Project",
     category: "Project",
     isProject: true,
     projectName: "Cathedral Building Project",
@@ -213,7 +213,7 @@ export const NGO_MEMBERS: NgoMember[] = [
     role: "Pastor / Minister",
     email: "e.osei@churchministry.org",
     phone: "+233 24 411 9002",
-    assignedPaymentTypes: ["Tithe", "Cathedral Building Project Levy", "Welfare"],
+    assignedPaymentTypes: ["Tithe", "Cathedral Building Project", "Welfare"],
     annualDues: 2500,
     duesPaid: 2500,
     duesStatus: "Paid",
@@ -231,7 +231,7 @@ export const NGO_MEMBERS: NgoMember[] = [
     role: "Elder / Deacon",
     email: "c.mensah@chambers.gh",
     phone: "+233 20 881 2299",
-    assignedPaymentTypes: ["Tithe", "Cathedral Building Project Levy", "Welfare"],
+    assignedPaymentTypes: ["Tithe", "Cathedral Building Project", "Welfare"],
     annualDues: 2000,
     duesPaid: 2000,
     duesStatus: "Paid",
@@ -267,7 +267,7 @@ export const NGO_MEMBERS: NgoMember[] = [
     role: "Board Member",
     email: "hannah.q@korlebu.edu.gh",
     phone: "+233 54 901 3322",
-    assignedPaymentTypes: ["Tithe", "Cathedral Building Project Levy", "Welfare", "Annual Harvest & Thanksgiving"],
+    assignedPaymentTypes: ["Tithe", "Cathedral Building Project", "Welfare", "Annual Harvest & Thanksgiving"],
     annualDues: 3500,
     duesPaid: 3500,
     duesStatus: "Paid",
@@ -303,7 +303,7 @@ export const NGO_MEMBERS: NgoMember[] = [
     role: "Member",
     email: "abigail.darko@yahoo.com",
     phone: "+233 20 114 7733",
-    assignedPaymentTypes: ["Tithe", "Welfare", "Cathedral Building Project Levy"],
+    assignedPaymentTypes: ["Tithe", "Welfare", "Cathedral Building Project"],
     annualDues: 1500,
     duesPaid: 1500,
     duesStatus: "Paid",
