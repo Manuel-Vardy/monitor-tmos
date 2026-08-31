@@ -560,6 +560,7 @@ function ProjectsPage() {
   const [statusFilter, setStatusFilter] = useState<ProjectStatus | "all">("all");
   const [search, setSearch] = useState("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
 
   const handleCreateProject = (newProject: NgoProject) => {
     setProjects((prev) => [newProject, ...prev]);
@@ -577,7 +578,8 @@ function ProjectsPage() {
       p.code.toLowerCase().includes(search.toLowerCase()) ||
       p.location.toLowerCase().includes(search.toLowerCase()) ||
       p.leadCoordinator.toLowerCase().includes(search.toLowerCase());
-    return matchStatus && matchSearch;
+    const matchSelected = selectedProjectId === null || p.id === selectedProjectId;
+    return matchStatus && matchSearch && matchSelected;
   });
 
   const totalTargetFunding = projects.reduce((a, p) => a + p.budgetAllocated, 0);
@@ -686,6 +688,18 @@ function ProjectsPage() {
               </button>
             );
           })}
+          <select
+            value={selectedProjectId || ""}
+            onChange={(e) => setSelectedProjectId(e.target.value || null)}
+            className="h-8 rounded-md border border-border bg-card px-2.5 text-xs outline-none focus:border-ring"
+          >
+            <option value="">All Projects</option>
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.code} — {p.title}
+              </option>
+            ))}
+          </select>
           <DateRangePicker value={dateRange} onChange={setDateRange} />
         </div>
       </div>

@@ -233,7 +233,7 @@ export function AppShell({
 
           {/* ── Desktop bar ── */}
           <div className="hidden h-16 items-center gap-3 px-6 lg:flex">
-            <BranchSwitcher />
+            {institutionType !== "school" && <BranchSwitcher />}
             {linkedAccounts.length > 1 && (
               <InstitutionSwitcher
                 accounts={linkedAccounts}
@@ -270,7 +270,7 @@ export function AppShell({
             )}
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <BranchSwitcher />
+                {institutionType !== "school" && <BranchSwitcher />}
                 {linkedAccounts.length > 1 && (
                   <InstitutionSwitcher
                     accounts={linkedAccounts}

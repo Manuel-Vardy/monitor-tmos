@@ -31,11 +31,7 @@ import { currency } from "@/lib/mos-data";
 import { cn } from "@/lib/utils";
 import { DateRangePicker } from "@/components/date-range-picker";
 import type { DateRange } from "react-day-picker";
-import {
-  NGO_MEMBERS,
-  CHURCH_PAYMENT_RECORDS,
-  NGO_PROJECTS,
-} from "@/lib/ngo-data";
+import { NGO_MEMBERS, CHURCH_PAYMENT_RECORDS, NGO_PROJECTS } from "@/lib/ngo-data";
 
 // ── Church-specific status pill ──
 const CHURCH_DUES_STATUS: Record<string, { bg: string; text: string; dot: string }> = {
@@ -73,7 +69,7 @@ function ChurchStatusPill({
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-semibold whitespace-nowrap",
         s.bg,
-        s.text
+        s.text,
       )}
     >
       <span className={cn("size-1.5 rounded-full shrink-0", s.dot)} />
@@ -111,16 +107,16 @@ export function ChurchDashboard() {
     members.length > 0 ? Math.round((paidDues.length / members.length) * 100) : 0;
 
   const tithesAndOfferings = useMemo(
-    () => members.reduce((a, m) => a + ((m.monthlyTithe || 0) * 12), 0),
-    [members]
+    () => members.reduce((a, m) => a + (m.monthlyTithe || 0) * 12, 0),
+    [members],
   );
   const projectFunds = useMemo(
     () => members.reduce((a, m) => a + (m.projectContributions || 0), 0),
-    [members]
+    [members],
   );
   const welfareFunds = useMemo(
     () => members.reduce((a, m) => a + (m.welfarePaid || 0), 0),
-    [members]
+    [members],
   );
 
   const [trendDateRange, setTrendDateRange] = useState<DateRange | undefined>(undefined);
@@ -209,13 +205,12 @@ export function ChurchDashboard() {
               label="Church Collections"
               value={currency(totalCollected)}
               delta={18}
-              sub={`${members.length} registered members`}
               icon={Coins}
             />
             <KpiCard
-              label="Project Funds Raised"
+              label="Pledges"
               value={currency(projectFunds)}
-              sub="Building & Bus projects"
+              sub="Current pledge commitments"
               icon={FolderKanban}
             />
             <KpiCard
@@ -239,13 +234,12 @@ export function ChurchDashboard() {
             label="Total Church Collections"
             value={currency(totalCollected)}
             delta={18}
-            sub={`${members.length} active registered members`}
             icon={Coins}
           />
           <KpiCard
-            label="Project Funds Raised"
+            label="Pledges"
             value={currency(projectFunds)}
-            sub={`${NGO_PROJECTS.length} church infrastructure initiatives`}
+            sub="Current pledge commitments"
             icon={FolderKanban}
           />
           <KpiCard
@@ -284,14 +278,21 @@ export function ChurchDashboard() {
             <div className="px-3 py-4">
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={CHURCH_COLLECTIONS_TREND} margin={{ left: -18, right: 8, top: 8 }}>
+                  <AreaChart
+                    data={CHURCH_COLLECTIONS_TREND}
+                    margin={{ left: -18, right: 8, top: 8 }}
+                  >
                     <defs>
                       <linearGradient id="g-church" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="0%" stopColor="#22c55e" stopOpacity={0.35} />
                         <stop offset="100%" stopColor="#22c55e" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="var(--color-border)"
+                      vertical={false}
+                    />
                     <XAxis
                       dataKey="month"
                       tickLine={false}
@@ -326,8 +327,8 @@ export function ChurchDashboard() {
               </div>
               <p className="mt-1 px-2 text-xs text-muted-foreground">
                 Total monthly collections climbed to{" "}
-                {currency(CHURCH_COLLECTIONS_TREND[CHURCH_COLLECTIONS_TREND.length - 1]!.collected)} in
-                August, driven by building fund pledges and steady tithing.
+                {currency(CHURCH_COLLECTIONS_TREND[CHURCH_COLLECTIONS_TREND.length - 1]!.collected)}{" "}
+                in August, driven by building fund pledges and steady tithing.
               </p>
             </div>
           </Card>

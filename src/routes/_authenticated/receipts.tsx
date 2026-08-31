@@ -16,11 +16,24 @@ import {
   Calendar,
   CreditCard,
   User,
+  Mail,
+  MessageSquare,
+  ChevronDown,
+  Copy,
+  MoreHorizontal,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { DateRangePicker } from "@/components/date-range-picker";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { currency } from "@/lib/mos-data";
 import {
   FEE_TRANSACTIONS,
@@ -46,7 +59,7 @@ export const Route = createFileRoute("/_authenticated/receipts")({
   component: ReceiptsPage,
 });
 
-type PaymentMethod = "Mobile Money (MTN)" | "Bank Transfer" | "Cash Deposit";
+type PaymentMethod = "Mobile Money (MTN)" | "Bank Transfer";
 
 const METHOD_CONFIG: Record<
   PaymentMethod,
@@ -63,12 +76,6 @@ const METHOD_CONFIG: Record<
     color: "text-blue-600 dark:text-blue-400",
     bg: "bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800",
     activePill: "bg-blue-600 text-white",
-  },
-  "Cash Deposit": {
-    icon: Banknote,
-    color: "text-emerald-600 dark:text-emerald-400",
-    bg: "bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800",
-    activePill: "bg-emerald-600 text-white",
   },
 };
 
@@ -146,6 +153,23 @@ function PrintReceiptModal({
     window.print();
   };
 
+  const handleSendSms = () => {
+    const phone =
+      student?.guardianPhone && student.guardianPhone !== "—"
+        ? student.guardianPhone
+        : "+233 24 555 0192";
+    toast.success(`SMS receipt dispatched to ${tx.studentName}`, {
+      description: `Receipt #${tx.receiptNo} (${currency(tx.amountPaid)}) sent to ${phone}`,
+    });
+  };
+
+  const handleSendEmail = () => {
+    const email = `${tx.studentName.toLowerCase().replace(/[^a-z0-9]/g, ".")}@stu.edu.gh`;
+    toast.success(`Email receipt sent to ${tx.studentName}`, {
+      description: `Official PDF confirmation for ${tx.receiptNo} sent to ${email}`,
+    });
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
@@ -155,24 +179,45 @@ function PrintReceiptModal({
         className="w-full max-w-lg rounded-2xl bg-card shadow-2xl border border-border p-6 space-y-5"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header with Print and Close */}
+        {/* Header with Print, SMS, Email and Close */}
         <div className="flex items-center justify-between border-b border-border pb-3">
           <div className="flex items-center gap-2">
             <Receipt className="size-5 text-accent" />
             <h2 className="text-base font-bold text-foreground">Official Payment Receipt</h2>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleSendSms}
+              className="h-8 text-xs px-2.5 gap-1 hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-colors"
+              title="Send via SMS"
+            >
+              <Smartphone className="size-3.5" />
+              <span className="hidden sm:inline">SMS</span>
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleSendEmail}
+              className="h-8 text-xs px-2.5 gap-1 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-colors"
+              title="Send via Email"
+            >
+              <Mail className="size-3.5" />
+              <span className="hidden sm:inline">Email</span>
+            </Button>
             <Button
               size="sm"
               onClick={handlePrint}
               className="bg-[#22c55e] text-white hover:bg-[#16a34a] gap-1.5 h-8 text-xs"
+              title="Print Receipt"
             >
               <Printer className="size-3.5" />
               <span>Print</span>
             </Button>
             <button
               onClick={onClose}
-              className="rounded-full p-1.5 text-muted-foreground hover:bg-secondary transition-colors"
+              className="rounded-full p-1.5 text-muted-foreground hover:bg-secondary transition-colors ml-1"
             >
               <X className="size-4" />
             </button>
@@ -285,9 +330,27 @@ function PrintReceiptModal({
         </div>
 
         {/* Modal Bottom Actions */}
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
           <Button variant="outline" size="sm" onClick={onClose} className="h-8 text-xs">
             Close
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleSendSms}
+            className="h-8 text-xs gap-1.5 hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-colors"
+          >
+            <Smartphone className="size-3.5" />
+            <span>Send SMS</span>
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleSendEmail}
+            className="h-8 text-xs gap-1.5 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-colors"
+          >
+            <Mail className="size-3.5" />
+            <span>Send Email</span>
           </Button>
           <Button
             size="sm"
@@ -312,6 +375,21 @@ function ReceiptsPage() {
 
   const students = SCHOOL_STUDENTS;
   const transactions = FEE_TRANSACTIONS;
+
+  const handleSendSms = (tx: FeeTransaction) => {
+    const st = students.find((s) => s.studentId === tx.studentId || s.name === tx.studentName);
+    const phone = st?.guardianPhone && st.guardianPhone !== "—" ? st.guardianPhone : "+233 24 555 0192";
+    toast.success(`SMS receipt dispatched to ${tx.studentName}`, {
+      description: `Receipt #${tx.receiptNo} (${currency(tx.amountPaid)}) sent to ${phone}`,
+    });
+  };
+
+  const handleSendEmail = (tx: FeeTransaction) => {
+    const email = `${tx.studentName.toLowerCase().replace(/[^a-z0-9]/g, ".")}@stu.edu.gh`;
+    toast.success(`Email receipt sent to ${tx.studentName}`, {
+      description: `Official PDF confirmation for ${tx.receiptNo} sent to ${email}`,
+    });
+  };
 
   // Filtered receipts reflecting students and fee management info
   const filtered = useMemo(() => {
@@ -371,63 +449,63 @@ function ReceiptsPage() {
         {/* Card 1: Total Receipts */}
         <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <p className="text-xs font-bold uppercase tracking-wider text-foreground">
               Total Receipts
             </p>
             <span className="rounded-full bg-slate-100 p-1.5 sm:p-2 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
               <Receipt className="size-3.5 sm:size-4" />
             </span>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-bold">{transactions.length}</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">Issued in Term 3, 2026</p>
+          <p className="mt-2 text-xl sm:text-2xl font-extrabold text-foreground">{transactions.length}</p>
+          <p className="mt-0.5 text-xs font-semibold text-foreground/90">Issued in Term 3, 2026</p>
         </div>
 
         {/* Card 2: Mobile Money */}
         <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <p className="text-xs font-bold uppercase tracking-wider text-foreground">
               Mobile Money
             </p>
             <span className="rounded-full bg-amber-50 p-1.5 sm:p-2 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
               <Smartphone className="size-3.5 sm:size-4" />
             </span>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-bold text-amber-600 dark:text-amber-400">
+          <p className="mt-2 text-xl sm:text-2xl font-extrabold text-amber-600 dark:text-amber-400">
             {transactions.filter((t) => t.paymentMethod.includes("Mobile Money")).length} Receipts
           </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">MoMo mobile settlements</p>
+          <p className="mt-0.5 text-xs font-semibold text-foreground/90">MoMo mobile settlements</p>
         </div>
 
         {/* Card 3: Bank Transfers */}
         <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <p className="text-xs font-bold uppercase tracking-wider text-foreground">
               Bank Transfers
             </p>
             <span className="rounded-full bg-blue-50 p-1.5 sm:p-2 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
               <Building2 className="size-3.5 sm:size-4" />
             </span>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">
+          <p className="mt-2 text-xl sm:text-2xl font-extrabold text-blue-600 dark:text-blue-400">
             {transactions.filter((t) => t.paymentMethod === "Bank Transfer").length} Receipts
           </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">Direct deposits & wires</p>
+          <p className="mt-0.5 text-xs font-semibold text-foreground/90">Direct deposits & wires</p>
         </div>
 
         {/* Card 4: Filtered Shown Amount */}
         <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <p className="text-xs font-bold uppercase tracking-wider text-foreground">
               Fees Collected (Shown)
             </p>
             <span className="rounded-full bg-emerald-50 p-1.5 sm:p-2 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
               <Banknote className="size-3.5 sm:size-4" />
             </span>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+          <p className="mt-2 text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">
             {currency(totalShown)}
           </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">{filtered.length} receipts displayed</p>
+          <p className="mt-0.5 text-xs font-semibold text-foreground/90">{filtered.length} receipts displayed</p>
         </div>
       </div>
 
@@ -594,15 +672,43 @@ function ReceiptsPage() {
                         {currency(tx.amountPaid)}
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setPrintTx(tx)}
-                          className="h-7 text-xs px-2.5 gap-1.5 hover:bg-[#22c55e] hover:text-white hover:border-[#22c55e] transition-colors"
-                        >
-                          <Printer className="size-3" />
-                          <span>Print Receipt</span>
-                        </Button>
+                        <div className="flex items-center justify-end">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 text-xs px-2.5 gap-1 font-medium border-border/80 hover:bg-secondary hover:text-foreground data-[state=open]:bg-secondary cursor-pointer"
+                              >
+                                <span>Actions</span>
+                                <ChevronDown className="size-3 text-muted-foreground" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-44 shadow-lg border-border">
+                              <DropdownMenuItem
+                                onClick={() => setPrintTx(tx)}
+                                className="cursor-pointer gap-2 text-xs py-2 font-medium"
+                              >
+                                <Printer className="size-3.5 text-emerald-600 dark:text-emerald-400" />
+                                <span>Print Receipt</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleSendSms(tx)}
+                                className="cursor-pointer gap-2 text-xs py-2 font-medium"
+                              >
+                                <Smartphone className="size-3.5 text-amber-600 dark:text-amber-400" />
+                                <span>Send via SMS</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleSendEmail(tx)}
+                                className="cursor-pointer gap-2 text-xs py-2 font-medium"
+                              >
+                                <Mail className="size-3.5 text-blue-600 dark:text-blue-400" />
+                                <span>Send via Email</span>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </td>
                     </tr>
                   );

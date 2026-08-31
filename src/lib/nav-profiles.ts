@@ -201,7 +201,10 @@ export const NAV_PROFILE_MAP: Record<InstitutionType, NavProfile> = {
     },
     {
       group: "Organisation",
-      items: [{ to: "/settings", label: "Settings", icon: Settings, priority: 5 }],
+      items: [
+        { to: "/audit", label: "Audit trail", icon: ScrollText },
+        { to: "/settings", label: "Settings", icon: Settings, priority: 5 },
+      ],
     },
   ],
 
@@ -225,7 +228,10 @@ export const NAV_PROFILE_MAP: Record<InstitutionType, NavProfile> = {
     },
     {
       group: "Organisation",
-      items: [{ to: "/settings", label: "Settings", icon: Settings, priority: 5 }],
+      items: [
+        { to: "/audit", label: "Audit trail", icon: ScrollText },
+        { to: "/settings", label: "Settings", icon: Settings, priority: 5 },
+      ],
     },
   ],
 
@@ -252,7 +258,10 @@ export const NAV_PROFILE_MAP: Record<InstitutionType, NavProfile> = {
     },
     {
       group: "Organisation",
-      items: [{ to: "/settings", label: "Settings", icon: Settings, priority: 5 }],
+      items: [
+        { to: "/audit", label: "Audit trail", icon: ScrollText },
+        { to: "/settings", label: "Settings", icon: Settings, priority: 5 },
+      ],
     },
   ],
 
@@ -310,7 +319,10 @@ export const NAV_PROFILE_MAP: Record<InstitutionType, NavProfile> = {
     },
     {
       group: "Organisation",
-      items: [{ to: "/settings", label: "Settings", icon: Settings, priority: 5 }],
+      items: [
+        { to: "/audit", label: "Audit trail", icon: ScrollText },
+        { to: "/settings", label: "Settings", icon: Settings, priority: 5 },
+      ],
     },
   ],
 
@@ -367,7 +379,10 @@ export const NAV_PROFILE_MAP: Record<InstitutionType, NavProfile> = {
     },
     {
       group: "Organisation",
-      items: [{ to: "/settings", label: "Settings", icon: Settings, priority: 5 }],
+      items: [
+        { to: "/audit", label: "Audit trail", icon: ScrollText },
+        { to: "/settings", label: "Settings", icon: Settings, priority: 5 },
+      ],
     },
   ],
 };

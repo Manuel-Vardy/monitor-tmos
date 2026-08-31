@@ -35,17 +35,17 @@ export function KpiCard({
       </div>
 
       {/* Label */}
-      <p className="text-[10px] sm:text-sm font-medium text-muted-foreground pr-8 sm:pr-12 leading-tight uppercase tracking-wide">{label}</p>
+      <p className="text-[11px] sm:text-xs font-bold text-foreground pr-8 sm:pr-12 leading-tight uppercase tracking-wider">{label}</p>
 
       {/* Value */}
-      <p className="text-base sm:text-3xl font-bold tracking-tight text-foreground leading-tight">{value}</p>
+      <p className="text-base sm:text-3xl font-extrabold tracking-tight text-foreground leading-tight">{value}</p>
 
       {/* Delta indicator */}
       {hasDelta && (
         <div
           className={cn(
-            "inline-flex items-center gap-1 text-[10px] sm:text-sm font-medium",
-            isPositive ? "text-emerald-600" : "text-red-500",
+            "inline-flex items-center gap-1 text-[10px] sm:text-sm font-semibold",
+            isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400",
           )}
         >
           {isPositive ? (
@@ -61,7 +61,7 @@ export function KpiCard({
       )}
 
       {/* Sub text */}
-      <p className="text-[10px] sm:text-xs text-muted-foreground leading-tight">{sub}</p>
+      <p className="text-[11px] sm:text-xs font-semibold text-foreground/90 leading-tight">{sub}</p>
     </Card>
   );
 }

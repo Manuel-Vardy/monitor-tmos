@@ -76,9 +76,10 @@ export type Department = {
   code: string;
   description?: string | undefined;
   defaultTuition?: number | undefined;
+  subCourses?: string[] | undefined;
 };
 
-// ── Tertiary Departments Focus ──
+// ── Tertiary Departments Focus with Sub-Courses ──
 const INITIAL_DEPARTMENTS: Department[] = [
   {
     id: "dept-it",
@@ -86,6 +87,13 @@ const INITIAL_DEPARTMENTS: Department[] = [
     code: "IT",
     description: "Computer Science, Software Engineering, Cybersecurity & Networks",
     defaultTuition: 3200,
+    subCourses: [
+      "Software Engineering",
+      "Computer Science",
+      "Cybersecurity & Networks",
+      "Data Science & AI",
+      "Information Systems",
+    ],
   },
   {
     id: "dept-hr",
@@ -93,6 +101,13 @@ const INITIAL_DEPARTMENTS: Department[] = [
     code: "HR",
     description: "Human Resource Management, Talent Dev & Organizational Strategy",
     defaultTuition: 2800,
+    subCourses: [
+      "Human Resource Management",
+      "Talent Development & Strategy",
+      "Organizational Leadership",
+      "Employee & Labor Relations",
+      "Workplace Psychology",
+    ],
   },
   {
     id: "dept-soc",
@@ -100,6 +115,13 @@ const INITIAL_DEPARTMENTS: Department[] = [
     code: "SOC",
     description: "Sociology, Development Policy, Public Relations & Social Work",
     defaultTuition: 2600,
+    subCourses: [
+      "Sociology & Community Dev",
+      "Public Policy & Governance",
+      "Development Studies",
+      "Social Work & Welfare",
+      "International Relations",
+    ],
   },
   {
     id: "dept-art",
@@ -107,6 +129,13 @@ const INITIAL_DEPARTMENTS: Department[] = [
     code: "ART",
     description: "Graphic Design, Industrial Arts, Multimedia & Digital Production",
     defaultTuition: 3000,
+    subCourses: [
+      "Graphic & UI/UX Design",
+      "Multimedia & Animation",
+      "Industrial & Product Arts",
+      "Fine Arts & Illustration",
+      "Fashion & Textile Design",
+    ],
   },
   {
     id: "dept-bus",
@@ -114,6 +143,13 @@ const INITIAL_DEPARTMENTS: Department[] = [
     code: "BUS",
     description: "Banking & Finance, Marketing, Supply Chain & Entrepreneurship",
     defaultTuition: 3400,
+    subCourses: [
+      "Banking & Finance",
+      "Marketing & Brand Strategy",
+      "Supply Chain & Logistics",
+      "Entrepreneurship & Innovation",
+      "Project Management",
+    ],
   },
   {
     id: "dept-acc",
@@ -121,6 +157,13 @@ const INITIAL_DEPARTMENTS: Department[] = [
     code: "ACC",
     description: "Corporate Accounting, Tax Practice, Forensic Auditing & Actuarial",
     defaultTuition: 3500,
+    subCourses: [
+      "Corporate Accounting & Auditing",
+      "Forensic Accounting & Tax",
+      "Actuarial Science",
+      "Investment Banking & Risk",
+      "Public Sector Financial Management",
+    ],
   },
 ];
 
@@ -137,6 +180,18 @@ export function getStudentDeptName(student: Student): string {
   const num = parseInt(student.id.replace(/\D/g, "") || "1", 10);
   const idx = (num - 1) % INITIAL_DEPARTMENTS.length;
   return INITIAL_DEPARTMENTS[idx]?.name || "IT Department";
+}
+
+export function getStudentSubCourse(student: Student, departments: Department[] = INITIAL_DEPARTMENTS): string {
+  if (student.subCourse) return student.subCourse;
+  const deptName = getStudentDeptName(student);
+  const deptObj = departments.find((d) => d.name === deptName) || INITIAL_DEPARTMENTS[0];
+  const list = deptObj?.subCourses && deptObj.subCourses.length > 0
+    ? deptObj.subCourses
+    : ["General Studies"];
+  const num = parseInt(student.id.replace(/\D/g, "") || student.studentId.replace(/\D/g, "") || "1", 10);
+  const idx = (num - 1) % list.length;
+  return list[idx] || list[0] || "General Course";
 }
 
 export function getStudentFeeTypes(student: Student): string[] {
@@ -279,11 +334,33 @@ function EditDepartmentModal({
   const [code, setCode] = useState(dept.code);
   const [description, setDescription] = useState(dept.description ?? "");
   const [tuition, setTuition] = useState(String(dept.defaultTuition ?? 3000));
+  const [subCoursesList, setSubCoursesList] = useState<string[]>(dept.subCourses ?? []);
+  const [newSubCourse, setNewSubCourse] = useState("");
+
+  const addSubCourse = () => {
+    const trimmed = newSubCourse.trim();
+    if (!trimmed) return;
+    if (!subCoursesList.includes(trimmed)) {
+      setSubCoursesList((prev) => [...prev, trimmed]);
+    }
+    setNewSubCourse("");
+  };
+
+  const removeSubCourse = (courseToRemove: string) => {
+    setSubCoursesList((prev) => prev.filter((c) => c !== courseToRemove));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-    onSubmit({ ...dept, name: name.trim(), code: code.trim().toUpperCase(), description: description.trim() || undefined, defaultTuition: Number(tuition) || dept.defaultTuition });
+    onSubmit({
+      ...dept,
+      name: name.trim(),
+      code: code.trim().toUpperCase(),
+      description: description.trim() || undefined,
+      defaultTuition: Number(tuition) || dept.defaultTuition,
+      subCourses: subCoursesList.length > 0 ? subCoursesList : undefined,
+    });
     onClose();
   };
 
@@ -293,43 +370,130 @@ function EditDepartmentModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl space-y-4"
+        className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-border pb-3">
-          <h2 className="text-base font-bold">Edit Department</h2>
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-lg bg-accent/10 text-accent">
+              <Building2 className="size-5" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold">Edit Department & Sub-Courses</h2>
+              <p className="text-xs text-muted-foreground">Manage faculty details and academic sub-courses</p>
+            </div>
+          </div>
           <button onClick={onClose} className="rounded-full p-1.5 text-muted-foreground hover:bg-secondary">
             <X className="size-4" />
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-3.5">
           <div>
             <label className="block text-xs font-semibold text-muted-foreground mb-1">Department Name *</label>
-            <input type="text" required value={name} onChange={(e) => setName(e.target.value)}
-              className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent" />
+            <input
+              type="text"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-muted-foreground mb-1">Department Code</label>
-              <input type="text" value={code} onChange={(e) => setCode(e.target.value)}
+              <input
+                type="text"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
                 placeholder="e.g. IT, HR, SOC"
-                className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent" />
+                className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              />
             </div>
             <div>
               <label className="block text-xs font-semibold text-muted-foreground mb-1">Semester Tuition (GH₵)</label>
-              <input type="number" value={tuition} onChange={(e) => setTuition(e.target.value)}
+              <input
+                type="number"
+                value={tuition}
+                onChange={(e) => setTuition(e.target.value)}
                 placeholder="3000"
-                className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent" />
+                className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-muted-foreground mb-1">Programs / Description</label>
-            <input type="text" value={description} onChange={(e) => setDescription(e.target.value)}
-              placeholder="e.g. B.Sc. Computer Science & Software Dev"
-              className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent" />
+            <label className="block text-xs font-semibold text-muted-foreground mb-1">Description / Overview</label>
+            <input
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="e.g. Faculty of Computing, Software & Information Systems"
+              className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+            />
           </div>
+
+          {/* ── Sub-Courses / Specializations Tag Manager ── */}
+          <div className="rounded-xl border border-border bg-secondary/20 p-3.5 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <BookOpen className="size-3.5 text-accent" />
+                Sub-Courses / Major Programs ({subCoursesList.length})
+              </label>
+              <span className="text-[10px] text-muted-foreground">Type course and press Add or Enter</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={newSubCourse}
+                onChange={(e) => setNewSubCourse(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addSubCourse();
+                  }
+                }}
+                placeholder="e.g. Software Engineering, Cybersecurity, AI..."
+                className="flex-1 h-8 px-3 rounded-lg border border-border bg-background text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              />
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={addSubCourse}
+                disabled={!newSubCourse.trim()}
+                className="h-8 text-xs px-2.5 gap-1 shrink-0"
+              >
+                <Plus className="size-3" /> Add Course
+              </Button>
+            </div>
+
+            <div className="flex flex-wrap gap-1.5 min-h-[36px] max-h-32 overflow-y-auto p-1 rounded-lg bg-background/60 border border-border/50">
+              {subCoursesList.length === 0 ? (
+                <p className="text-xs text-muted-foreground italic px-2 py-1">No sub-courses added yet.</p>
+              ) : (
+                subCoursesList.map((course, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-accent/10 text-accent border border-accent/20"
+                  >
+                    <span>{course}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeSubCourse(course)}
+                      className="text-muted-foreground hover:text-rose-500 rounded-full p-0.5"
+                    >
+                      <X className="size-3" />
+                    </button>
+                  </span>
+                ))
+              )}
+            </div>
+          </div>
+
           <div className="flex justify-end gap-2 pt-3 border-t border-border">
-            <Button type="button" variant="outline" size="sm" onClick={onClose}>Cancel</Button>
+            <Button type="button" variant="outline" size="sm" onClick={onClose}>
+              Cancel
+            </Button>
             <Button type="submit" size="sm" className="bg-[#22c55e] text-white hover:bg-[#16a34a] gap-1.5">
               <Check className="size-4" /> Save Changes
             </Button>
@@ -342,13 +506,25 @@ function EditDepartmentModal({
 
 function EditStudentModal({
   student,
+  departments,
   onClose,
   onSubmit,
 }: {
   student: Student;
+  departments: Department[];
   onClose: () => void;
   onSubmit: (updated: Student) => void;
 }) {
+  const currentDept = getStudentDeptName(student);
+  const [dept, setDept] = useState(currentDept);
+  const currentDeptObj = departments.find((d) => d.name === dept) ?? departments[0];
+  const availableSubCourses = currentDeptObj?.subCourses && currentDeptObj.subCourses.length > 0
+    ? currentDeptObj.subCourses
+    : ["General Studies"];
+
+  const [subCourse, setSubCourse] = useState(
+    student.subCourse || getStudentSubCourse(student, departments) || availableSubCourses[0] || "General Studies"
+  );
   const [name, setName] = useState(student.name);
   const [studentId, setStudentId] = useState(student.studentId);
   const [phone, setPhone] = useState(student.guardianPhone);
@@ -375,6 +551,8 @@ function EditStudentModal({
       ...student,
       name: name.trim(),
       studentId: studentId.trim(),
+      department: dept,
+      subCourse,
       guardianPhone: phone.trim(),
       guardianName: name.trim(),
       academicYearRange,
@@ -398,7 +576,7 @@ function EditStudentModal({
         <div className="flex items-center justify-between border-b border-border pb-3">
           <div>
             <h2 className="text-base font-bold">Edit Student Details</h2>
-            <p className="text-xs text-muted-foreground">Update profile, cohort years, and assigned fees</p>
+            <p className="text-xs text-muted-foreground">Update profile, department, sub-course, and assigned fees</p>
           </div>
           <button onClick={onClose} className="rounded-full p-1.5 text-muted-foreground hover:bg-secondary">
             <X className="size-4" />
@@ -433,6 +611,48 @@ function EditStudentModal({
                 onChange={(e) => setPhone(e.target.value)}
                 className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
               />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground mb-1">Department</label>
+              <select
+                value={dept}
+                onChange={(e) => {
+                  const newDept = e.target.value;
+                  setDept(newDept);
+                  const targetDeptObj = departments.find((d) => d.name === newDept);
+                  const nextSubCourses = targetDeptObj?.subCourses && targetDeptObj.subCourses.length > 0
+                    ? targetDeptObj.subCourses
+                    : ["General Studies"];
+                  setSubCourse(nextSubCourses[0] || "General Studies");
+                }}
+                className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              >
+                {departments.map((d) => (
+                  <option key={d.id} value={d.name}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground mb-1">
+                Sub-Course / Major *
+              </label>
+              <select
+                value={subCourse}
+                onChange={(e) => setSubCourse(e.target.value)}
+                className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              >
+                {availableSubCourses.map((sc, i) => (
+                  <option key={i} value={sc}>
+                    {sc}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
@@ -514,6 +734,24 @@ function AddDepartmentModal({
   const [code, setCode] = useState("");
   const [description, setDescription] = useState("");
   const [tuition, setTuition] = useState("3000");
+  const [subCoursesList, setSubCoursesList] = useState<string[]>([
+    "Software Engineering",
+    "Computer Science",
+  ]);
+  const [newSubCourse, setNewSubCourse] = useState("");
+
+  const addSubCourse = () => {
+    const trimmed = newSubCourse.trim();
+    if (!trimmed) return;
+    if (!subCoursesList.includes(trimmed)) {
+      setSubCoursesList((prev) => [...prev, trimmed]);
+    }
+    setNewSubCourse("");
+  };
+
+  const removeSubCourse = (courseToRemove: string) => {
+    setSubCoursesList((prev) => prev.filter((c) => c !== courseToRemove));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -524,6 +762,7 @@ function AddDepartmentModal({
       code: code.trim().toUpperCase() || name.slice(0, 4).toUpperCase(),
       description: description.trim() || undefined,
       defaultTuition: Number(tuition) || 3000,
+      subCourses: subCoursesList.length > 0 ? subCoursesList : undefined,
     };
     onSubmit(newDept);
     onClose();
@@ -535,7 +774,7 @@ function AddDepartmentModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl space-y-4"
+        className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-border pb-3">
@@ -544,8 +783,8 @@ function AddDepartmentModal({
               <Building2 className="size-5" />
             </div>
             <div>
-              <h2 className="text-lg font-bold">Add Tertiary Department</h2>
-              <p className="text-xs text-muted-foreground">Create a new academic faculty or department</p>
+              <h2 className="text-lg font-bold">Add Department & Sub-Courses</h2>
+              <p className="text-xs text-muted-foreground">Create a new academic faculty with specialized sub-courses</p>
             </div>
           </div>
           <button
@@ -600,15 +839,76 @@ function AddDepartmentModal({
 
           <div>
             <label className="block text-xs font-semibold text-muted-foreground mb-1">
-              Programs / Description
+              Overview / Description
             </label>
             <input
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="e.g. B.Sc. Computer Science & Software Dev"
+              placeholder="e.g. Faculty of Computing, Software & Information Systems"
               className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
             />
+          </div>
+
+          {/* ── Sub-Courses / Programs Tag List ── */}
+          <div className="rounded-xl border border-border bg-secondary/20 p-3.5 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <BookOpen className="size-3.5 text-accent" />
+                Department Sub-Courses ({subCoursesList.length}) *
+              </label>
+              <span className="text-[10px] text-muted-foreground">Type course and press Add or Enter</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={newSubCourse}
+                onChange={(e) => setNewSubCourse(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addSubCourse();
+                  }
+                }}
+                placeholder="e.g. Software Engineering, Computer Science, Cyber Security..."
+                className="flex-1 h-8 px-3 rounded-lg border border-border bg-background text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              />
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={addSubCourse}
+                disabled={!newSubCourse.trim()}
+                className="h-8 text-xs px-2.5 gap-1 shrink-0"
+              >
+                <Plus className="size-3" /> Add Course
+              </Button>
+            </div>
+
+            <div className="flex flex-wrap gap-1.5 min-h-[36px] max-h-32 overflow-y-auto p-1 rounded-lg bg-background/60 border border-border/50">
+              {subCoursesList.length === 0 ? (
+                <p className="text-xs text-muted-foreground italic px-2 py-1">
+                  Add sub-courses under this department (e.g. Software Engineering, Computer Science)
+                </p>
+              ) : (
+                subCoursesList.map((course, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-accent/10 text-accent border border-accent/20"
+                  >
+                    <span>{course}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeSubCourse(course)}
+                      className="text-muted-foreground hover:text-rose-500 rounded-full p-0.5"
+                    >
+                      <X className="size-3" />
+                    </button>
+                  </span>
+                ))
+              )}
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-3 border-t border-border">
@@ -726,20 +1026,25 @@ function UploadStudentsCsvModal({
   const handleConfirmImport = () => {
     if (parsedRows.length === 0) return;
 
-    const newStudents: Student[] = parsedRows.map((r, i) => ({
-      id: `STU-IMP-${Date.now()}-${i}`,
-      studentId: r.indexNo,
-      name: r.name,
-      department: targetDept,
-      academicYearRange: r.yearRange || targetYearRange,
-      guardianName: r.name,
-      guardianPhone: r.phone,
-      tuitionFee: r.tuition || (currentDeptObj?.defaultTuition ?? 3000),
-      paidAmount: 0,
-      balanceDue: r.tuition || (currentDeptObj?.defaultTuition ?? 3000),
-      status: "Overdue",
-      term: "Term 3, 2026",
-    }));
+    const newStudents: Student[] = parsedRows.map((r, i) => {
+      // Use the per-row dept from CSV column if present, otherwise fall back to dropdown selection
+      const assignedDept = r.dept && r.dept.trim() ? r.dept.trim() : targetDept;
+      const fee = r.tuition || (currentDeptObj?.defaultTuition ?? 3000);
+      return {
+        id: `STU-IMP-${Date.now()}-${i}`,
+        studentId: r.indexNo,
+        name: r.name,
+        department: assignedDept,
+        academicYearRange: r.yearRange || targetYearRange,
+        guardianName: r.name,
+        guardianPhone: r.phone,
+        tuitionFee: fee,
+        paidAmount: 0,
+        balanceDue: fee,
+        status: "Overdue" as const,
+        term: "Term 3, 2026" as const,
+      };
+    });
 
     onImport(newStudents, targetDept);
     onClose();
@@ -758,7 +1063,7 @@ function UploadStudentsCsvModal({
           <div>
             <h2 className="text-lg font-bold">Import Students by Department</h2>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Select target tertiary department & cohort year range, then upload CSV
+              Select target department & cohort year range, then upload CSV
             </p>
           </div>
           <button
@@ -1046,7 +1351,7 @@ function StudentCollectModal({
   onClose: () => void;
   onSubmit: (tx: FeeTransaction) => void;
 }) {
-  const PAYMENT_METHODS = ["Mobile Money (MTN)", "Bank Transfer", "Cash Deposit"] as const;
+  const PAYMENT_METHODS = ["Mobile Money (MTN)", "Bank Transfer"] as const;
   const assignedFees = getStudentFeeTypes(student);
   const [feeType, setFeeType] = useState(assignedFees[0] ?? "Tuition Fee (Core Academic)");
   const [amount, setAmount] = useState(String(student.balanceDue > 0 ? student.balanceDue : student.tuitionFee));
@@ -1193,6 +1498,13 @@ function EnrollStudentModal({
   const [dept, setDept] = useState(
     selectedDept !== "all" ? selectedDept : (departments[0]?.name ?? "IT Department")
   );
+
+  const currentDeptObj = departments.find((d) => d.name === dept) ?? departments[0];
+  const availableSubCourses = currentDeptObj?.subCourses && currentDeptObj.subCourses.length > 0
+    ? currentDeptObj.subCourses
+    : ["General Studies"];
+
+  const [subCourse, setSubCourse] = useState(availableSubCourses[0] ?? "Software Engineering");
   const [academicYearRange, setAcademicYearRange] = useState("2026 - 2029");
   const [assignedFees, setAssignedFees] = useState<string[]>(
     DEFAULT_FEE_TYPES.map((ft) => ft.name)
@@ -1227,7 +1539,6 @@ function EnrollStudentModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-    const currentDeptObj = departments.find((d) => d.name === dept);
     const fee = Number(tuitionFee) || calculatedFeeTotal || currentDeptObj?.defaultTuition || 3000;
     const idNum = Math.floor(Math.random() * 900) + 100;
     const code = currentDeptObj?.code || "UG";
@@ -1236,6 +1547,7 @@ function EnrollStudentModal({
       studentId: schoolId.trim() || `UG-2026-${code}${idNum}`,
       schoolId: schoolId.trim() || undefined,
       department: dept,
+      subCourse,
       academicYearRange,
       assignedFeeTypes: assignedFees,
       name: name.trim(),
@@ -1264,8 +1576,8 @@ function EnrollStudentModal({
       >
         <div className="flex items-center justify-between border-b border-border pb-3">
           <div>
-            <h2 className="text-lg font-bold">Enroll Tertiary Student</h2>
-            <p className="text-xs text-muted-foreground">Assign student to department, cohort years & fee types</p>
+            <h2 className="text-lg font-bold">Add Student Details</h2>
+            <p className="text-xs text-muted-foreground">Assign student to department, sub-course & cohort</p>
           </div>
           <button
             onClick={onClose}
@@ -1318,11 +1630,19 @@ function EnrollStudentModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block text-xs font-semibold text-muted-foreground">
-                Department
+                Department *
               </label>
               <select
                 value={dept}
-                onChange={(e) => setDept(e.target.value)}
+                onChange={(e) => {
+                  const newDept = e.target.value;
+                  setDept(newDept);
+                  const targetDeptObj = departments.find((d) => d.name === newDept);
+                  const nextSubCourses = targetDeptObj?.subCourses && targetDeptObj.subCourses.length > 0
+                    ? targetDeptObj.subCourses
+                    : ["General Studies"];
+                  setSubCourse(nextSubCourses[0] || "General Studies");
+                }}
                 className={inputClass}
               >
                 {departments.map((d) => (
@@ -1335,16 +1655,33 @@ function EnrollStudentModal({
 
             <div>
               <label className="mb-1 block text-xs font-semibold text-muted-foreground">
-                Cohort Years
+                Sub-Course / Major *
               </label>
-              <input
-                type="text"
-                value={academicYearRange}
-                onChange={(e) => setAcademicYearRange(e.target.value)}
-                placeholder="e.g. 2026 - 2029"
+              <select
+                value={subCourse}
+                onChange={(e) => setSubCourse(e.target.value)}
                 className={inputClass}
-              />
+              >
+                {availableSubCourses.map((sc, i) => (
+                  <option key={i} value={sc}>
+                    {sc}
+                  </option>
+                ))}
+              </select>
             </div>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+              Cohort Years / Academic Range
+            </label>
+            <input
+              type="text"
+              value={academicYearRange}
+              onChange={(e) => setAcademicYearRange(e.target.value)}
+              placeholder="e.g. 2026 - 2029"
+              className={inputClass}
+            />
           </div>
 
           <div>
@@ -1397,7 +1734,7 @@ function EnrollStudentModal({
               className="bg-[#22c55e] text-white hover:bg-[#16a34a] gap-1.5"
               disabled={!name.trim()}
             >
-              <Plus className="size-4" /> Enroll Student
+              <Plus className="size-4" /> Add Student Details
             </Button>
           </div>
         </form>
@@ -1408,10 +1745,12 @@ function EnrollStudentModal({
 
 function StudentCard({
   s,
+  departments,
   onStatement,
   onCollect,
 }: {
   s: Student;
+  departments?: Department[];
   onStatement: (s: Student) => void;
   onCollect: (s: Student) => void;
 }) {
@@ -1419,6 +1758,7 @@ function StudentCard({
   const Icon = cfg.icon;
   const pctPaid = s.tuitionFee > 0 ? Math.round((s.paidAmount / s.tuitionFee) * 100) : 100;
   const deptName = getStudentDeptName(s);
+  const subCourse = getStudentSubCourse(s, departments);
   const yearRange = getStudentYearRange(s);
 
   return (
@@ -1437,7 +1777,14 @@ function StudentCard({
                 {yearRange}
               </span>
             </div>
-            <h3 className="truncate text-sm font-bold text-foreground mt-0.5">{s.name}</h3>
+            <h3 className="truncate text-sm font-bold text-foreground mt-1">{s.name}</h3>
+            {/* Sub-course Badge */}
+            <div className="mt-1">
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border border-violet-200/60 dark:border-violet-800/40 truncate max-w-full">
+                <BookOpen className="size-2.5 shrink-0" />
+                <span className="truncate">{subCourse}</span>
+              </span>
+            </div>
           </div>
           <span
             className={`shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] leading-none ${cfg.bg} ${cfg.color}`}
@@ -1563,42 +1910,64 @@ function DepartmentTile({
           </button>
         </div>
 
-        {/* Live Metrics Grid inside tile */}
-        <div className="mt-4 grid grid-cols-2 gap-2 rounded-xl bg-secondary/40 p-2.5">
-          <div>
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase">Enrolled</p>
-            <p className="text-sm font-bold text-foreground mt-0.5">{deptStudents.length} Students</p>
+        {/* Sub-courses preview badges */}
+        {dept.subCourses && dept.subCourses.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1">
+            {dept.subCourses.slice(0, 3).map((sc, i) => (
+              <span
+                key={i}
+                className="inline-flex items-center gap-1 rounded-md bg-secondary/80 px-1.5 py-0.5 text-[10px] font-medium text-foreground border border-border/50"
+              >
+                {sc}
+              </span>
+            ))}
+            {dept.subCourses.length > 3 && (
+              <span className="inline-flex items-center rounded-md bg-accent/10 px-1.5 py-0.5 text-[10px] font-bold text-accent">
+                +{dept.subCourses.length - 3} more
+              </span>
+            )}
           </div>
-          <div>
-            <p className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase">Paid Full</p>
-            <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">{paidCount} Paid</p>
-          </div>
-          <div className="pt-1.5 border-t border-border/50">
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase">Collected</p>
-            <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">{currency(totalPaid)}</p>
-          </div>
-          <div className="pt-1.5 border-t border-border/50">
-            <p className="text-[10px] font-semibold text-rose-600 dark:text-rose-400 uppercase">Arrears</p>
-            <p className="text-xs font-bold text-rose-600 dark:text-rose-400 mt-0.5">{currency(totalArrears)}</p>
-          </div>
-        </div>
+        )}
 
-        {/* Progress Bar */}
-        <div className="mt-3">
-          <div className="flex justify-between text-[10px] font-semibold mb-1">
-            <span className="text-muted-foreground">Settlement Rate</span>
-            <span className={pct >= 70 ? "text-emerald-600 dark:text-emerald-400 font-bold" : "text-amber-600 dark:text-amber-400 font-bold"}>
-              {pct}%
-            </span>
+        {/* Live Metrics — vertical list */}
+        <div className="mt-4 flex flex-col gap-0 rounded-xl bg-secondary/40 overflow-hidden">
+          {/* Enrolled */}
+          <div className="flex items-center justify-between px-3 py-2 border-b border-border/50">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Enrolled</p>
+            <p className="text-sm font-bold text-foreground">{deptStudents.length} Students</p>
           </div>
-          <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
-            <div
-              className={cn(
-                "h-full rounded-full transition-all",
-                pct >= 80 ? "bg-emerald-500" : pct >= 40 ? "bg-amber-500" : "bg-rose-500"
-              )}
-              style={{ width: `${Math.min(100, pct)}%` }}
-            />
+          {/* Paid Full */}
+          <div className="flex items-center justify-between px-3 py-2 border-b border-border/50">
+            <p className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">Full Payment</p>
+            <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{paidCount} Paid</p>
+          </div>
+          {/* Collected */}
+          <div className="flex items-center justify-between px-3 py-2 border-b border-border/50">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Collected</p>
+            <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{currency(totalPaid)}</p>
+          </div>
+          {/* Arrears */}
+          <div className="flex items-center justify-between px-3 py-2 border-b border-border/50">
+            <p className="text-[10px] font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wide">Arrears</p>
+            <p className="text-sm font-bold text-rose-600 dark:text-rose-400">{currency(totalArrears)}</p>
+          </div>
+          {/* Settlement Rate */}
+          <div className="px-3 py-2">
+            <div className="flex justify-between text-[10px] font-semibold mb-1.5">
+              <span className="text-muted-foreground uppercase tracking-wide">Settlement Rate</span>
+              <span className={pct >= 70 ? "text-emerald-600 dark:text-emerald-400 font-bold" : "text-amber-600 dark:text-amber-400 font-bold"}>
+                {pct}%
+              </span>
+            </div>
+            <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all",
+                  pct >= 80 ? "bg-emerald-500" : pct >= 40 ? "bg-amber-500" : "bg-rose-500"
+                )}
+                style={{ width: `${Math.min(100, pct)}%` }}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -1617,6 +1986,7 @@ function StudentsPage() {
   const [departments, setDepartments] = useState<Department[]>(INITIAL_DEPARTMENTS);
   const [selectedDept, setSelectedDept] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<Standing | "all">("all");
+  const [subCourseFilter, setSubCourseFilter] = useState<string>("all");
   const {
     academicYear: cohortYearFilter,
     setAcademicYear: setCohortYearFilter,
@@ -1630,7 +2000,8 @@ function StudentsPage() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [sortKey, setSortKey] = useState<SortKey>("balanceDue");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
-  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "table">("table");
+  const [overviewView, setOverviewView] = useState<"grid" | "table">("table");
 
   const [students, setStudents] = useState<Student[]>(SCHOOL_STUDENTS);
   const [transactions, setTransactions] = useState<FeeTransaction[]>(FEE_TRANSACTIONS);
@@ -1643,9 +2014,16 @@ function StudentsPage() {
   const [editDept, setEditDept] = useState<Department | null>(null);
   const [editStudent, setEditStudent] = useState<Student | null>(null);
 
+  // Switch dept and always show table view when entering a specific department
+  const selectDept = (name: string) => {
+    setSelectedDept(name);
+    setSubCourseFilter("all");
+    if (name !== "all") setViewMode("table");
+  };
+
   const handleAddDepartment = (newDept: Department) => {
     setDepartments((prev) => [...prev, newDept]);
-    setSelectedDept(newDept.name);
+    selectDept(newDept.name);
   };
 
   const handleEditDepartment = (updated: Department) => {
@@ -1663,7 +2041,7 @@ function StudentsPage() {
   const handleImportCsvStudents = (newStudents: Student[], targetDeptName: string) => {
     setStudents((prev) => [...prev, ...newStudents]);
     // Automatically switch to that department straight away!
-    setSelectedDept(targetDeptName);
+    selectDept(targetDeptName);
   };
 
   const handleCollectPayment = (tx: FeeTransaction) => {
@@ -1695,11 +2073,21 @@ function StudentsPage() {
     }
   };
 
-  // ── Filter by Department & Status & Cohort Year & Search ──
+  // ── Filter by Department & Status & Cohort Year & Sub-Course & Search ──
   const departmentStudents = useMemo(() => {
     if (selectedDept === "all") return students;
     return students.filter((s) => getStudentDeptName(s) === selectedDept);
   }, [students, selectedDept]);
+
+  const activeSubCourses = useMemo(() => {
+    if (selectedDept === "all") {
+      const set = new Set<string>();
+      departments.forEach((d) => (d.subCourses || []).forEach((sc) => set.add(sc)));
+      return Array.from(set);
+    }
+    const d = departments.find((dept) => dept.name === selectedDept);
+    return d?.subCourses || [];
+  }, [selectedDept, departments]);
 
   const filtered = useMemo(() => {
     return departmentStudents
@@ -1707,6 +2095,14 @@ function StudentsPage() {
         // Status filter
         if (statusFilter !== "all" && s.status !== statusFilter) {
           return false;
+        }
+
+        // Sub-Course filter
+        if (subCourseFilter !== "all") {
+          const studentCourse = getStudentSubCourse(s, departments);
+          if (studentCourse !== subCourseFilter) {
+            return false;
+          }
         }
 
         // Cohort / Academic Year Range filter
@@ -1727,7 +2123,8 @@ function StudentsPage() {
           const matchId = s.studentId.toLowerCase().includes(q);
           const matchPhone = s.guardianPhone.toLowerCase().includes(q);
           const matchYear = getStudentYearRange(s).toLowerCase().includes(q);
-          if (!matchName && !matchId && !matchPhone && !matchYear) return false;
+          const matchSubCourse = getStudentSubCourse(s, departments).toLowerCase().includes(q);
+          if (!matchName && !matchId && !matchPhone && !matchYear && !matchSubCourse) return false;
         }
 
         return true;
@@ -1753,7 +2150,7 @@ function StudentsPage() {
         }
         return sortDir === "asc" ? cmp : -cmp;
       });
-  }, [departmentStudents, statusFilter, cohortYearFilter, customStartYear, customEndYear, search, sortKey, sortDir]);
+  }, [departmentStudents, statusFilter, subCourseFilter, cohortYearFilter, customStartYear, customEndYear, search, sortKey, sortDir, departments]);
 
   // ── Reactive KPI Stats for active view ──
   const totalExpected = departmentStudents.reduce((s, st) => s + st.tuitionFee, 0);
@@ -1769,10 +2166,10 @@ function StudentsPage() {
 
   return (
     <AppShell
-      title={isOverview ? "Tertiary Academic Departments" : `${selectedDept}`}
+      title={isOverview ? "Academic Departments" : `${selectedDept}`}
       subtitle={
         isOverview
-          ? `${departments.length} tertiary departments · ${students.length} enrolled students · ${currency(totalCollected)} collected`
+          ? `${departments.length} departments · ${students.length} enrolled students · ${currency(totalCollected)} collected`
           : `${departmentStudents.length} enrolled students · ${currency(totalCollected)} collected in ${selectedDept}`
       }
       actions={
@@ -1806,7 +2203,7 @@ function StudentsPage() {
             className="h-8 px-3 text-xs bg-[#22c55e] text-white hover:bg-[#16a34a] gap-1.5"
           >
             <Plus className="size-3.5" />
-            <span>Enroll Student</span>
+            <span>Add Student Details</span>
           </Button>
         </div>
       }
@@ -1818,17 +2215,17 @@ function StudentsPage() {
         {/* Card 1: Selected Department Info */}
         <div className="rounded-xl border border-border bg-card p-4 shadow-2xs">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <p className="text-xs font-bold uppercase tracking-wider text-foreground">
               {isOverview ? "Total Enrolled" : "Department Cohort"}
             </p>
             <span className="rounded-full bg-slate-100 p-2 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
               <Building2 className="size-4" />
             </span>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-bold truncate text-foreground">
+          <p className="mt-2 text-xl sm:text-2xl font-extrabold truncate text-foreground">
             {isOverview ? `${students.length} Students` : `${departmentStudents.length} Students`}
           </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
+          <p className="mt-0.5 text-xs font-semibold text-foreground/90">
             {isOverview ? `Across ${departments.length} departments` : `In ${selectedDept}`}
           </p>
         </div>
@@ -1836,17 +2233,17 @@ function StudentsPage() {
         {/* Card 2: Fees Collected (Maintained as requested) */}
         <div className="rounded-xl border border-border bg-card p-4 shadow-2xs">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <p className="text-xs font-bold uppercase tracking-wider text-foreground">
               Fees Collected
             </p>
             <span className="rounded-full bg-emerald-50 p-2 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
               <CheckCircle2 className="size-4" />
             </span>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400 num">
+          <p className="mt-2 text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 num">
             {currency(totalCollected)}
           </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
+          <p className="mt-0.5 text-xs font-semibold text-foreground/90">
             {clearedCount} fully cleared · {partialCount} partial
           </p>
         </div>
@@ -1854,17 +2251,17 @@ function StudentsPage() {
         {/* Card 3: Receivables / Unpaid Arrears */}
         <div className="rounded-xl border border-border bg-card p-4 shadow-2xs">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <p className="text-xs font-bold uppercase tracking-wider text-foreground">
               Fee Arrears (Unpaid)
             </p>
             <span className="rounded-full bg-rose-50 p-2 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400">
               <AlertCircle className="size-4" />
             </span>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-bold text-rose-600 dark:text-rose-400 num">
+          <p className="mt-2 text-xl sm:text-2xl font-extrabold text-rose-600 dark:text-rose-400 num">
             {currency(totalArrears)}
           </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
+          <p className="mt-0.5 text-xs font-semibold text-foreground/90">
             {overdueCount} students with overdue balances
           </p>
         </div>
@@ -1872,72 +2269,199 @@ function StudentsPage() {
         {/* Card 4: Collection Efficiency */}
         <div className="rounded-xl border border-border bg-card p-4 shadow-2xs">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <p className="text-xs font-bold uppercase tracking-wider text-foreground">
               Collection Efficiency
             </p>
             <span className="rounded-full bg-blue-50 p-2 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
               <Coins className="size-4" />
             </span>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-bold text-foreground num">
+          <p className="mt-2 text-xl sm:text-2xl font-extrabold text-foreground num">
             {collectionRate}%
           </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
+          <p className="mt-0.5 text-xs font-semibold text-foreground/90">
             Target: {currency(totalExpected)}
           </p>
         </div>
       </div>
 
-
       {/* ══════════════════════════════════════════════
-          VIEW 1: DEPARTMENT TILES GRID (4 COLUMNS)
+          VIEW 1: DEPARTMENT OVERVIEW
           (When "All Departments" is active)
       ══════════════════════════════════════════════ */}
       {isOverview ? (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-base font-bold text-foreground">Tertiary Faculties & Departments</h2>
+              <h2 className="text-base font-bold text-foreground">Faculties &amp; Departments</h2>
               <p className="text-xs text-muted-foreground">
-                Click any department tile below to inspect student accounts, who has paid, and who is in arrears.
+                Click any row to inspect student accounts, who has paid, and who is in arrears.
               </p>
             </div>
-            <Button
-              size="sm"
-              onClick={() => setIsUploadCsvOpen(true)}
-              className="bg-[#22c55e] text-white hover:bg-[#16a34a] text-xs gap-1.5 h-8"
-            >
-              <Upload className="size-3.5" />
-              <span>Import Students CSV</span>
-            </Button>
-          </div>
-
-          {/* 4-Column Grid of Department Tiles */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {departments.map((dept) => (
-              <DepartmentTile
-                key={dept.id}
-                dept={dept}
-                students={students}
-                onClick={() => setSelectedDept(dept.name)}
-                onEdit={(d) => setEditDept(d)}
-              />
-            ))}
-
-            {/* "+ Add New Department" Tile */}
-            <div
-              onClick={() => setIsAddDeptOpen(true)}
-              className="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed border-border hover:border-accent bg-card/50 hover:bg-secondary/40 text-center cursor-pointer transition-all min-h-[220px] group"
-            >
-              <div className="p-3 rounded-full bg-secondary group-hover:bg-accent/10 group-hover:text-accent transition-colors mb-2 text-muted-foreground">
-                <Plus className="size-6" />
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 rounded-xl border border-border bg-card p-1">
+                <button
+                  onClick={() => setOverviewView("table")}
+                  className={cn(
+                    "p-1.5 rounded-lg transition-colors",
+                    overviewView === "table" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"
+                  )}
+                  title="Table View"
+                >
+                  <TableIcon className="size-4" />
+                </button>
+                <button
+                  onClick={() => setOverviewView("grid")}
+                  className={cn(
+                    "p-1.5 rounded-lg transition-colors",
+                    overviewView === "grid" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"
+                  )}
+                  title="Card Grid View"
+                >
+                  <LayoutGrid className="size-4" />
+                </button>
               </div>
-              <p className="text-sm font-bold text-foreground group-hover:text-accent">Add New Department</p>
-              <p className="text-xs text-muted-foreground mt-1 max-w-[180px]">
-                Create a new tertiary program or faculty tile
-              </p>
+              <Button
+                size="sm"
+                onClick={() => setIsUploadCsvOpen(true)}
+                className="bg-[#22c55e] text-white hover:bg-[#16a34a] text-xs gap-1.5 h-8"
+              >
+                <Upload className="size-3.5" />
+                <span>Import Students CSV</span>
+              </Button>
             </div>
           </div>
+
+          {overviewView === "table" ? (
+            <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs">
+              <div className="overflow-x-auto scrollbar-light pb-1">
+                <table className="w-full text-sm text-left min-w-[1100px]">
+                  <thead>
+                    <tr className="border-b border-border bg-secondary/40">
+                      <th className="px-4 py-3.5 text-left text-[11px] font-bold uppercase tracking-wider text-foreground whitespace-nowrap">Department & Sub-Courses</th>
+                      <th className="px-4 py-3.5 text-right text-[11px] font-bold uppercase tracking-wider text-foreground whitespace-nowrap">Enrolled</th>
+                      <th className="px-4 py-3.5 text-right text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 whitespace-nowrap">Full Paid</th>
+                      <th className="px-4 py-3.5 text-right text-[11px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 whitespace-nowrap">Partial</th>
+                      <th className="px-4 py-3.5 text-right text-[11px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400 whitespace-nowrap">Overdue</th>
+                      <th className="px-4 py-3.5 text-right text-[11px] font-bold uppercase tracking-wider text-foreground whitespace-nowrap">Collected</th>
+                      <th className="px-4 py-3.5 text-right text-[11px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400 whitespace-nowrap">Arrears</th>
+                      <th className="px-4 py-3.5 text-center text-[11px] font-bold uppercase tracking-wider text-foreground whitespace-nowrap">Settlement</th>
+                      <th className="px-4 py-3.5 text-center text-[11px] font-bold uppercase tracking-wider text-foreground whitespace-nowrap">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {departments.map((dept) => {
+                      const deptStudents = students.filter((s) => getStudentDeptName(s) === dept.name);
+                      const totalFee = deptStudents.reduce((sum, s) => sum + s.tuitionFee, 0);
+                      const totalPaid = deptStudents.reduce((sum, s) => sum + s.paidAmount, 0);
+                      const totalArrears = deptStudents.reduce((sum, s) => sum + s.balanceDue, 0);
+                      const paidCount = deptStudents.filter((s) => s.status === "Paid Full").length;
+                      const overdueCount2 = deptStudents.filter((s) => s.status === "Overdue").length;
+                      const partialCount = deptStudents.filter((s) => s.status === "Partial Payment").length;
+                      const pct = totalFee > 0 ? Math.round((totalPaid / totalFee) * 100) : 0;
+                      const style = getDeptStyle(dept.code);
+                      const Icon = style.icon;
+                      return (
+                        <tr
+                          key={dept.id}
+                          onClick={() => selectDept(dept.name)}
+                          className="hover:bg-secondary/40 cursor-pointer transition-colors group"
+                        >
+                          <td className="px-4 py-3.5 whitespace-nowrap">
+                            <div className="flex items-center gap-3">
+                              <div className={cn("p-2 rounded-lg shrink-0", style.bg)}>
+                                <Icon className={cn("size-4", style.color)} />
+                              </div>
+                              <div>
+                                <p className="font-bold text-foreground text-sm group-hover:text-accent transition-colors">{dept.name}</p>
+                                <p className="text-[11px] text-muted-foreground line-clamp-1 max-w-[280px]">
+                                  {dept.subCourses && dept.subCourses.length > 0
+                                    ? `${dept.subCourses.length} Sub-Courses · ${dept.subCourses.slice(0, 3).join(", ")}${dept.subCourses.length > 3 ? "..." : ""}`
+                                    : dept.description || "Faculty & Programs"}
+                                </p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3.5 text-right font-bold text-foreground whitespace-nowrap">{deptStudents.length}</td>
+                          <td className="px-4 py-3.5 text-right font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">{paidCount}</td>
+                          <td className="px-4 py-3.5 text-right font-bold text-amber-600 dark:text-amber-400 whitespace-nowrap">{partialCount}</td>
+                          <td className="px-4 py-3.5 text-right font-bold text-rose-600 dark:text-rose-400 whitespace-nowrap">{overdueCount2}</td>
+                          <td className="px-4 py-3.5 text-right font-bold text-emerald-600 dark:text-emerald-400 num whitespace-nowrap">{currency(totalPaid)}</td>
+                          <td className="px-4 py-3.5 text-right font-bold text-rose-600 dark:text-rose-400 num whitespace-nowrap">{currency(totalArrears)}</td>
+                          <td className="px-4 py-3.5 whitespace-nowrap">
+                            <div className="flex flex-col items-center gap-1 min-w-[90px]">
+                              <span className={cn("text-xs font-bold", pct >= 70 ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400")}>{pct}%</span>
+                              <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
+                                <div
+                                  className={cn("h-full rounded-full transition-all", pct >= 80 ? "bg-emerald-500" : pct >= 40 ? "bg-amber-500" : "bg-rose-500")}
+                                  style={{ width: `${Math.min(100, pct)}%` }}
+                                />
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3.5 whitespace-nowrap">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setEditDept(dept); }}
+                                className="p-1.5 rounded-lg text-muted-foreground hover:text-accent hover:bg-accent/10 transition-colors"
+                                title="Edit department"
+                              >
+                                <Pencil className="size-3.5" />
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); selectDept(dept.name); }}
+                                className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-accent bg-accent/10 hover:bg-accent hover:text-accent-foreground transition-colors"
+                              >
+                                <span>View</span>
+                                <ArrowRight className="size-3" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                  <tfoot>
+                    <tr
+                      onClick={() => setIsAddDeptOpen(true)}
+                      className="border-t border-border/60 hover:bg-secondary/30 cursor-pointer transition-colors"
+                    >
+                      <td colSpan={9} className="px-4 py-3.5">
+                        <div className="flex items-center gap-2 text-muted-foreground hover:text-accent transition-colors">
+                          <Plus className="size-4" />
+                          <span className="text-sm font-semibold">Add New Department</span>
+                        </div>
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {departments.map((dept) => (
+                <DepartmentTile
+                  key={dept.id}
+                  dept={dept}
+                  students={students}
+                  onClick={() => selectDept(dept.name)}
+                  onEdit={(d) => setEditDept(d)}
+                />
+              ))}
+              <div
+                onClick={() => setIsAddDeptOpen(true)}
+                className="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed border-border hover:border-accent bg-card/50 hover:bg-secondary/40 text-center cursor-pointer transition-all min-h-[220px] group"
+              >
+                <div className="p-3 rounded-full bg-secondary group-hover:bg-accent/10 group-hover:text-accent transition-colors mb-2 text-muted-foreground">
+                  <Plus className="size-6" />
+                </div>
+                <p className="text-sm font-bold text-foreground group-hover:text-accent">Add New Department</p>
+                <p className="text-xs text-muted-foreground mt-1 max-w-[180px]">
+                  Create a new program or faculty tile
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         /* ══════════════════════════════════════════════
@@ -2094,6 +2618,55 @@ function StudentsPage() {
                 </button>
               </div>
 
+              {/* Row 2: Sub-Course Specializations Filter Pills */}
+              {activeSubCourses.length > 0 && (
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar pt-1 border-t border-border/40">
+                  <span className="text-xs font-bold text-foreground/80 shrink-0 mr-1 flex items-center gap-1">
+                    <BookOpen className="size-3.5 text-violet-600 dark:text-violet-400" /> Sub-Courses:
+                  </span>
+                  <button
+                    onClick={() => setSubCourseFilter("all")}
+                    className={cn(
+                      "rounded-full px-3 py-1 text-xs font-semibold transition-all border shrink-0",
+                      subCourseFilter === "all"
+                        ? "bg-violet-600 text-white border-violet-600 shadow-2xs"
+                        : "bg-card text-muted-foreground border-border hover:bg-secondary"
+                    )}
+                  >
+                    All Sub-Courses ({departmentStudents.length})
+                  </button>
+
+                  {activeSubCourses.map((sc) => {
+                    const isSelected = subCourseFilter === sc;
+                    const count = departmentStudents.filter(
+                      (s) => getStudentSubCourse(s, departments) === sc
+                    ).length;
+                    return (
+                      <button
+                        key={sc}
+                        onClick={() => setSubCourseFilter(sc)}
+                        className={cn(
+                          "rounded-full px-3 py-1 text-xs font-semibold transition-all border shrink-0 flex items-center gap-1.5",
+                          isSelected
+                            ? "bg-violet-600 text-white border-violet-600 shadow-2xs"
+                            : "bg-card text-muted-foreground border-border hover:bg-secondary"
+                        )}
+                      >
+                        <span>{sc}</span>
+                        <span
+                          className={cn(
+                            "text-[10px] font-bold rounded-full px-1.5 py-0.2",
+                            isSelected ? "bg-white/20 text-white" : "bg-secondary text-foreground"
+                          )}
+                        >
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
               {/* Sort controls */}
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <span className="font-semibold">Sort By:</span>
@@ -2135,6 +2708,7 @@ function StudentsPage() {
                   variant="outline"
                   onClick={() => {
                     setStatusFilter("all");
+                    setSubCourseFilter("all");
                     setCohortYearFilter("all");
                     setSearch("");
                   }}
@@ -2157,29 +2731,31 @@ function StudentsPage() {
                 <StudentCard
                   key={s.id}
                   s={s}
+                  departments={departments}
                   onStatement={(st) => setStatementStudent(st)}
                   onCollect={(st) => setCollectStudent(st)}
                 />
               ))}
             </div>
           ) : (
-            /* Table View with Cohort / Years column */
+            /* Table View with Cohort / Years & Sub-Courses columns */
             <div className="rounded-xl border border-border bg-card overflow-hidden shadow-xs">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                  <thead className="bg-secondary/40 text-xs font-bold text-muted-foreground uppercase border-b border-border">
+              <div className="overflow-x-auto scrollbar-light pb-2">
+                <table className="w-full text-sm text-left min-w-[1450px]">
+                  <thead className="bg-secondary/50 text-xs font-bold text-muted-foreground uppercase border-b border-border">
                     <tr>
-                      <th className="px-4 py-3">#</th>
-                      <th className="px-5 py-3">Student Name</th>
-                      <th className="px-4 py-3">Index Number</th>
-                      <th className="px-4 py-3">Cohort / Years</th>
-                      <th className="px-4 py-3">Phone</th>
-                      <th className="px-4 py-3">Fee Types Taking</th>
-                      <th className="px-4 py-3 text-right">Tuition</th>
-                      <th className="px-4 py-3 text-right">Paid</th>
-                      <th className="px-4 py-3 text-right">Balance</th>
-                      <th className="px-4 py-3">Status</th>
-                      <th className="px-4 py-3 text-right">Actions</th>
+                      <th className="px-4 py-3.5 text-center w-12 whitespace-nowrap">#</th>
+                      <th className="px-5 py-3.5 whitespace-nowrap min-w-[190px]">Student Name</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap min-w-[140px]">Index Number</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap min-w-[210px]">Sub-Course / Program</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap min-w-[140px]">Cohort / Years</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap min-w-[140px]">Phone</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap min-w-[220px]">Fee Types Taking</th>
+                      <th className="px-4 py-3.5 text-right whitespace-nowrap min-w-[110px]">Tuition</th>
+                      <th className="px-4 py-3.5 text-right whitespace-nowrap min-w-[110px]">Paid</th>
+                      <th className="px-4 py-3.5 text-right whitespace-nowrap min-w-[120px]">Balance</th>
+                      <th className="px-4 py-3.5 whitespace-nowrap min-w-[120px]">Status</th>
+                      <th className="px-4 py-3.5 text-right whitespace-nowrap min-w-[190px]">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
@@ -2187,19 +2763,26 @@ function StudentsPage() {
                       const cfg = STATUS_CONFIG[s.status];
                       const studentFees = getStudentFeeTypes(s);
                       const yearRange = getStudentYearRange(s);
+                      const subCourse = getStudentSubCourse(s, departments);
                       return (
                         <tr key={s.id} className="hover:bg-secondary/30 transition-colors">
-                          <td className="px-4 py-3 text-xs font-bold text-muted-foreground">{idx + 1}</td>
-                          <td className="px-5 py-3 font-semibold text-foreground">{s.name}</td>
-                          <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{s.studentId}</td>
-                          <td className="px-4 py-3">
-                            <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40 whitespace-nowrap">
+                          <td className="px-4 py-3.5 text-xs font-bold text-muted-foreground text-center whitespace-nowrap">{idx + 1}</td>
+                          <td className="px-5 py-3.5 font-semibold text-foreground whitespace-nowrap">{s.name}</td>
+                          <td className="px-4 py-3.5 font-mono text-xs text-muted-foreground whitespace-nowrap">{s.studentId}</td>
+                          <td className="px-4 py-3.5 whitespace-nowrap">
+                            <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-md bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border border-violet-200/60 dark:border-violet-800/40">
+                              <BookOpen className="size-3 shrink-0" />
+                              <span>{subCourse}</span>
+                            </span>
+                          </td>
+                          <td className="px-4 py-3.5 whitespace-nowrap">
+                            <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40">
                               {yearRange}
                             </span>
                           </td>
-                          <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{s.guardianPhone}</td>
-                          <td className="px-4 py-3">
-                            <div className="flex flex-wrap gap-1 max-w-[200px]">
+                          <td className="px-4 py-3.5 font-mono text-xs text-muted-foreground whitespace-nowrap">{s.guardianPhone}</td>
+                          <td className="px-4 py-3.5 whitespace-nowrap">
+                            <div className="flex flex-wrap gap-1 max-w-[240px]">
                               {studentFees.slice(0, 2).map((ft, i) => (
                                 <span
                                   key={i}
@@ -2215,23 +2798,23 @@ function StudentsPage() {
                               )}
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-right font-medium">{currency(s.tuitionFee)}</td>
-                          <td className="px-4 py-3 text-right font-medium text-emerald-600 dark:text-emerald-400">
+                          <td className="px-4 py-3.5 text-right font-medium whitespace-nowrap">{currency(s.tuitionFee)}</td>
+                          <td className="px-4 py-3.5 text-right font-medium text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
                             {currency(s.paidAmount)}
                           </td>
-                          <td className="px-4 py-3 text-right font-bold">
+                          <td className="px-4 py-3.5 text-right font-bold whitespace-nowrap">
                             {s.balanceDue > 0 ? (
                               <span className="text-rose-600 dark:text-rose-400">{currency(s.balanceDue)}</span>
                             ) : (
                               <span className="text-emerald-600 dark:text-emerald-400">Cleared</span>
                             )}
                           </td>
-                          <td className="px-4 py-3">
-                            <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-semibold", cfg.bg, cfg.color)}>
+                          <td className="px-4 py-3.5 whitespace-nowrap">
+                            <span className={cn("text-[10px] px-2.5 py-0.5 rounded-full font-semibold", cfg.bg, cfg.color)}>
                               {cfg.label}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-right">
+                          <td className="px-4 py-3.5 text-right whitespace-nowrap">
                             <div className="flex items-center justify-end gap-1.5">
                               <button
                                 onClick={() => setEditStudent(s)}
@@ -2321,6 +2904,7 @@ function StudentsPage() {
       {editStudent && (
         <EditStudentModal
           student={editStudent}
+          departments={departments}
           onClose={() => setEditStudent(null)}
           onSubmit={handleEditStudent}
         />

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import type { DateRange } from "react-day-picker";
-import { format, differenceInDays, addDays, subDays, startOfDay } from "date-fns";
+import { format, differenceInDays, addDays, subDays, startOfDay, endOfDay, parse } from "date-fns";
 import {
   GraduationCap,
   AlertCircle,
@@ -10,7 +10,6 @@ import {
   Receipt,
   Bell,
   Smartphone,
-  Building2,
   Landmark,
   CircleDollarSign,
   TrendingUp,
@@ -36,8 +35,7 @@ import { currency } from "@/lib/mos-data";
 import { SCHOOL_STUDENTS, FEE_TRANSACTIONS, SCHOOL_SUMMARY } from "@/lib/school-data";
 import { useAcademicYear } from "@/contexts/academic-year-context";
 
-type PaymentMethodKey = "Mobile Money (MTN)" | "Bank Transfer" | "Cash Deposit" | "Stablecoin";
-
+type PaymentMethodKey = "Mobile Money (MTN)" | "Bank Transfer";
 function generateCollectionTrendData(dateRange: DateRange | undefined): {
   day: string;
   label: string;
@@ -84,19 +82,96 @@ const tooltipStyle = {
 const METHOD_COLORS: Record<PaymentMethodKey, string> = {
   "Mobile Money (MTN)": "#f59e0b",
   "Bank Transfer": "#0ea5e9",
-  "Cash Deposit": "#64748b",
-  Stablecoin: "#22c55e",
 };
 
 const METHOD_ICONS: Record<PaymentMethodKey, React.ElementType> = {
   "Mobile Money (MTN)": Smartphone,
   "Bank Transfer": Landmark,
-  "Cash Deposit": Building2,
-  Stablecoin: Coins,
 };
+
+function getDepartmentForTx(tx: { studentId?: string; studentName?: string }): string {
+  if (tx.studentId) {
+    const s = SCHOOL_STUDENTS.find(
+      (st) =>
+        st.studentId === tx.studentId ||
+        st.name.toLowerCase() === (tx.studentName ?? "").toLowerCase(),
+    );
+    if (s?.department) return s.department;
+    const id = tx.studentId.toUpperCase();
+    if (id.includes("-IT")) return "IT Department";
+    if (id.includes("-HR")) return "HR Department";
+    if (id.includes("-SOC")) return "Social Studies Department";
+    if (id.includes("-ART")) return "Art Department";
+    if (id.includes("-BUS")) return "Business Administration";
+    if (id.includes("-ACC")) return "Accounting & Finance";
+  }
+  return "IT Department";
+}
 
 export function SchoolDashboard() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
+  const [departmentDateRange, setDepartmentDateRange] = useState<DateRange | undefined>(undefined);
+  const [showRecentReceipts] = useState(false);
+
+  const departmentTransactions = useMemo(() => {
+    return FEE_TRANSACTIONS.map((tx) => ({
+      ...tx,
+      department: getDepartmentForTx(tx),
+      transactionDate: parse(tx.date, "dd MMM yyyy", new Date()),
+    }));
+  }, []);
+
+  const filteredDeptTransactions = useMemo(() => {
+    const rangeStart = startOfDay(departmentDateRange?.from ?? subDays(new Date(), 29));
+    const rangeEnd = endOfDay(departmentDateRange?.to ?? departmentDateRange?.from ?? new Date());
+
+    return departmentTransactions.filter((tx) => {
+      const matchesDepartment =
+        selectedDepartment === "all" || tx.department === selectedDepartment;
+      return (
+        matchesDepartment && tx.transactionDate >= rangeStart && tx.transactionDate <= rangeEnd
+      );
+    });
+  }, [departmentTransactions, selectedDepartment, departmentDateRange]);
+
+  const filteredDeptTotalInflow = useMemo(() => {
+    return filteredDeptTransactions.reduce((acc, tx) => acc + tx.amountPaid, 0);
+  }, [filteredDeptTransactions]);
+
+  const departmentDailyCollections = useMemo(() => {
+    const dailyCollections = new Map<
+      string,
+      {
+        department: string;
+        date: string;
+        transactionDate: Date;
+        receiptCount: number;
+        amount: number;
+      }
+    >();
+
+    for (const tx of filteredDeptTransactions) {
+      const key = `${tx.department}-${tx.date}`;
+      const current = dailyCollections.get(key);
+      if (current) {
+        current.receiptCount += 1;
+        current.amount += tx.amountPaid;
+      } else {
+        dailyCollections.set(key, {
+          department: tx.department,
+          date: tx.date,
+          transactionDate: tx.transactionDate,
+          receiptCount: 1,
+          amount: tx.amountPaid,
+        });
+      }
+    }
+
+    return [...dailyCollections.values()].sort(
+      (a, b) => b.transactionDate.getTime() - a.transactionDate.getTime(),
+    );
+  }, [filteredDeptTransactions]);
 
   const trendData = useMemo(() => generateCollectionTrendData(dateRange), [dateRange]);
 
@@ -118,7 +193,6 @@ export function SchoolDashboard() {
     for (const tx of FEE_TRANSACTIONS) {
       map.set(tx.paymentMethod, (map.get(tx.paymentMethod) ?? 0) + tx.amountPaid);
     }
-    if (!map.has("Stablecoin")) map.set("Stablecoin", 1800);
     return Array.from(map.entries())
       .map(([method, amount]) => ({
         method: method as PaymentMethodKey,
@@ -129,13 +203,24 @@ export function SchoolDashboard() {
   }, []);
 
   const { filterStudentsByYear } = useAcademicYear();
-  const yearFilteredStudents = useMemo(() => filterStudentsByYear(SCHOOL_STUDENTS), [filterStudentsByYear]);
+  const yearFilteredStudents = useMemo(
+    () => filterStudentsByYear(SCHOOL_STUDENTS),
+    [filterStudentsByYear],
+  );
 
-  const totalExpected = useMemo(() => yearFilteredStudents.reduce((s, st) => s + st.tuitionFee, 0), [yearFilteredStudents]);
-  const totalCollected = useMemo(() => yearFilteredStudents.reduce((s, st) => s + st.paidAmount, 0), [yearFilteredStudents]);
-  const totalOutstanding = useMemo(() => yearFilteredStudents.reduce((s, st) => s + st.balanceDue, 0), [yearFilteredStudents]);
-  const collectionRate =
-    totalExpected > 0 ? Math.round((totalCollected / totalExpected) * 100) : 0;
+  const totalExpected = useMemo(
+    () => yearFilteredStudents.reduce((s, st) => s + st.tuitionFee, 0),
+    [yearFilteredStudents],
+  );
+  const totalCollected = useMemo(
+    () => yearFilteredStudents.reduce((s, st) => s + st.paidAmount, 0),
+    [yearFilteredStudents],
+  );
+  const totalOutstanding = useMemo(
+    () => yearFilteredStudents.reduce((s, st) => s + st.balanceDue, 0),
+    [yearFilteredStudents],
+  );
+  const collectionRate = totalExpected > 0 ? Math.round((totalCollected / totalExpected) * 100) : 0;
 
   const overdueStudents = yearFilteredStudents.filter((s) => s.status === "Overdue").length;
   const partialStudents = yearFilteredStudents.filter((s) => s.status === "Partial Payment").length;
@@ -209,9 +294,7 @@ export function SchoolDashboard() {
                   <p className="text-[10px] font-bold uppercase tracking-widest text-white/70">
                     Receipts
                   </p>
-                  <p className="text-lg font-bold leading-none mt-1 num">
-                    {trendTotals.totalTx}
-                  </p>
+                  <p className="text-lg font-bold leading-none mt-1 num">{trendTotals.totalTx}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-widest text-white/70">
@@ -225,18 +308,24 @@ export function SchoolDashboard() {
 
           <div className="grid grid-cols-2 gap-2.5">
             <div className="rounded-xl border border-border bg-card p-3 shadow-2xs">
-              <p className="text-xs text-muted-foreground">Total Arrears</p>
-              <p className="mt-1 font-bold text-lg text-rose-600 dark:text-rose-400 num">
+              <p className="text-xs font-bold uppercase tracking-wider text-foreground">
+                Total Arrears
+              </p>
+              <p className="mt-1 font-extrabold text-lg text-rose-600 dark:text-rose-400 num">
                 {currency(totalOutstanding)}
               </p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">{overdueStudents} overdue</p>
+              <p className="text-[11px] font-semibold text-foreground/90 mt-0.5">
+                {overdueStudents} overdue
+              </p>
             </div>
             <div className="rounded-xl border border-border bg-card p-3 shadow-2xs">
-              <p className="text-xs text-muted-foreground">Cleared Students</p>
-              <p className="mt-1 font-bold text-lg text-emerald-600 dark:text-emerald-400">
+              <p className="text-xs font-bold uppercase tracking-wider text-foreground">
+                Cleared Students
+              </p>
+              <p className="mt-1 font-extrabold text-lg text-emerald-600 dark:text-emerald-400">
                 {fullyPaidStudents}/{SCHOOL_STUDENTS.length}
               </p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Fully paid fees</p>
+              <p className="text-[11px] font-semibold text-foreground/90 mt-0.5">Fully paid fees</p>
             </div>
           </div>
         </div>
@@ -380,95 +469,205 @@ export function SchoolDashboard() {
           </Card>
         </div>
 
-        {/* Student Balances + Recent Payments */}
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Card className="p-0 overflow-hidden shadow-none">
-            <div className="flex items-center justify-between border-b border-border px-5 py-4">
-              <div className="flex items-center gap-2">
-                <GraduationCap className="size-4 text-emerald-600 dark:text-emerald-400" />
-                <h2 className="text-sm font-semibold">Student Account Balances</h2>
+        {/* Department Recent Activities + Recent Payments (Full Width Stack) */}
+        <div className="space-y-6">
+          <Card className="p-0 overflow-hidden shadow-none flex flex-col">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4 bg-muted/20">
+              <div className="flex items-center">
+                <div>
+                  <h2 className="text-base font-bold">Department Recent Activities</h2>
+                  <p className="text-xs text-muted-foreground">
+                    Daily fee collections received by each department
+                  </p>
+                </div>
               </div>
-              <Link
-                to="/students"
-                className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
-              >
-                All Students ({SCHOOL_STUDENTS.length}) →
-              </Link>
+              <div className="flex items-center gap-2 flex-wrap">
+                <select
+                  value={selectedDepartment}
+                  onChange={(e) => setSelectedDepartment(e.target.value)}
+                  className="rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-2xs cursor-pointer"
+                >
+                  <option value="all">All Departments ({departmentTransactions.length})</option>
+                  <option value="IT Department">IT Department</option>
+                  <option value="HR Department">HR Department</option>
+                  <option value="Business Administration">Business Administration</option>
+                  <option value="Accounting & Finance">Accounting & Finance</option>
+                  <option value="Art Department">Art Department</option>
+                  <option value="Social Studies Department">Social Studies Department</option>
+                </select>
+                <DateRangePicker value={departmentDateRange} onChange={setDepartmentDateRange} />
+              </div>
             </div>
-            <ul className="divide-y divide-border">
-              {SCHOOL_STUDENTS.slice(0, 6).map((s) => (
-                <li key={s.id} className="flex items-center justify-between gap-3 px-5 py-3">
-                  <div>
-                    <p className="font-semibold text-sm">{s.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {s.studentId} · {s.guardianPhone}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                      Balance Due
-                    </p>
-                    <p
-                      className={`font-bold text-sm ${
-                        s.balanceDue > 0
-                          ? s.status === "Overdue"
-                            ? "text-rose-600 dark:text-rose-400"
-                            : "text-amber-600 dark:text-amber-400"
-                          : "text-emerald-600 dark:text-emerald-400"
-                      }`}
-                    >
-                      {s.balanceDue > 0 ? currency(s.balanceDue) : "Cleared ✓"}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </Card>
 
-          <Card className="p-0 overflow-hidden shadow-none">
-            <div className="flex items-center justify-between border-b border-border px-5 py-4">
-              <div className="flex items-center gap-2">
-                <Receipt className="size-4 text-blue-600 dark:text-blue-400" />
-                <h2 className="text-sm font-semibold">Recent Receipts (Settled)</h2>
+            {/* Department Summary Ribbon */}
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 bg-muted/10 px-5 py-2.5 text-xs">
+              <span className="text-muted-foreground flex items-center gap-2">
+                <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                {selectedDepartment === "all" ? "All Faculty Departments" : selectedDepartment}:
+                <strong className="text-foreground ml-1">
+                  {departmentDailyCollections.length}{" "}
+                  {departmentDailyCollections.length === 1
+                    ? "daily collection"
+                    : "daily collections"}
+                </strong>
+              </span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 num text-sm">
+                Total Inflow: {currency(filteredDeptTotalInflow)}
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <div className="grid min-w-[620px] grid-cols-[minmax(180px,1fr)_130px_120px_100px_140px] items-center gap-x-4 border-b border-border bg-muted/20 px-5 py-2.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                <span>Department</span>
+                <span>Date</span>
+                <span>Receipts</span>
+                <span>Settlement</span>
+                <span className="text-right">Received</span>
               </div>
+              <ul className="min-w-[620px] divide-y divide-border">
+                {departmentDailyCollections.length === 0 ? (
+                  <li className="p-10 text-center text-sm text-muted-foreground">
+                    <p className="font-semibold">No recent transactions recorded</p>
+                    <p className="text-xs mt-1">
+                      Select another department or view all departments.
+                    </p>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="mt-3 text-xs"
+                      onClick={() => setSelectedDepartment("all")}
+                    >
+                      View All Departments
+                    </Button>
+                  </li>
+                ) : (
+                  departmentDailyCollections.map((collection) => {
+                    const tx = {
+                      id: `${collection.department}-${collection.date}`,
+                      department: collection.department,
+                      studentName: collection.department,
+                      studentId: "",
+                      receiptNo: "",
+                      paymentMethod: "Bank Transfer" as PaymentMethodKey,
+                      date: `${collection.receiptCount} ${collection.receiptCount === 1 ? "receipt" : "receipts"}`,
+                      amountPaid: collection.amount,
+                    };
+                    return (
+                      <li
+                        key={tx.id}
+                        className="grid grid-cols-[minmax(180px,1fr)_130px_120px_100px_140px] items-center gap-x-4 px-5 py-3 text-sm hover:bg-muted/30 transition-colors"
+                      >
+                        <div className="contents">
+                          <div className="contents">
+                            <div className="contents">
+                              <p className="font-semibold text-sm whitespace-nowrap text-foreground">
+                                {tx.studentName}
+                              </p>
+                              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                {collection.date}
+                              </span>
+                            </div>
+                            <p className="hidden">
+                              {tx.studentId} · <span className="font-mono">{tx.receiptNo}</span> ·{" "}
+                              {tx.paymentMethod}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="contents">
+                          <div className="contents">
+                            <p className="text-[11px] text-muted-foreground">{tx.date}</p>
+                            <span className="inline-block text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 rounded px-1.5 py-0.2 mt-0.5">
+                              Settled ✓
+                            </span>
+                          </div>
+                          <div className="contents">
+                            <p className="text-right font-bold text-base text-emerald-600 dark:text-emerald-400 num whitespace-nowrap">
+                              +{currency(tx.amountPaid)}
+                            </p>
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })
+                )}
+              </ul>
+            </div>
+
+            <div className="border-t border-border bg-muted/20 px-5 py-3 flex items-center justify-between text-xs">
               <Link
                 to="/receipts"
-                className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
+                className="text-emerald-600 dark:text-emerald-400 hover:underline font-semibold"
               >
                 All Receipts ({FEE_TRANSACTIONS.length}) →
               </Link>
             </div>
-            <ul className="divide-y divide-border">
-              {FEE_TRANSACTIONS.map((tx) => {
-                const color = METHOD_COLORS[tx.paymentMethod];
-                const Icon = METHOD_ICONS[tx.paymentMethod] ?? Banknote;
-                return (
-                  <li key={tx.id} className="flex items-center justify-between gap-3 px-5 py-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span
-                        className="grid size-8 shrink-0 place-items-center rounded-lg"
-                        style={{ backgroundColor: `${color}1A`, color }}
-                      >
-                        <Icon className="size-3.5" />
-                      </span>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-sm truncate">{tx.studentName}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {tx.receiptNo} · {tx.paymentMethod}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-[10px] text-muted-foreground">{tx.date}</p>
-                      <p className="font-bold text-sm text-emerald-600 dark:text-emerald-400 num">
-                        +{currency(tx.amountPaid)}
-                      </p>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
           </Card>
+
+          {showRecentReceipts && (
+            <Card className="p-0 overflow-hidden shadow-none flex flex-col">
+              <div className="flex items-center justify-between border-b border-border px-5 py-4 bg-muted/20">
+                <div className="flex items-center gap-3">
+                  <div className="grid size-9 place-items-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                    <Receipt className="size-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-semibold">Recent Receipts (Settled)</h2>
+                    <p className="text-xs text-muted-foreground">
+                      Official ledger settlements & payment receipts
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  to="/receipts"
+                  className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline font-medium"
+                >
+                  All Receipts ({FEE_TRANSACTIONS.length}) →
+                </Link>
+              </div>
+              <ul className="divide-y divide-border flex-1 overflow-y-auto max-h-[420px]">
+                {FEE_TRANSACTIONS.map((tx) => {
+                  const color = METHOD_COLORS[tx.paymentMethod];
+                  const Icon = METHOD_ICONS[tx.paymentMethod] ?? Banknote;
+                  return (
+                    <li
+                      key={tx.id}
+                      className="flex flex-wrap items-center justify-between gap-4 px-5 py-3.5 hover:bg-muted/30 transition-colors"
+                    >
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <span
+                          className="grid size-9 shrink-0 place-items-center rounded-xl"
+                          style={{ backgroundColor: `${color}1A`, color }}
+                        >
+                          <Icon className="size-4" />
+                        </span>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-sm truncate">{tx.studentName}</p>
+                          <p className="text-xs text-muted-foreground truncate mt-0.5">
+                            <span className="font-mono">{tx.receiptNo}</span> · {tx.paymentMethod} ·{" "}
+                            {tx.term}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4 shrink-0 text-right">
+                        <div>
+                          <p className="text-[11px] text-muted-foreground">{tx.date}</p>
+                          <span className="text-[10px] text-muted-foreground">
+                            Received by {tx.receivedBy ?? "Bursar"}
+                          </span>
+                        </div>
+                        <div className="min-w-[100px] text-right">
+                          <p className="font-bold text-base text-emerald-600 dark:text-emerald-400 num">
+                            +{currency(tx.amountPaid)}
+                          </p>
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </Card>
+          )}
         </div>
       </div>
     </AppShell>

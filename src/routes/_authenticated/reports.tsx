@@ -142,44 +142,89 @@ const SCHOOL_METHOD_COLORS: Record<string, string> = {
   "Mobile Money": "#f59e0b",
   "Mobile Money (MTN)": "#f59e0b",
   "Bank Transfer": "#0ea5e9",
-  "Cash Deposit": "#64748b",
-  Stablecoin: "#22c55e",
 };
 
 const SCHOOL_METHOD_ICONS: Record<string, React.ElementType> = {
   "Mobile Money": Smartphone,
   "Mobile Money (MTN)": Smartphone,
   "Bank Transfer": Landmark,
-  "Cash Deposit": Building2,
-  Stablecoin: Coins,
 };
 
 const TERTIARY_ACADEMIC_DEPTS = [
-  { name: "IT Department", key: "it", color: "#8b5cf6", badgeColor: "bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300" },
-  { name: "HR Department", key: "hr", color: "#0ea5e9", badgeColor: "bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300" },
-  { name: "Social Studies Department", key: "social", color: "#f59e0b", badgeColor: "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300" },
-  { name: "Art Department", key: "art", color: "#ec4899", badgeColor: "bg-pink-100 text-pink-700 dark:bg-pink-950/60 dark:text-pink-300" },
-  { name: "Business Administration", key: "business", color: "#f97316", badgeColor: "bg-orange-100 text-orange-700 dark:bg-orange-950/60 dark:text-orange-300" },
-  { name: "Accounting & Finance", key: "accounting", color: "#14b8a6", badgeColor: "bg-teal-100 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300" },
+  {
+    name: "IT Department",
+    key: "it",
+    color: "#8b5cf6",
+    badgeColor: "bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300",
+  },
+  {
+    name: "HR Department",
+    key: "hr",
+    color: "#0ea5e9",
+    badgeColor: "bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300",
+  },
+  {
+    name: "Social Studies Department",
+    key: "social",
+    color: "#f59e0b",
+    badgeColor: "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300",
+  },
+  {
+    name: "Art Department",
+    key: "art",
+    color: "#ec4899",
+    badgeColor: "bg-pink-100 text-pink-700 dark:bg-pink-950/60 dark:text-pink-300",
+  },
+  {
+    name: "Business Administration",
+    key: "business",
+    color: "#f97316",
+    badgeColor: "bg-orange-100 text-orange-700 dark:bg-orange-950/60 dark:text-orange-300",
+  },
+  {
+    name: "Accounting & Finance",
+    key: "accounting",
+    color: "#14b8a6",
+    badgeColor: "bg-teal-100 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300",
+  },
 ] as const;
 
 function getStudentDeptInfo(s: Student) {
-  const deptName = s.department ?? (
-    s.studentId.includes("-IT") || s.studentId.includes("-C01") || s.studentId.includes("-P6") || s.studentId.includes("-J3")
+  const deptName =
+    s.department ??
+    (s.studentId.includes("-IT") ||
+    s.studentId.includes("-C01") ||
+    s.studentId.includes("-P6") ||
+    s.studentId.includes("-J3")
       ? "IT Department"
-      : s.studentId.includes("-HR") || s.studentId.includes("-C02") || s.studentId.includes("-P5") || s.studentId.includes("-J2")
-      ? "HR Department"
-      : s.studentId.includes("-SOC") || s.studentId.includes("-N101") || s.studentId.includes("-N102") || s.studentId.includes("-P4") || s.studentId.includes("-J1")
-      ? "Social Studies Department"
-      : s.studentId.includes("-ART") || s.studentId.includes("-N201") || s.studentId.includes("-P3") || s.studentId.includes("-K101")
-      ? "Art Department"
-      : s.studentId.includes("-BUS") || s.studentId.includes("-K102") || s.studentId.includes("-P2") || s.studentId.includes("-J202")
-      ? "Business Administration"
-      : s.studentId.includes("-ACC") || s.studentId.includes("-K201") || s.studentId.includes("-P1")
-      ? "Accounting & Finance"
-      : "IT Department"
-  );
-  const found = TERTIARY_ACADEMIC_DEPTS.find((d) => d.name === deptName) ?? TERTIARY_ACADEMIC_DEPTS[0];
+      : s.studentId.includes("-HR") ||
+          s.studentId.includes("-C02") ||
+          s.studentId.includes("-P5") ||
+          s.studentId.includes("-J2")
+        ? "HR Department"
+        : s.studentId.includes("-SOC") ||
+            s.studentId.includes("-N101") ||
+            s.studentId.includes("-N102") ||
+            s.studentId.includes("-P4") ||
+            s.studentId.includes("-J1")
+          ? "Social Studies Department"
+          : s.studentId.includes("-ART") ||
+              s.studentId.includes("-N201") ||
+              s.studentId.includes("-P3") ||
+              s.studentId.includes("-K101")
+            ? "Art Department"
+            : s.studentId.includes("-BUS") ||
+                s.studentId.includes("-K102") ||
+                s.studentId.includes("-P2") ||
+                s.studentId.includes("-J202")
+              ? "Business Administration"
+              : s.studentId.includes("-ACC") ||
+                  s.studentId.includes("-K201") ||
+                  s.studentId.includes("-P1")
+                ? "Accounting & Finance"
+                : "IT Department");
+  const found =
+    TERTIARY_ACADEMIC_DEPTS.find((d) => d.name === deptName) ?? TERTIARY_ACADEMIC_DEPTS[0];
   return { label: found.name, key: found.key, badgeColor: found.badgeColor, color: found.color };
 }
 
@@ -191,7 +236,13 @@ function getTxDeptName(tx: FeeTransaction, students: Student[]): string {
     return "IT Department";
   if (id.includes("-HR") || id.includes("-C02") || id.includes("-P5") || id.includes("-J2"))
     return "HR Department";
-  if (id.includes("-SOC") || id.includes("-N101") || id.includes("-N102") || id.includes("-P4") || id.includes("-J1"))
+  if (
+    id.includes("-SOC") ||
+    id.includes("-N101") ||
+    id.includes("-N102") ||
+    id.includes("-P4") ||
+    id.includes("-J1")
+  )
     return "Social Studies Department";
   if (id.includes("-ART") || id.includes("-N201") || id.includes("-P3") || id.includes("-K101"))
     return "Art Department";
@@ -214,13 +265,7 @@ function getTxFeeTypeDesc(tx: FeeTransaction): string {
 
 function getStudentFeeTypesList(s: Student): string[] {
   if (s.assignedFeeTypes && s.assignedFeeTypes.length > 0) return s.assignedFeeTypes;
-  return [
-    "Tuition Fee",
-    "Faculty Lab",
-    "Exam Levy",
-    "ICT Levy",
-    "SRC Dues",
-  ];
+  return ["Tuition Fee", "Faculty Lab", "Exam Levy", "ICT Levy", "SRC Dues"];
 }
 
 function exportAcademicCsv(students: Student[], _transactions: FeeTransaction[]) {
@@ -256,7 +301,10 @@ function exportAcademicCsv(students: Student[], _transactions: FeeTransaction[])
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.setAttribute("href", url);
-  link.setAttribute("download", `tertiary_academic_report_${new Date().toISOString().slice(0, 10)}.csv`);
+  link.setAttribute(
+    "download",
+    `tertiary_academic_report_${new Date().toISOString().slice(0, 10)}.csv`,
+  );
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -273,7 +321,7 @@ function StudentQuickModal({
 }) {
   const deptInfo = getStudentDeptInfo(student);
   const studentTxns = transactions.filter(
-    (t) => t.studentId === student.studentId || t.studentName === student.name
+    (t) => t.studentId === student.studentId || t.studentName === student.name,
   );
   const pctPaid =
     student.tuitionFee > 0 ? Math.round((student.paidAmount / student.tuitionFee) * 100) : 100;
@@ -293,14 +341,21 @@ function StudentQuickModal({
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-xl font-bold">{student.name}</h3>
-              <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-full", deptInfo.badgeColor)}>
+              <span
+                className={cn(
+                  "text-xs font-semibold px-2 py-0.5 rounded-full",
+                  deptInfo.badgeColor,
+                )}
+              >
                 {deptInfo.label}
               </span>
               <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/40 font-mono">
                 {yearRange}
               </span>
             </div>
-            <p className="text-xs text-muted-foreground mt-0.5">Index No: {student.studentId} · Cohort: {yearRange} · {student.term}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Index No: {student.studentId} · Cohort: {yearRange} · {student.term}
+            </p>
           </div>
           <button
             onClick={onClose}
@@ -317,21 +372,34 @@ function StudentQuickModal({
             <p className="text-lg font-bold mt-1">{currency(student.tuitionFee)}</p>
           </div>
           <div className="rounded-xl border border-border bg-emerald-500/10 p-3">
-            <p className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 uppercase">Paid Amount</p>
-            <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-1">{currency(student.paidAmount)}</p>
+            <p className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 uppercase">
+              Paid Amount
+            </p>
+            <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+              {currency(student.paidAmount)}
+            </p>
           </div>
           <div className="rounded-xl border border-border bg-rose-500/10 p-3">
-            <p className="text-[11px] font-medium text-rose-600 dark:text-rose-400 uppercase">Balance Due</p>
-            <p className="text-lg font-bold text-rose-600 dark:text-rose-400 mt-1">{currency(student.balanceDue)}</p>
+            <p className="text-[11px] font-medium text-rose-600 dark:text-rose-400 uppercase">
+              Balance Due
+            </p>
+            <p className="text-lg font-bold text-rose-600 dark:text-rose-400 mt-1">
+              {currency(student.balanceDue)}
+            </p>
           </div>
         </div>
 
         {/* Assigned Fee Types */}
         <div className="rounded-xl border border-border bg-secondary/20 p-3 space-y-1.5">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Assigned Fee Types</p>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            Assigned Fee Types
+          </p>
           <div className="flex flex-wrap gap-1.5">
             {assignedFees.map((ft, i) => (
-              <span key={i} className="text-xs bg-card px-2 py-0.5 rounded-md border border-border font-medium">
+              <span
+                key={i}
+                className="text-xs bg-card px-2 py-0.5 rounded-md border border-border font-medium"
+              >
                 {ft}
               </span>
             ))}
@@ -348,7 +416,7 @@ function StudentQuickModal({
             <div
               className={cn(
                 "h-full rounded-full transition-all",
-                pctPaid >= 100 ? "bg-emerald-500" : pctPaid > 0 ? "bg-amber-500" : "bg-rose-500"
+                pctPaid >= 100 ? "bg-emerald-500" : pctPaid > 0 ? "bg-amber-500" : "bg-rose-500",
               )}
               style={{ width: `${Math.min(100, pctPaid)}%` }}
             />
@@ -357,7 +425,9 @@ function StudentQuickModal({
 
         {/* Contact details */}
         <div className="rounded-xl border border-border bg-secondary/20 p-3.5 space-y-1">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Phone Contact</p>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            Phone Contact
+          </p>
           <p className="text-sm font-medium flex items-center gap-1.5">
             <Smartphone className="size-3.5 text-muted-foreground" />
             <span>{student.guardianPhone}</span>
@@ -370,7 +440,9 @@ function StudentQuickModal({
             Payment Receipts History ({studentTxns.length})
           </h4>
           {studentTxns.length === 0 ? (
-            <p className="text-xs text-muted-foreground italic py-2">No recorded receipts yet for this student.</p>
+            <p className="text-xs text-muted-foreground italic py-2">
+              No recorded receipts yet for this student.
+            </p>
           ) : (
             <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
               {studentTxns.map((tx) => (
@@ -381,7 +453,9 @@ function StudentQuickModal({
                   <div>
                     <span className="font-semibold text-foreground">{tx.receiptNo}</span>
                     <span className="text-muted-foreground ml-2">· {tx.date}</span>
-                    <p className="text-[11px] text-muted-foreground">{tx.paymentMethod.replace(" (MTN)", "")}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {tx.paymentMethod.replace(" (MTN)", "")}
+                    </p>
                   </div>
                   <span className="font-bold text-emerald-600 dark:text-emerald-400">
                     +{currency(tx.amountPaid)}
@@ -403,7 +477,9 @@ function StudentQuickModal({
 }
 
 function SchoolReports() {
-  const [activeTab, setActiveTab] = useState<"collection" | "methods" | "students" | "transactions">("collection");
+  const [activeTab, setActiveTab] = useState<
+    "collection" | "methods" | "students" | "transactions"
+  >("collection");
 
   // ── Filters State ──
   const [search, setSearch] = useState("");
@@ -421,8 +497,18 @@ function SchoolReports() {
   const [balanceFilter, setBalanceFilter] = useState("all");
   const [termFilter, setTermFilter] = useState("all");
   const [paymentMethodFilter, setPaymentMethodFilter] = useState("all");
+  const [showBalanceAndSortControls] = useState(false);
+  const [customRangeDraftStart, setCustomRangeDraftStart] = useState(customStartYear);
+  const [customRangeDraftEnd, setCustomRangeDraftEnd] = useState(customEndYear);
+  const [isCustomYearRangeEditing, setIsCustomYearRangeEditing] = useState(false);
   const [sortBy, setSortBy] = useState<
-    "balance-desc" | "balance-asc" | "name-asc" | "tuition-desc" | "tuition-asc" | "cohort-asc" | "cohort-desc"
+    | "balance-desc"
+    | "balance-asc"
+    | "name-asc"
+    | "tuition-desc"
+    | "tuition-asc"
+    | "cohort-asc"
+    | "cohort-desc"
   >("balance-desc");
   const [selectedStudentForModal, setSelectedStudentForModal] = useState<Student | null>(null);
 
@@ -437,7 +523,15 @@ function SchoolReports() {
     if (termFilter !== "all") count++;
     if (paymentMethodFilter !== "all") count++;
     return count;
-  }, [search, deptFilter, statusFilter, cohortYearFilter, balanceFilter, termFilter, paymentMethodFilter]);
+  }, [
+    search,
+    deptFilter,
+    statusFilter,
+    cohortYearFilter,
+    balanceFilter,
+    termFilter,
+    paymentMethodFilter,
+  ]);
 
   const handleResetFilters = () => {
     setSearch("");
@@ -502,11 +596,23 @@ function SchoolReports() {
       if (sortBy === "name-asc") return a.name.localeCompare(b.name);
       if (sortBy === "tuition-desc") return b.tuitionFee - a.tuitionFee;
       if (sortBy === "tuition-asc") return a.tuitionFee - b.tuitionFee;
-      if (sortBy === "cohort-desc") return getStudentYearRange(b).localeCompare(getStudentYearRange(a));
-      if (sortBy === "cohort-asc") return getStudentYearRange(a).localeCompare(getStudentYearRange(b));
+      if (sortBy === "cohort-desc")
+        return getStudentYearRange(b).localeCompare(getStudentYearRange(a));
+      if (sortBy === "cohort-asc")
+        return getStudentYearRange(a).localeCompare(getStudentYearRange(b));
       return 0;
     });
-  }, [search, deptFilter, statusFilter, cohortYearFilter, customStartYear, customEndYear, balanceFilter, termFilter, sortBy]);
+  }, [
+    search,
+    deptFilter,
+    statusFilter,
+    cohortYearFilter,
+    customStartYear,
+    customEndYear,
+    balanceFilter,
+    termFilter,
+    sortBy,
+  ]);
 
   // ── Filtered Transactions Computation ──
   const filteredTransactions = useMemo(() => {
@@ -543,18 +649,17 @@ function SchoolReports() {
   // ── Dynamic KPIs (Live Tallying with Students & Fees) ──
   const totalExpected = useMemo(
     () => filteredStudents.reduce((s, st) => s + st.tuitionFee, 0),
-    [filteredStudents]
+    [filteredStudents],
   );
   const totalCollected = useMemo(
     () => filteredStudents.reduce((s, st) => s + st.paidAmount, 0),
-    [filteredStudents]
+    [filteredStudents],
   );
   const totalOutstanding = useMemo(
     () => filteredStudents.reduce((s, st) => s + st.balanceDue, 0),
-    [filteredStudents]
+    [filteredStudents],
   );
-  const collectionRate =
-    totalExpected > 0 ? Math.round((totalCollected / totalExpected) * 100) : 0;
+  const collectionRate = totalExpected > 0 ? Math.round((totalCollected / totalExpected) * 100) : 0;
 
   const fullyPaidCount = filteredStudents.filter((s) => s.status === "Paid Full").length;
   const partialCount = filteredStudents.filter((s) => s.status === "Partial Payment").length;
@@ -563,7 +668,9 @@ function SchoolReports() {
   // ── Department Grouping for Charts ──
   const deptBreakdownChartData = useMemo(() => {
     return TERTIARY_ACADEMIC_DEPTS.map((g) => {
-      const studentsInGroup = filteredStudents.filter((s) => getStudentDeptInfo(s).label === g.name);
+      const studentsInGroup = filteredStudents.filter(
+        (s) => getStudentDeptInfo(s).label === g.name,
+      );
       const billed = studentsInGroup.reduce((s, st) => s + st.tuitionFee, 0);
       const collected = studentsInGroup.reduce((s, st) => s + st.paidAmount, 0);
       const arrears = studentsInGroup.reduce((s, st) => s + st.balanceDue, 0);
@@ -575,7 +682,9 @@ function SchoolReports() {
         collected,
         arrears,
       };
-    }).filter((g) => (deptFilter === "all" ? true : filteredStudents.length > 0 ? g.count > 0 : true));
+    }).filter((g) =>
+      deptFilter === "all" ? true : filteredStudents.length > 0 ? g.count > 0 : true,
+    );
   }, [filteredStudents, deptFilter]);
 
   // ── Payment method distribution ──
@@ -587,12 +696,16 @@ function SchoolReports() {
     }
     // If no filtered transactions but students have payments, show proportionate estimates
     if (map.size === 0 && totalCollected > 0) {
-      map.set("Mobile Money", Math.round(totalCollected * 0.55));
-      map.set("Bank Transfer", Math.round(totalCollected * 0.3));
-      map.set("Cash Deposit", Math.round(totalCollected * 0.15));
+      map.set("Mobile Money", Math.round(totalCollected * 0.65));
+      map.set("Bank Transfer", Math.round(totalCollected * 0.35));
     }
     return Array.from(map.entries())
-      .filter(([method]) => paymentMethodFilter === "all" || method === paymentMethodFilter || `${method} (MTN)` === paymentMethodFilter)
+      .filter(
+        ([method]) =>
+          paymentMethodFilter === "all" ||
+          method === paymentMethodFilter ||
+          `${method} (MTN)` === paymentMethodFilter,
+      )
       .map(([method, amount]) => ({
         method,
         amount,
@@ -611,8 +724,16 @@ function SchoolReports() {
   const tabs = [
     { key: "collection" as const, label: "Fee Collection", icon: GraduationCap },
     { key: "methods" as const, label: "Payment Channels", icon: Banknote },
-    { key: "students" as const, label: `Student Balances (${filteredStudents.length})`, icon: Users },
-    { key: "transactions" as const, label: `Receipts Ledger (${filteredTransactions.length})`, icon: Receipt },
+    {
+      key: "students" as const,
+      label: `Student Balances (${filteredStudents.length})`,
+      icon: Users,
+    },
+    {
+      key: "transactions" as const,
+      label: `Receipts Ledger (${filteredTransactions.length})`,
+      icon: Receipt,
+    },
   ];
 
   return (
@@ -636,7 +757,8 @@ function SchoolReports() {
                 )}
               </h2>
               <p className="text-xs text-muted-foreground">
-                Filter fees, arrears, and student records across departments, standing, and payment channels
+                Filter fees, arrears, and student records across departments, standing, and payment
+                channels
               </p>
             </div>
           </div>
@@ -718,7 +840,15 @@ function SchoolReports() {
             </label>
             <select
               value={cohortYearFilter}
-              onChange={(e) => setCohortYearFilter(e.target.value)}
+              onChange={(e) => {
+                const nextValue = e.target.value;
+                setCohortYearFilter(nextValue);
+                if (nextValue === "custom") {
+                  setCustomRangeDraftStart(customStartYear);
+                  setCustomRangeDraftEnd(customEndYear);
+                  setIsCustomYearRangeEditing(true);
+                }
+              }}
               className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
             >
               <option value="all">All Academic Years</option>
@@ -729,25 +859,85 @@ function SchoolReports() {
               ))}
               <option value="custom">Type Custom Year Range...</option>
             </select>
-            {cohortYearFilter === "custom" && (
-              <div className="flex items-center gap-1.5 mt-1.5">
-                <input
-                  type="number"
-                  placeholder="Start (2026)"
-                  value={customStartYear}
-                  onChange={(e) => setCustomStartYear(e.target.value)}
-                  className="w-1/2 h-7 px-2 text-xs rounded border border-border bg-background text-foreground font-mono"
-                />
-                <span className="text-xs text-muted-foreground font-bold">–</span>
-                <input
-                  type="number"
-                  placeholder="End (2030)"
-                  value={customEndYear}
-                  onChange={(e) => setCustomEndYear(e.target.value)}
-                  className="w-1/2 h-7 px-2 text-xs rounded border border-border bg-background text-foreground font-mono"
-                />
-              </div>
-            )}
+            {cohortYearFilter === "custom" &&
+              (isCustomYearRangeEditing || !customStartYear || !customEndYear ? (
+                <div className="mt-2.5 rounded-xl border border-accent/20 bg-accent/5 p-3">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wide text-accent">
+                      Custom cohort range
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">e.g. 2026 – 2030</span>
+                  </div>
+                  <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                    <input
+                      type="number"
+                      min="2000"
+                      max="2100"
+                      placeholder="Start year"
+                      value={customRangeDraftStart}
+                      onChange={(e) => setCustomRangeDraftStart(e.target.value)}
+                      className="h-9 min-w-0 rounded-lg border border-border bg-background px-3 text-sm text-foreground font-mono outline-none focus:ring-1 focus:ring-accent"
+                    />
+                    <span className="text-sm font-semibold text-muted-foreground">–</span>
+                    <input
+                      type="number"
+                      min="2000"
+                      max="2100"
+                      placeholder="End year"
+                      value={customRangeDraftEnd}
+                      onChange={(e) => setCustomRangeDraftEnd(e.target.value)}
+                      className="h-9 min-w-0 rounded-lg border border-border bg-background px-3 text-sm text-foreground font-mono outline-none focus:ring-1 focus:ring-accent"
+                    />
+                  </div>
+                  <div className="mt-2 flex items-center justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 text-xs"
+                      onClick={() => {
+                        setCustomRangeDraftStart(customStartYear);
+                        setCustomRangeDraftEnd(customEndYear);
+                        setIsCustomYearRangeEditing(false);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="h-8 text-xs"
+                      disabled={
+                        !customRangeDraftStart ||
+                        !customRangeDraftEnd ||
+                        Number(customRangeDraftStart) > Number(customRangeDraftEnd)
+                      }
+                      onClick={() => {
+                        setCustomStartYear(customRangeDraftStart);
+                        setCustomEndYear(customRangeDraftEnd);
+                        setIsCustomYearRangeEditing(false);
+                      }}
+                    >
+                      Apply range
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-2.5 flex items-center justify-between gap-2 rounded-xl border border-border bg-secondary/30 px-3 py-2">
+                  <span className="text-xs font-semibold text-foreground">
+                    {customStartYear} – {customEndYear}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2.5 text-xs"
+                    onClick={() => setIsCustomYearRangeEditing(true)}
+                  >
+                    Edit range
+                  </Button>
+                </div>
+              ))}
           </div>
 
           {/* 4. Payment Standing */}
@@ -767,22 +957,24 @@ function SchoolReports() {
             </select>
           </div>
 
-          {/* 5. Balance Due Filter */}
-          <div>
-            <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">
-              Balance / Arrears
-            </label>
-            <select
-              value={balanceFilter}
-              onChange={(e) => setBalanceFilter(e.target.value)}
-              className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-            >
-              <option value="all">All Balances</option>
-              <option value="has-balance">Has Balance Due (&gt; GH₵0)</option>
-              <option value="cleared">Fully Cleared (= GH₵0)</option>
-              <option value="high-arrears">High Arrears (≥ GH₵1,000)</option>
-            </select>
-          </div>
+          {/* Balance / arrears filter removed from this report view */}
+          {showBalanceAndSortControls && (
+            <div>
+              <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+                Balance / Arrears
+              </label>
+              <select
+                value={balanceFilter}
+                onChange={(e) => setBalanceFilter(e.target.value)}
+                className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              >
+                <option value="all">All Balances</option>
+                <option value="has-balance">Has Balance Due (&gt; GH₵0)</option>
+                <option value="cleared">Fully Cleared (= GH₵0)</option>
+                <option value="high-arrears">High Arrears (≥ GH₵1,000)</option>
+              </select>
+            </div>
+          )}
 
           {/* 6. Payment Channel */}
           <div>
@@ -797,7 +989,6 @@ function SchoolReports() {
               <option value="all">All Payment Channels</option>
               <option value="Mobile Money">Mobile Money</option>
               <option value="Bank Transfer">Bank Transfer</option>
-              <option value="Cash Deposit">Cash Deposit</option>
             </select>
           </div>
 
@@ -818,25 +1009,26 @@ function SchoolReports() {
             </select>
           </div>
 
-          {/* 8. Sort By */}
-          <div>
-            <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">
-              Sort Order
-            </label>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-            >
-              <option value="balance-desc">Highest Balance Due</option>
-              <option value="balance-asc">Lowest Balance Due</option>
-              <option value="name-asc">Student Name (A - Z)</option>
-              <option value="tuition-desc">Tuition Fee (High - Low)</option>
-              <option value="tuition-asc">Tuition Fee (Low - High)</option>
-              <option value="cohort-desc">Cohort Years (Newest First)</option>
-              <option value="cohort-asc">Cohort Years (Oldest First)</option>
-            </select>
-          </div>
+          {showBalanceAndSortControls /* Sort order control removed from this report view */ && (
+            <div>
+              <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+                Sort Order
+              </label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              >
+                <option value="balance-desc">Highest Balance Due</option>
+                <option value="balance-asc">Lowest Balance Due</option>
+                <option value="name-asc">Student Name (A - Z)</option>
+                <option value="tuition-desc">Tuition Fee (High - Low)</option>
+                <option value="tuition-asc">Tuition Fee (Low - High)</option>
+                <option value="cohort-desc">Cohort Years (Newest First)</option>
+                <option value="cohort-asc">Cohort Years (Oldest First)</option>
+              </select>
+            </div>
+          )}
 
           {/* 9. Quick Status Quick Filters */}
           <div className="flex flex-col justify-end">
@@ -850,18 +1042,20 @@ function SchoolReports() {
                   "px-2.5 py-1 text-xs font-semibold rounded-md border transition-colors",
                   statusFilter === "Overdue"
                     ? "bg-rose-600 text-white border-rose-600"
-                    : "bg-background text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/60 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                    : "bg-background text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/60 hover:bg-rose-50 dark:hover:bg-rose-950/40",
                 )}
               >
                 Overdue ({SCHOOL_STUDENTS.filter((s) => s.status === "Overdue").length})
               </button>
               <button
-                onClick={() => setBalanceFilter(balanceFilter === "has-balance" ? "all" : "has-balance")}
+                onClick={() =>
+                  setBalanceFilter(balanceFilter === "has-balance" ? "all" : "has-balance")
+                }
                 className={cn(
                   "px-2.5 py-1 text-xs font-semibold rounded-md border transition-colors",
                   balanceFilter === "has-balance"
                     ? "bg-amber-600 text-white border-amber-600"
-                    : "bg-background text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900/60 hover:bg-amber-50 dark:hover:bg-amber-950/40"
+                    : "bg-background text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900/60 hover:bg-amber-50 dark:hover:bg-amber-950/40",
                 )}
               >
                 With Arrears ({SCHOOL_STUDENTS.filter((s) => s.balanceDue > 0).length})
@@ -872,7 +1066,7 @@ function SchoolReports() {
                   "px-2.5 py-1 text-xs font-semibold rounded-md border transition-colors",
                   statusFilter === "Paid Full"
                     ? "bg-emerald-600 text-white border-emerald-600"
-                    : "bg-background text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/60 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+                    : "bg-background text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/60 hover:bg-emerald-50 dark:hover:bg-emerald-950/40",
                 )}
               >
                 Cleared ({SCHOOL_STUDENTS.filter((s) => s.status === "Paid Full").length})
@@ -884,44 +1078,58 @@ function SchoolReports() {
         {/* Active Filter Tags Row */}
         <div className="flex flex-wrap items-center gap-2 pt-1">
           <span className="text-xs text-muted-foreground">
-            Showing <strong className="text-foreground">{filteredStudents.length}</strong> of {SCHOOL_STUDENTS.length} students
+            Showing <strong className="text-foreground">{filteredStudents.length}</strong> of{" "}
+            {SCHOOL_STUDENTS.length} students
             {filteredStudents.length !== SCHOOL_STUDENTS.length && (
-              <span> ({Math.round((filteredStudents.length / SCHOOL_STUDENTS.length) * 100)}% of cohort)</span>
+              <span>
+                {" "}
+                ({Math.round((filteredStudents.length / SCHOOL_STUDENTS.length) * 100)}% of cohort)
+              </span>
             )}
           </span>
 
           {search && (
             <span className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-0.5 text-xs text-foreground font-medium">
               Search: "{search}"
-              <button onClick={() => setSearch("")} className="hover:text-rose-500"><X className="size-3" /></button>
+              <button onClick={() => setSearch("")} className="hover:text-rose-500">
+                <X className="size-3" />
+              </button>
             </span>
           )}
 
           {deptFilter !== "all" && (
             <span className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-0.5 text-xs text-foreground font-medium">
               Dept: {deptFilter}
-              <button onClick={() => setDeptFilter("all")} className="hover:text-rose-500"><X className="size-3" /></button>
+              <button onClick={() => setDeptFilter("all")} className="hover:text-rose-500">
+                <X className="size-3" />
+              </button>
             </span>
           )}
 
           {statusFilter !== "all" && (
             <span className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-0.5 text-xs text-foreground font-medium">
-              Status: {statusFilter}
-              <button onClick={() => setStatusFilter("all")} className="hover:text-rose-500"><X className="size-3" /></button>
+              {statusFilter === "Paid Full" ? "Cleared" : "Overdue"}
+              <button onClick={() => setStatusFilter("all")} className="hover:text-rose-500">
+                <X className="size-3" />
+              </button>
             </span>
           )}
 
           {balanceFilter !== "all" && (
             <span className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-0.5 text-xs text-foreground font-medium">
-              Balance: {balanceFilter}
-              <button onClick={() => setBalanceFilter("all")} className="hover:text-rose-500"><X className="size-3" /></button>
+              Arrears
+              <button onClick={() => setBalanceFilter("all")} className="hover:text-rose-500">
+                <X className="size-3" />
+              </button>
             </span>
           )}
 
           {paymentMethodFilter !== "all" && (
             <span className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-0.5 text-xs text-foreground font-medium">
               Channel: {paymentMethodFilter}
-              <button onClick={() => setPaymentMethodFilter("all")} className="hover:text-rose-500"><X className="size-3" /></button>
+              <button onClick={() => setPaymentMethodFilter("all")} className="hover:text-rose-500">
+                <X className="size-3" />
+              </button>
             </span>
           )}
         </div>
@@ -937,7 +1145,7 @@ function SchoolReports() {
               "flex shrink-0 items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors",
               activeTab === t.key
                 ? "border-accent text-accent"
-                : "border-transparent text-muted-foreground hover:text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground",
             )}
           >
             <t.icon className="size-4 shrink-0" />
@@ -1016,9 +1224,7 @@ function SchoolReports() {
               <p className="mt-2 text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400">
                 {collectionRate}%
               </p>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                Billed vs received in filter
-              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">Billed vs received in filter</p>
             </div>
           </div>
 
@@ -1039,9 +1245,22 @@ function SchoolReports() {
                   </div>
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={deptBreakdownChartData} margin={{ left: -18, right: 4, top: 4 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
-                      <XAxis dataKey="name" tickLine={false} axisLine={false} fontSize={11} stroke="var(--color-muted-foreground)" />
+                    <BarChart
+                      data={deptBreakdownChartData}
+                      margin={{ left: -18, right: 4, top: 4 }}
+                    >
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="var(--color-border)"
+                        vertical={false}
+                      />
+                      <XAxis
+                        dataKey="name"
+                        tickLine={false}
+                        axisLine={false}
+                        fontSize={11}
+                        stroke="var(--color-muted-foreground)"
+                      />
                       <YAxis
                         tickFormatter={(v) => `${Math.round(v / 1000)}k`}
                         tickLine={false}
@@ -1051,8 +1270,18 @@ function SchoolReports() {
                       />
                       <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => currency(v)} />
                       <Legend wrapperStyle={{ fontSize: 12 }} />
-                      <Bar name="Collected" dataKey="collected" fill="#22c55e" radius={[4, 4, 0, 0]} />
-                      <Bar name="Arrears Due" dataKey="arrears" fill="#f43f5e" radius={[4, 4, 0, 0]} />
+                      <Bar
+                        name="Collected"
+                        dataKey="collected"
+                        fill="#22c55e"
+                        radius={[4, 4, 0, 0]}
+                      />
+                      <Bar
+                        name="Arrears Due"
+                        dataKey="arrears"
+                        fill="#f43f5e"
+                        radius={[4, 4, 0, 0]}
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
@@ -1063,7 +1292,9 @@ function SchoolReports() {
             <div className="rounded-xl border border-border bg-card p-4 sm:p-5 shadow-2xs">
               <div className="mb-4">
                 <h2 className="text-lg font-bold">Collection by Channel</h2>
-                <p className="text-xs text-muted-foreground">Fee settlement split across payment methods</p>
+                <p className="text-xs text-muted-foreground">
+                  Fee settlement split across payment methods
+                </p>
               </div>
               <div className="h-64">
                 {methodChartData.length === 0 ? (
@@ -1073,8 +1304,18 @@ function SchoolReports() {
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={methodChartData} margin={{ left: -18, right: 4, top: 4 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
-                      <XAxis dataKey="name" tickLine={false} axisLine={false} fontSize={11} stroke="var(--color-muted-foreground)" />
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="var(--color-border)"
+                        vertical={false}
+                      />
+                      <XAxis
+                        dataKey="name"
+                        tickLine={false}
+                        axisLine={false}
+                        fontSize={11}
+                        stroke="var(--color-muted-foreground)"
+                      />
                       <YAxis
                         tickFormatter={(v) => `${Math.round(v / 1000)}k`}
                         tickLine={false}
@@ -1084,7 +1325,12 @@ function SchoolReports() {
                       />
                       <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => currency(v)} />
                       <Legend wrapperStyle={{ fontSize: 12 }} />
-                      <Bar name="Amount Received" dataKey="amount" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                      <Bar
+                        name="Amount Received"
+                        dataKey="amount"
+                        fill="#3b82f6"
+                        radius={[4, 4, 0, 0]}
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
@@ -1103,7 +1349,8 @@ function SchoolReports() {
             <div>
               <h2 className="text-lg font-bold">Payment Method Breakdown</h2>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                Filtered share of fees collected by channel ({collectedByMethod.length} channels active)
+                Filtered share of fees collected by channel ({collectedByMethod.length} channels
+                active)
               </p>
             </div>
             <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
@@ -1119,9 +1366,13 @@ function SchoolReports() {
               {collectedByMethod.map((m) => {
                 const Icon = SCHOOL_METHOD_ICONS[m.method] ?? Banknote;
                 const color = SCHOOL_METHOD_COLORS[m.method] ?? "#22c55e";
-                const pct = totalMethodAmount > 0 ? Math.round((m.amount / totalMethodAmount) * 100) : 0;
+                const pct =
+                  totalMethodAmount > 0 ? Math.round((m.amount / totalMethodAmount) * 100) : 0;
                 return (
-                  <li key={m.method} className="flex items-center gap-4 px-5 py-3.5 hover:bg-secondary/40 transition-colors">
+                  <li
+                    key={m.method}
+                    className="flex items-center gap-4 px-5 py-3.5 hover:bg-secondary/40 transition-colors"
+                  >
                     <span
                       className="grid size-9 shrink-0 place-items-center rounded-xl"
                       style={{ backgroundColor: `${color}1A`, color }}
@@ -1134,7 +1385,10 @@ function SchoolReports() {
                     </div>
                     <div className="flex-1">
                       <div className="h-2 overflow-hidden rounded-full bg-secondary">
-                        <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${pct}%` }} />
+                        <div
+                          className="h-full rounded-full bg-accent transition-all"
+                          style={{ width: `${pct}%` }}
+                        />
                       </div>
                     </div>
                     <span className="w-12 text-right text-xs font-semibold text-muted-foreground">
@@ -1158,7 +1412,8 @@ function SchoolReports() {
             <div>
               <h2 className="text-lg font-bold">Student Account Balances Ledger</h2>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                Showing {filteredStudents.length} of {SCHOOL_STUDENTS.length} students · {fullyPaidCount} paid in full · {partialCount} partial · {overdueCount} overdue
+                Showing {filteredStudents.length} of {SCHOOL_STUDENTS.length} students ·{" "}
+                {fullyPaidCount} paid in full · {partialCount} partial · {overdueCount} overdue
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -1210,13 +1465,20 @@ function SchoolReports() {
                     const yearRange = getStudentYearRange(s);
                     return (
                       <tr key={s.id} className="transition-colors hover:bg-secondary/60">
-                        <td className="px-4 py-3 text-xs font-bold text-muted-foreground">{i + 1}</td>
+                        <td className="px-4 py-3 text-xs font-bold text-muted-foreground">
+                          {i + 1}
+                        </td>
                         <td className="px-5 py-3">
                           <p className="font-semibold text-foreground">{s.name}</p>
                           <p className="text-xs font-mono text-muted-foreground">{s.studentId}</p>
                         </td>
                         <td className="px-5 py-3">
-                          <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-md", deptInfo.badgeColor)}>
+                          <span
+                            className={cn(
+                              "text-xs font-semibold px-2 py-0.5 rounded-md",
+                              deptInfo.badgeColor,
+                            )}
+                          >
                             {deptInfo.label}
                           </span>
                         </td>
@@ -1228,7 +1490,10 @@ function SchoolReports() {
                         <td className="px-5 py-3">
                           <div className="flex flex-wrap gap-1 max-w-[200px]">
                             {feeTypes.slice(0, 2).map((ft, fi) => (
-                              <span key={fi} className="text-[10px] bg-secondary px-1.5 py-0.5 rounded border border-border/60">
+                              <span
+                                key={fi}
+                                className="text-[10px] bg-secondary px-1.5 py-0.5 rounded border border-border/60"
+                              >
                                 {ft.split(" ")[0]}
                               </span>
                             ))}
@@ -1245,7 +1510,9 @@ function SchoolReports() {
                             <span>{s.guardianPhone}</span>
                           </p>
                         </td>
-                        <td className="px-5 py-3 text-right font-medium">{currency(s.tuitionFee)}</td>
+                        <td className="px-5 py-3 text-right font-medium">
+                          {currency(s.tuitionFee)}
+                        </td>
                         <td className="px-5 py-3 text-right font-medium text-emerald-600 dark:text-emerald-400">
                           {currency(s.paidAmount)}
                         </td>
@@ -1300,7 +1567,8 @@ function SchoolReports() {
             <div>
               <h2 className="text-lg font-bold">Fee Receipts & Transaction Log</h2>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                Showing {filteredTransactions.length} receipts issued · Total: {currency(filteredTransactions.reduce((s, t) => s + t.amountPaid, 0))}
+                Showing {filteredTransactions.length} receipts issued · Total:{" "}
+                {currency(filteredTransactions.reduce((s, t) => s + t.amountPaid, 0))}
               </p>
             </div>
             <Button
@@ -1318,7 +1586,9 @@ function SchoolReports() {
             <div className="p-12 text-center space-y-3">
               <Receipt className="size-8 text-muted-foreground mx-auto" />
               <p className="text-base font-semibold">No receipts match your search & filter</p>
-              <p className="text-xs text-muted-foreground">Try adjusting search term, department, or payment channel filter.</p>
+              <p className="text-xs text-muted-foreground">
+                Try adjusting search term, department, or payment channel filter.
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -1361,7 +1631,9 @@ function SchoolReports() {
                             >
                               <MethodIcon className="size-3" />
                             </span>
-                            <span className="text-xs font-medium">{tx.paymentMethod.replace(" (MTN)", "")}</span>
+                            <span className="text-xs font-medium">
+                              {tx.paymentMethod.replace(" (MTN)", "")}
+                            </span>
                           </div>
                         </td>
                         <td className="px-5 py-3 text-right font-bold text-emerald-600 dark:text-emerald-400">
@@ -1422,7 +1694,10 @@ function exportChurchCsv(transactions: ChurchPaymentRecord[], members: NgoMember
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.setAttribute("href", url);
-  link.setAttribute("download", `church_financial_report_${new Date().toISOString().slice(0, 10)}.csv`);
+  link.setAttribute(
+    "download",
+    `church_financial_report_${new Date().toISOString().slice(0, 10)}.csv`,
+  );
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -1440,7 +1715,7 @@ function ChurchMemberStatementModal({
   const memberTxns = transactions.filter(
     (t) =>
       t.memberId === member.memberId ||
-      t.memberName.toLowerCase().trim() === member.name.toLowerCase().trim()
+      t.memberName.toLowerCase().trim() === member.name.toLowerCase().trim(),
   );
 
   const totalPaid = memberTxns.reduce((a, t) => a + t.amount, 0) || member.totalPaid;
@@ -1585,8 +1860,18 @@ function ChurchMemberStatementModal({
 // Helper: parse "DD MMM YYYY" date strings from records
 function parseRecordDate(dateStr: string): Date | null {
   const months: Record<string, number> = {
-    Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
-    Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11,
+    Jan: 0,
+    Feb: 1,
+    Mar: 2,
+    Apr: 3,
+    May: 4,
+    Jun: 5,
+    Jul: 6,
+    Aug: 7,
+    Sep: 8,
+    Oct: 9,
+    Nov: 10,
+    Dec: 11,
   };
   const parts = dateStr.trim().split(" ");
   if (parts.length !== 3) return null;
@@ -1598,29 +1883,38 @@ function parseRecordDate(dateStr: string): Date | null {
 }
 
 function ChurchReports() {
-  const [activeTab, setActiveTab] = useState<"transactions" | "members" | "projects">("transactions");
+  const [activeTab, setActiveTab] = useState<"transactions" | "projects">(
+    "transactions",
+  );
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [methodFilter, setMethodFilter] = useState("all");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  const [datePeriod, setDatePeriod] = useState<"all" | "today" | "week" | "month" | "year" | "custom">("all");
-  const [selectedMemberForModal, setSelectedMemberForModal] = useState<NgoMember | null>(null);
+  const [datePeriod, setDatePeriod] = useState<
+    "all" | "today" | "week" | "month" | "year" | "custom"
+  >("all");
+  const [projectFilter, setProjectFilter] = useState("all");
 
   const members = NGO_MEMBERS;
   const transactions = CHURCH_PAYMENT_RECORDS;
+  const projects = NGO_PROJECTS;
 
   const totalChurchRevenue = useMemo(() => members.reduce((a, m) => a + m.totalPaid, 0), [members]);
   const totalTithes = useMemo(
-    () => members.reduce((a, m) => a + ((m.monthlyTithe || 0) * 12), 0),
-    [members]
+    () => members.reduce((a, m) => a + (m.monthlyTithe || 0) * 12, 0),
+    [members],
+  );
+  const totalOfferings = useMemo(
+    () => transactions.filter((tx) => tx.category === "Offering").reduce((a, tx) => a + tx.amount, 0),
+    [transactions],
   );
   const totalProjects = useMemo(
     () => members.reduce((a, m) => a + (m.projectContributions || 0), 0),
-    [members]
+    [members],
   );
   const totalWelfare = useMemo(
     () => members.reduce((a, m) => a + (m.welfarePaid || 0), 0),
-    [members]
+    [members],
   );
   const totalArrears = useMemo(() => members.reduce((a, m) => a + m.balanceDue, 0), [members]);
 
@@ -1675,7 +1969,8 @@ function ChurchReports() {
         const matchReceipt = tx.receiptNo.toLowerCase().includes(q);
         const matchType = tx.paymentType.toLowerCase().includes(q);
         const matchProject = tx.projectName?.toLowerCase().includes(q) || false;
-        const matchPhone = memberPhone.includes(cleanQ) || (member && member.phone.toLowerCase().includes(q));
+        const matchPhone =
+          memberPhone.includes(cleanQ) || (member && member.phone.toLowerCase().includes(q));
 
         if (!matchName && !matchReceipt && !matchType && !matchProject && !matchPhone) {
           return false;
@@ -1701,26 +1996,20 @@ function ChurchReports() {
     });
   }, [transactions, members, search, categoryFilter, methodFilter, periodStart, periodEnd]);
 
-  // ── FILTERED MEMBERS (Search by Member Name OR Phone Number) ──
-  const filteredMembers = useMemo(() => {
-    return members.filter((m) => {
+  const filteredProjects = useMemo(() => {
+    return projects.filter((p) => {
+      if (projectFilter !== "all" && p.status !== projectFilter) return false;
       if (search.trim()) {
         const q = search.toLowerCase().trim();
-        const cleanQ = q.replace(/\s+/g, "");
-        const matchName = m.name.toLowerCase().includes(q);
-        const matchPhone = m.phone.toLowerCase().includes(q) || m.phone.replace(/\s+/g, "").includes(cleanQ);
-        const matchId = m.memberId.toLowerCase().includes(q);
-        const matchRole = m.role.toLowerCase().includes(q);
-        if (!matchName && !matchPhone && !matchId && !matchRole) return false;
+        const matchTitle = p.title.toLowerCase().includes(q);
+        const matchCode = p.code.toLowerCase().includes(q);
+        const matchCoordinator = p.leadCoordinator.toLowerCase().includes(q);
+        const matchLocation = p.location.toLowerCase().includes(q);
+        if (!matchTitle && !matchCode && !matchCoordinator && !matchLocation) return false;
       }
-
-      if (categoryFilter === "Project" && !(m.projectContributions && m.projectContributions > 0)) {
-        return false;
-      }
-
       return true;
     });
-  }, [members, search, categoryFilter]);
+  }, [projects, projectFilter, search]);
 
   return (
     <div className="space-y-6">
@@ -1746,7 +2035,7 @@ function ChurchReports() {
         <div className="rounded-xl border border-border bg-card p-4 shadow-2xs">
           <div className="flex items-center justify-between">
             <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Tithes & Offerings
+              Tithe
             </p>
             <span className="rounded-full bg-violet-50 p-2 text-violet-600 dark:bg-violet-950/60 dark:text-violet-400">
               <Banknote className="size-4" />
@@ -1761,24 +2050,22 @@ function ChurchReports() {
         <div className="rounded-xl border border-border bg-card p-4 shadow-2xs">
           <div className="flex items-center justify-between">
             <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Project Fund Pledges
+              Offering
             </p>
-            <span className="rounded-full bg-amber-50 p-2 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
-              <FolderKanban className="size-4" />
+            <span className="rounded-full bg-emerald-50 p-2 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
+              <Receipt className="size-4" />
             </span>
           </div>
-          <p className="mt-2 text-2xl font-black text-amber-600 dark:text-amber-400">
-            {currency(totalProjects)}
+          <p className="mt-2 text-2xl font-black text-emerald-600 dark:text-emerald-400">
+            {currency(totalOfferings)}
           </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Cathedral & Bus acquisitions
-          </p>
+          <p className="mt-0.5 text-xs text-muted-foreground">Sunday & special offerings</p>
         </div>
 
         <div className="rounded-xl border border-border bg-card p-4 shadow-2xs">
           <div className="flex items-center justify-between">
             <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Welfare & Benevolence
+              Welfare
             </p>
             <span className="rounded-full bg-teal-50 p-2 text-teal-600 dark:bg-teal-950/60 dark:text-teal-400">
               <Users className="size-4" />
@@ -1800,21 +2087,21 @@ function ChurchReports() {
               "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all",
               activeTab === "transactions"
                 ? "bg-foreground text-background"
-                : "bg-secondary text-muted-foreground hover:text-foreground"
+                : "bg-secondary text-muted-foreground hover:text-foreground",
             )}
           >
-            Receipts & Payment Ledger ({filteredTransactions.length})
+             Receipts & Payment Ledger ({filteredTransactions.length})
           </button>
           <button
-            onClick={() => setActiveTab("members")}
+            onClick={() => setActiveTab("projects")}
             className={cn(
               "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all",
-              activeTab === "members"
+              activeTab === "projects"
                 ? "bg-foreground text-background"
-                : "bg-secondary text-muted-foreground hover:text-foreground"
+                : "bg-secondary text-muted-foreground hover:text-foreground",
             )}
           >
-            Member Statements Directory ({filteredMembers.length})
+            Projects Directory ({filteredProjects.length})
           </button>
         </div>
 
@@ -1825,7 +2112,7 @@ function ChurchReports() {
           className="h-8 text-xs gap-1.5"
         >
           <Download className="size-3.5" />
-          <span>Export Audit CSV</span>
+          <span>Export Church Audit CSV</span>
         </Button>
       </div>
 
@@ -1853,11 +2140,31 @@ function ChurchReports() {
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-semibold text-muted-foreground">Category:</span>
           {[
-            { val: "all", label: "All", activeClass: "bg-foreground text-background border-transparent" },
-            { val: "Tithe", label: "Tithes", activeClass: "bg-violet-600 text-white border-violet-600" },
-            { val: "Offering", label: "Offerings", activeClass: "bg-emerald-600 text-white border-emerald-600" },
-            { val: "Welfare", label: "Welfare", activeClass: "bg-teal-600 text-white border-teal-600" },
-            { val: "Project", label: "🏗️ Projects", activeClass: "bg-amber-600 text-white border-amber-600" },
+            {
+              val: "all",
+              label: "All",
+              activeClass: "bg-foreground text-background border-transparent",
+            },
+            {
+              val: "Tithe",
+              label: "Tithes",
+              activeClass: "bg-violet-600 text-white border-violet-600",
+            },
+            {
+              val: "Offering",
+              label: "Offerings",
+              activeClass: "bg-emerald-600 text-white border-emerald-600",
+            },
+            {
+              val: "Welfare",
+              label: "Welfare",
+              activeClass: "bg-teal-600 text-white border-teal-600",
+            },
+            {
+              val: "Project",
+              label: "🏗️ Projects",
+              activeClass: "bg-amber-600 text-white border-amber-600",
+            },
           ].map(({ val, label, activeClass }) => (
             <button
               key={val}
@@ -1866,7 +2173,7 @@ function ChurchReports() {
                 "rounded-full px-3 py-1 text-xs font-semibold transition-all border",
                 categoryFilter === val
                   ? activeClass
-                  : "bg-card text-muted-foreground border-border hover:bg-secondary"
+                  : "bg-card text-muted-foreground border-border hover:bg-secondary",
               )}
             >
               {label}
@@ -1907,7 +2214,7 @@ function ChurchReports() {
                 "rounded-full px-3 py-1 text-xs font-semibold transition-all border",
                 datePeriod === val && !dateRange?.from
                   ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-card text-muted-foreground border-border hover:bg-secondary"
+                  : "bg-card text-muted-foreground border-border hover:bg-secondary",
               )}
             >
               {label}
@@ -1941,6 +2248,18 @@ function ChurchReports() {
       ══════════════════════════════════════════════ */}
       {activeTab === "transactions" && (
         <div className="rounded-xl border border-border bg-card overflow-hidden shadow-xs">
+          <div className="border-b border-border px-5 py-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-bold">Church Receipts & Payment Ledger</h2>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Showing {filteredTransactions.length} receipts · Total:{" "}
+                {currency(filteredTransactions.reduce((s, t) => s + t.amount, 0))}
+              </p>
+            </div>
+            <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+              {filteredTransactions.length} received
+            </span>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
               <thead className="bg-secondary/40 text-xs font-bold text-muted-foreground uppercase border-b border-border">
@@ -1953,25 +2272,26 @@ function ChurchReports() {
                   <th className="px-5 py-3">Payment Purpose</th>
                   <th className="px-5 py-3">Channel</th>
                   <th className="px-5 py-3 text-right font-bold">Amount Paid</th>
-                  <th className="px-5 py-3 text-center font-bold">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {filteredTransactions.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="py-12 text-center text-xs text-muted-foreground">
+                    <td colSpan={8} className="py-12 text-center text-xs text-muted-foreground">
                       No payment records found matching "{search}".
                     </td>
                   </tr>
                 ) : (
                   filteredTransactions.map((tx, idx) => {
                     const member = members.find(
-                      (m) => m.memberId === tx.memberId || m.name === tx.memberName
+                      (m) => m.memberId === tx.memberId || m.name === tx.memberName,
                     );
 
                     return (
                       <tr key={tx.id} className="hover:bg-secondary/30 transition-colors">
-                        <td className="px-4 py-3 text-xs font-bold text-muted-foreground">{idx + 1}</td>
+                        <td className="px-4 py-3 text-xs font-bold text-muted-foreground">
+                          {idx + 1}
+                        </td>
                         <td className="px-5 py-3 font-mono text-xs font-bold text-foreground">
                           {tx.receiptNo}
                         </td>
@@ -1980,14 +2300,18 @@ function ChurchReports() {
                         </td>
                         <td className="px-5 py-3">
                           <p className="font-semibold text-foreground text-sm">{tx.memberName}</p>
-                          <p className="text-[11px] text-muted-foreground font-mono">{tx.memberId}</p>
+                          <p className="text-[11px] text-muted-foreground font-mono">
+                            {tx.memberId}
+                          </p>
                         </td>
                         <td className="px-5 py-3 text-xs font-mono text-foreground">
                           {member?.phone || "+233 20 000 0000"}
                         </td>
                         <td className="px-5 py-3">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="font-medium text-foreground text-xs">{tx.paymentType}</span>
+                            <span className="font-medium text-foreground text-xs">
+                              {tx.paymentType}
+                            </span>
                             {tx.isProject && (
                               <span className="text-[9px] font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 px-2 py-0.5 rounded-full border border-amber-300">
                                 🏗️ Project
@@ -1995,22 +2319,11 @@ function ChurchReports() {
                             )}
                           </div>
                         </td>
-                        <td className="px-5 py-3 text-xs text-muted-foreground">{tx.paymentMethod}</td>
+                        <td className="px-5 py-3 text-xs text-muted-foreground">
+                          {tx.paymentMethod}
+                        </td>
                         <td className="px-5 py-3 text-right font-bold text-emerald-600 dark:text-emerald-400">
                           {currency(tx.amount)}
-                        </td>
-                        <td className="px-5 py-3 text-center">
-                          {member && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setSelectedMemberForModal(member)}
-                              className="h-7 px-2.5 text-[11px] font-semibold gap-1"
-                            >
-                              <FileText className="size-3" />
-                              <span>Statement</span>
-                            </Button>
-                          )}
                         </td>
                       </tr>
                     );
@@ -2023,88 +2336,130 @@ function ChurchReports() {
       )}
 
       {/* ══════════════════════════════════════════════
-          TAB 2: MEMBER STATEMENTS DIRECTORY
+          TAB 2: PROJECTS DIRECTORY
       ══════════════════════════════════════════════ */}
-      {activeTab === "members" && (
-        <div className="rounded-xl border border-border bg-card overflow-hidden shadow-xs">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="bg-secondary/40 text-xs font-bold text-muted-foreground uppercase border-b border-border">
-                <tr>
-                  <th className="px-4 py-3">#</th>
-                  <th className="px-5 py-3">Member Name</th>
-                  <th className="px-5 py-3">Telephone</th>
-                  <th className="px-5 py-3">Assigned Payments</th>
-                  <th className="px-5 py-3 text-right">Total Contributed</th>
-                  <th className="px-5 py-3 text-right">Balance Due</th>
-                  <th className="px-5 py-3 text-center font-bold">Statement</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {filteredMembers.length === 0 ? (
+      {activeTab === "projects" && (
+        <div className="space-y-4">
+          <div className="rounded-xl border border-border bg-card p-4 shadow-2xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h2 className="text-sm font-bold text-foreground">Projects Directory</h2>
+                <p className="text-xs text-muted-foreground">
+                  Showing {filteredProjects.length} of {projects.length} church projects
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-muted-foreground">Filter:</span>
+                {[
+                  { val: "all", label: "All" },
+                  { val: "Active Implementation", label: "Active" },
+                  { val: "Planning Phase", label: "Planning" },
+                  { val: "Completed", label: "Completed" },
+                ].map(({ val, label }) => (
+                  <button
+                    key={val}
+                    onClick={() => setProjectFilter(val)}
+                    className={cn(
+                      "rounded-full px-3 py-1 text-xs font-semibold transition-all border",
+                      projectFilter === val
+                        ? "bg-amber-600 text-white border-amber-600"
+                        : "bg-card text-muted-foreground border-border hover:bg-secondary",
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
+                <select
+                  value={projectFilter}
+                  onChange={(e) => setProjectFilter(e.target.value)}
+                  className="h-8 px-2.5 rounded-lg border border-border bg-card text-xs text-foreground focus:outline-none"
+                >
+                  <option value="all">All Projects</option>
+                  {projects.map((p) => (
+                    <option key={p.id} value={p.status}>
+                      {p.code} — {p.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-border bg-card overflow-hidden shadow-xs">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-secondary/40 text-xs font-bold text-muted-foreground uppercase border-b border-border">
                   <tr>
-                    <td colSpan={7} className="py-12 text-center text-xs text-muted-foreground">
-                      No members found matching "{search}".
-                    </td>
+                    <th className="px-4 py-3">#</th>
+                    <th className="px-5 py-3">Project</th>
+                    <th className="px-5 py-3">Code</th>
+                    <th className="px-5 py-3">Status</th>
+                    <th className="px-5 py-3 text-right">Budget</th>
+                    <th className="px-5 py-3 text-right">Spent</th>
+                    <th className="px-5 py-3 text-right">Balance</th>
+                    <th className="px-5 py-3">Coordinator</th>
+                    <th className="px-5 py-3">Beneficiaries</th>
                   </tr>
-                ) : (
-                  filteredMembers.map((m, idx) => (
-                    <tr key={m.id} className="hover:bg-secondary/30 transition-colors">
-                      <td className="px-4 py-3 text-xs font-bold text-muted-foreground">{idx + 1}</td>
-                      <td className="px-5 py-3">
-                        <p className="font-semibold text-foreground text-sm">{m.name}</p>
-                        <p className="text-[11px] text-muted-foreground font-mono">{m.memberId}</p>
-                      </td>
-                      <td className="px-5 py-3 text-xs font-mono text-foreground">{m.phone}</td>
-                      <td className="px-5 py-3">
-                        <div className="flex flex-wrap gap-1 max-w-[280px]">
-                          {(m.assignedPaymentTypes || ["Tithe", "Welfare"]).map((pName, pi) => (
-                            <span
-                              key={pi}
-                              className="text-[10px] font-medium bg-secondary px-2 py-0.5 rounded-md border border-border"
-                            >
-                              {pName}
-                            </span>
-                          ))}
-                        </div>
-                      </td>
-                      <td className="px-5 py-3 text-right font-bold text-emerald-600 dark:text-emerald-400">
-                        {currency(m.totalPaid)}
-                      </td>
-                      <td className="px-5 py-3 text-right font-bold">
-                        {m.balanceDue > 0 ? (
-                          <span className="text-rose-600 dark:text-rose-400">{currency(m.balanceDue)}</span>
-                        ) : (
-                          <span className="text-emerald-600 dark:text-emerald-400">Cleared ✓</span>
-                        )}
-                      </td>
-                      <td className="px-5 py-3 text-center">
-                        <Button
-                          size="sm"
-                          onClick={() => setSelectedMemberForModal(m)}
-                          className="bg-[#22c55e] text-white hover:bg-[#16a34a] h-7 px-2.5 text-[11px] font-semibold gap-1"
-                        >
-                          <FileText className="size-3" />
-                          <span>View History</span>
-                        </Button>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {filteredProjects.length === 0 ? (
+                    <tr>
+                      <td colSpan={9} className="py-12 text-center text-xs text-muted-foreground">
+                        No projects match your current filter.
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    filteredProjects.map((p, idx) => {
+                      const budgetBalance = p.budgetAllocated - p.fundsSpent;
+                      const statusColor =
+                        p.status === "Active Implementation"
+                          ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
+                          : p.status === "Planning Phase"
+                            ? "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
+                            : "bg-slate-50 text-slate-700 dark:bg-slate-900/40 dark:text-slate-300";
+                      return (
+                        <tr key={p.id} className="hover:bg-secondary/30 transition-colors">
+                          <td className="px-4 py-3 text-xs font-bold text-muted-foreground">
+                            {idx + 1}
+                          </td>
+                          <td className="px-5 py-3">
+                            <p className="font-semibold text-foreground text-sm">{p.title}</p>
+                            <p className="text-[11px] text-muted-foreground">{p.location}</p>
+                          </td>
+                          <td className="px-5 py-3 text-xs font-mono text-muted-foreground">
+                            {p.code}
+                          </td>
+                          <td className="px-5 py-3">
+                            <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-full border", statusColor)}>
+                              {p.status}
+                            </span>
+                          </td>
+                          <td className="px-5 py-3 text-right font-medium">
+                            {currency(p.budgetAllocated)}
+                          </td>
+                          <td className="px-5 py-3 text-right font-medium text-rose-600 dark:text-rose-400">
+                            {currency(p.fundsSpent)}
+                          </td>
+                          <td className="px-5 py-3 text-right font-bold text-emerald-600 dark:text-emerald-400">
+                            {currency(budgetBalance)}
+                          </td>
+                          <td className="px-5 py-3 text-xs text-foreground">
+                            {p.leadCoordinator}
+                          </td>
+                          <td className="px-5 py-3 text-xs text-muted-foreground">
+                            {p.beneficiariesCount.toLocaleString()}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Member Financial Giving Statement Modal */}
-      {selectedMemberForModal && (
-        <ChurchMemberStatementModal
-          member={selectedMemberForModal}
-          transactions={transactions}
-          onClose={() => setSelectedMemberForModal(null)}
-        />
-      )}
     </div>
   );
 }
@@ -2117,7 +2472,9 @@ function Reports() {
   const [activeTab, setActiveTab] = useState<"today" | "products" | "range" | "interbranch">(
     "today",
   );
-  const [productStockFilter, setProductStockFilter] = useState<"all" | "healthy" | "low" | "out">("all");
+  const [productStockFilter, setProductStockFilter] = useState<"all" | "healthy" | "low" | "out">(
+    "all",
+  );
   const { branches } = useBranches();
   const branchOptions = branches.filter((b) => b.id !== "all");
   const branchChartData = branchOptions.map((b) => ({
@@ -2151,8 +2508,8 @@ function Reports() {
         isSchool
           ? "School analytics · fee collection & balances"
           : isChurch
-          ? "Church giving analytics · tithes, offerings, welfare & project statements"
-          : "Retail analytics · sales, products, branch performance"
+            ? "Church giving analytics · tithes, offerings, welfare & project statements"
+            : "Retail analytics · sales, products, branch performance"
       }
       actions={
         <Button
@@ -2415,25 +2772,50 @@ function Reports() {
                     <div>
                       <h2 className="text-lg font-bold">Product Performance</h2>
                       <p className="mt-0.5 text-xs text-muted-foreground">
-                        Ranked by stock value · {productReport.filter((p) =>
-                          productStockFilter === "all" || p.stockHealth === productStockFilter
-                        ).length} SKUs
+                        Ranked by stock value ·{" "}
+                        {
+                          productReport.filter(
+                            (p) =>
+                              productStockFilter === "all" || p.stockHealth === productStockFilter,
+                          ).length
+                        }{" "}
+                        SKUs
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
-                      {([
-                        { key: "all",     label: "All",     activeClass: "bg-foreground text-background border-transparent" },
-                        { key: "healthy", label: "Healthy", activeClass: "bg-emerald-600 text-white border-transparent" },
-                        { key: "low",     label: "Low",     activeClass: "bg-amber-500 text-white border-transparent" },
-                        { key: "out",     label: "Out",     activeClass: "bg-red-600 text-white border-transparent" },
-                      ] as const).map(({ key, label, activeClass }) => (
+                      {(
+                        [
+                          {
+                            key: "all",
+                            label: "All",
+                            activeClass: "bg-foreground text-background border-transparent",
+                          },
+                          {
+                            key: "healthy",
+                            label: "Healthy",
+                            activeClass: "bg-emerald-600 text-white border-transparent",
+                          },
+                          {
+                            key: "low",
+                            label: "Low",
+                            activeClass: "bg-amber-500 text-white border-transparent",
+                          },
+                          {
+                            key: "out",
+                            label: "Out",
+                            activeClass: "bg-red-600 text-white border-transparent",
+                          },
+                        ] as const
+                      ).map(({ key, label, activeClass }) => (
                         <button
                           key={key}
                           onClick={() => setProductStockFilter(key)}
                           aria-pressed={productStockFilter === key}
                           className={cn(
                             "rounded-full px-3 py-1 text-xs font-semibold transition-all shadow-xs border",
-                            productStockFilter === key ? activeClass : "bg-card text-foreground border-border hover:bg-secondary",
+                            productStockFilter === key
+                              ? activeClass
+                              : "bg-card text-foreground border-border hover:bg-secondary",
                           )}
                         >
                           {label}
@@ -2458,58 +2840,63 @@ function Reports() {
                     </thead>
                     <tbody className="divide-y divide-border">
                       {productReport
-                        .filter((p) => productStockFilter === "all" || p.stockHealth === productStockFilter)
+                        .filter(
+                          (p) =>
+                            productStockFilter === "all" || p.stockHealth === productStockFilter,
+                        )
                         .map((p, i) => (
-                        <tr key={p.sku} className="transition-colors hover:bg-secondary/60">
-                          <td className="px-5 py-3 text-xs font-bold text-muted-foreground">
-                            {i + 1}
-                          </td>
-                          <td className="px-5 py-3">
-                            <p className="font-semibold">{p.name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {p.sku} · {p.variant}
-                            </p>
-                          </td>
-                          <td className="px-5 py-3 text-muted-foreground">{p.branch}</td>
-                          <td className="px-5 py-3 text-right font-medium">{currency(p.price)}</td>
-                          <td className="px-5 py-3 text-right font-bold">{p.stock}</td>
-                          <td className="px-5 py-3 text-right font-bold text-accent">
-                            {currency(p.revenue)}
-                          </td>
-                          <td className="px-5 py-3">
-                            <div className="flex items-center gap-1.5">
-                              <div className="h-1.5 w-16 overflow-hidden rounded-full bg-secondary">
-                                <div
-                                  className="h-full rounded-full bg-accent"
-                                  style={{
-                                    width: `${Math.round((p.revenue / totalProductRevenue) * 100)}%`,
-                                  }}
-                                />
+                          <tr key={p.sku} className="transition-colors hover:bg-secondary/60">
+                            <td className="px-5 py-3 text-xs font-bold text-muted-foreground">
+                              {i + 1}
+                            </td>
+                            <td className="px-5 py-3">
+                              <p className="font-semibold">{p.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {p.sku} · {p.variant}
+                              </p>
+                            </td>
+                            <td className="px-5 py-3 text-muted-foreground">{p.branch}</td>
+                            <td className="px-5 py-3 text-right font-medium">
+                              {currency(p.price)}
+                            </td>
+                            <td className="px-5 py-3 text-right font-bold">{p.stock}</td>
+                            <td className="px-5 py-3 text-right font-bold text-accent">
+                              {currency(p.revenue)}
+                            </td>
+                            <td className="px-5 py-3">
+                              <div className="flex items-center gap-1.5">
+                                <div className="h-1.5 w-16 overflow-hidden rounded-full bg-secondary">
+                                  <div
+                                    className="h-full rounded-full bg-accent"
+                                    style={{
+                                      width: `${Math.round((p.revenue / totalProductRevenue) * 100)}%`,
+                                    }}
+                                  />
+                                </div>
+                                <span className="text-xs text-muted-foreground">
+                                  {Math.round((p.revenue / totalProductRevenue) * 100)}%
+                                </span>
                               </div>
-                              <span className="text-xs text-muted-foreground">
-                                {Math.round((p.revenue / totalProductRevenue) * 100)}%
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-5 py-3">
-                            <StatusBadge
-                              tone={
-                                p.stockHealth === "out"
-                                  ? "bad"
+                            </td>
+                            <td className="px-5 py-3">
+                              <StatusBadge
+                                tone={
+                                  p.stockHealth === "out"
+                                    ? "bad"
+                                    : p.stockHealth === "low"
+                                      ? "warn"
+                                      : "good"
+                                }
+                              >
+                                {p.stockHealth === "out"
+                                  ? "Out"
                                   : p.stockHealth === "low"
-                                    ? "warn"
-                                    : "good"
-                              }
-                            >
-                              {p.stockHealth === "out"
-                                ? "Out"
-                                : p.stockHealth === "low"
-                                  ? "Low"
-                                  : "Healthy"}
-                            </StatusBadge>
-                          </td>
-                        </tr>
-                      ))}
+                                    ? "Low"
+                                    : "Healthy"}
+                              </StatusBadge>
+                            </td>
+                          </tr>
+                        ))}
                     </tbody>
                   </table>
                 </div>

@@ -174,7 +174,6 @@ function AddFeeTypeModal({
   const [category, setCategory] = useState<FeeTypeItem["category"]>("Academic Core");
   const [amount, setAmount] = useState("300");
   const [frequency, setFrequency] = useState<FeeTypeItem["frequency"]>("Per Semester");
-  const [description, setDescription] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -187,7 +186,7 @@ function AddFeeTypeModal({
       amount: Number(amount) || 0,
       frequency,
       isCompulsory: true,
-      description: description.trim() || "Institutional student fee item",
+      description: "Institutional student fee item",
     });
     onClose();
   };
@@ -291,19 +290,6 @@ function AddFeeTypeModal({
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-muted-foreground mb-1">
-              Description / Notes
-            </label>
-            <input
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="e.g. Covers practical modules, computing lab and resources"
-              className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-            />
-          </div>
-
           <div className="flex justify-end gap-2 pt-3 border-t border-border">
             <Button type="button" variant="outline" size="sm" onClick={onClose}>
               Cancel
@@ -329,7 +315,7 @@ function CollectFeePaymentModal({
   onClose: () => void;
   onSubmit: (tx: FeeTransaction, feeTypeId: string) => void;
 }) {
-  const PAYMENT_METHODS = ["Mobile Money (MTN)", "Bank Transfer", "Cash Deposit"] as const;
+  const PAYMENT_METHODS = ["Mobile Money (MTN)", "Bank Transfer"] as const;
 
   const [studentId, setStudentId] = useState(students[0]?.studentId ?? "");
   const selectedStudent = students.find((s) => s.studentId === studentId) ?? students[0];
@@ -633,35 +619,35 @@ function FeeManagementPage() {
         {/* Card 1: Fees to be Paid (Expected Total) */}
         <div className="rounded-xl border border-border bg-card p-4 shadow-2xs">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <p className="text-xs font-bold uppercase tracking-wider text-foreground">
               Fees to be Paid (Expected)
             </p>
             <span className="rounded-full bg-blue-50 p-2 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
               <Banknote className="size-4" />
             </span>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-bold text-foreground num">
+          <p className="mt-2 text-xl sm:text-2xl font-extrabold text-foreground num">
             {currency(totalFeesExpected)}
           </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Total expected fees across {students.length} enrolled students
+          <p className="mt-0.5 text-xs font-semibold text-foreground/90">
+            Total expected fees across {yearFilteredStudents.length} enrolled students
           </p>
         </div>
 
         {/* Card 2: Fees Collected */}
         <div className="rounded-xl border border-border bg-card p-4 shadow-2xs">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <p className="text-xs font-bold uppercase tracking-wider text-foreground">
               Fees Collected
             </p>
             <span className="rounded-full bg-emerald-50 p-2 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
               <CheckCircle2 className="size-4" />
             </span>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400 num">
+          <p className="mt-2 text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 num">
             {currency(totalFeesCollected)}
           </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
+          <p className="mt-0.5 text-xs font-semibold text-foreground/90">
             {clearedStudentsCount} students cleared · {collectionRate}% fulfillment rate
           </p>
         </div>
@@ -669,17 +655,17 @@ function FeeManagementPage() {
         {/* Card 3: Fee Arrears (To be Paid) */}
         <div className="rounded-xl border border-border bg-card p-4 shadow-2xs">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <p className="text-xs font-bold uppercase tracking-wider text-foreground">
               Fee Arrears (To be Paid)
             </p>
             <span className="rounded-full bg-rose-50 p-2 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400">
               <AlertCircle className="size-4" />
             </span>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-bold text-rose-600 dark:text-rose-400 num">
+          <p className="mt-2 text-xl sm:text-2xl font-extrabold text-rose-600 dark:text-rose-400 num">
             {currency(totalFeesArrears)}
           </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
+          <p className="mt-0.5 text-xs font-semibold text-foreground/90">
             {overdueStudentsCount} overdue accounts with balance due
           </p>
         </div>
@@ -687,17 +673,17 @@ function FeeManagementPage() {
         {/* Card 4: Types of Fee */}
         <div className="rounded-xl border border-border bg-card p-4 shadow-2xs">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <p className="text-xs font-bold uppercase tracking-wider text-foreground">
               Active Fee Types
             </p>
             <span className="rounded-full bg-purple-50 p-2 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400">
               <Layers className="size-4" />
             </span>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-bold text-purple-600 dark:text-purple-400 num">
+          <p className="mt-2 text-xl sm:text-2xl font-extrabold text-purple-600 dark:text-purple-400 num">
             {feeTypes.length} Categories
           </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
+          <p className="mt-0.5 text-xs font-semibold text-foreground/90">
             Structured institutional fee schedules
           </p>
         </div>
@@ -757,11 +743,34 @@ function FeeManagementPage() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {feeTypes.map((ft) => {
-                // Approximate collection metrics for each fee type based on student ratios
-                const targetBilling = ft.amount * students.length;
-                const collectedAmount = Math.round(targetBilling * (collectionRate / 100));
-                const remainingArrears = Math.max(0, targetBilling - collectedAmount);
+              {feeTypes.map((ft, idx) => {
+                // Each fee type's share of the total expected billing
+                const totalFeeTypeBilling = feeTypes.reduce((s, f) => s + f.amount, 0);
+                const ftShare = totalFeeTypeBilling > 0 ? ft.amount / totalFeeTypeBilling : 1 / feeTypes.length;
+
+                // Distribute the real totals proportionally across fee types.
+                // For the last fee type, use the remainder to avoid rounding drift.
+                const isLast = idx === feeTypes.length - 1;
+                const prevCollected = feeTypes
+                  .slice(0, idx)
+                  .reduce((s, f) => {
+                    const share = totalFeeTypeBilling > 0 ? f.amount / totalFeeTypeBilling : 1 / feeTypes.length;
+                    return s + Math.round(totalFeesCollected * share);
+                  }, 0);
+                const prevArrears = feeTypes
+                  .slice(0, idx)
+                  .reduce((s, f) => {
+                    const share = totalFeeTypeBilling > 0 ? f.amount / totalFeeTypeBilling : 1 / feeTypes.length;
+                    return s + Math.round(totalFeesArrears * share);
+                  }, 0);
+
+                const collectedAmount = isLast
+                  ? totalFeesCollected - prevCollected
+                  : Math.round(totalFeesCollected * ftShare);
+                const remainingArrears = isLast
+                  ? totalFeesArrears - prevArrears
+                  : Math.round(totalFeesArrears * ftShare);
+                const targetBilling = collectedAmount + remainingArrears;
 
                 return (
                   <div
@@ -775,9 +784,6 @@ function FeeManagementPage() {
                             {ft.category}
                           </span>
                           <h4 className="text-base font-bold text-foreground mt-1.5">{ft.name}</h4>
-                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 min-h-[32px]">
-                            {ft.description}
-                          </p>
                         </div>
                       </div>
 

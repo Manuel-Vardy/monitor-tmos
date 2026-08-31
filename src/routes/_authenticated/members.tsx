@@ -57,10 +57,7 @@ export const Route = createFileRoute("/_authenticated/members")({
 
 type Role = NgoMember["role"];
 
-const ROLE_CONFIG: Record<
-  Role,
-  { icon: React.ElementType; color: string; bg: string }
-> = {
+const ROLE_CONFIG: Record<Role, { icon: React.ElementType; color: string; bg: string }> = {
   "Pastor / Minister": {
     icon: Crown,
     color: "text-amber-600 dark:text-amber-400",
@@ -175,7 +172,7 @@ function AddPaymentTypeModal({
               >
                 <option value="Tithe">Tithe</option>
                 <option value="Offering">Sunday Offering</option>
-                <option value="Welfare">Welfare & Benevolence</option>
+                <option value="Welfare">Welfare</option>
                 <option value="Project">Church Project</option>
                 <option value="Dues">Membership Dues</option>
                 <option value="Special">Special Thanksgiving / Levy</option>
@@ -283,7 +280,7 @@ function CsvImportModal({
   const [csvText, setCsvText] = useState("");
   const [selectedDefaultPayments, setSelectedDefaultPayments] = useState<string[]>([
     "Tithe",
-    "Welfare & Benevolence Dues",
+    "Welfare",
   ]);
   const [markAsProject, setMarkAsProject] = useState(false);
   const [projectName, setProjectName] = useState("Cathedral Building Project");
@@ -293,7 +290,7 @@ function CsvImportModal({
 Rev. Isaac Donkor,+233 24 555 0101,Tithe,1500
 Deaconess Mary Ansah,+233 20 888 0202,Tithe,800
 Bro Joshua Mensah,+233 27 777 0303,Sunday General Offering,300
-Sis Grace Koomson,+233 54 222 0404,Welfare & Benevolence Dues,500`;
+Sis Grace Koomson,+233 54 222 0404,Welfare,500`;
 
   const handleDownloadSample = () => {
     const blob = new Blob([sampleCsv], { type: "text/csv;charset=utf-8;" });
@@ -397,7 +394,8 @@ Sis Grace Koomson,+233 54 222 0404,Welfare & Benevolence Dues,500`;
                 Automatic CSV Member & Payment Assignment
               </h2>
               <p className="text-xs text-muted-foreground">
-                Import church members from a spreadsheet and automatically assign payment obligations
+                Import church members from a spreadsheet and automatically assign payment
+                obligations
               </p>
             </div>
           </div>
@@ -437,7 +435,7 @@ Sis Grace Koomson,+233 54 222 0404,Welfare & Benevolence Dues,500`;
                             setSelectedDefaultPayments([...selectedDefaultPayments, pt.name]);
                           } else {
                             setSelectedDefaultPayments(
-                              selectedDefaultPayments.filter((p) => p !== pt.name)
+                              selectedDefaultPayments.filter((p) => p !== pt.name),
                             );
                           }
                         }}
@@ -580,7 +578,7 @@ function RecordPaymentModal({
   const [memberName, setMemberName] = useState(initialMember?.name || "");
   const [phone, setPhone] = useState(initialMember?.phone || "");
   const [selectedPaymentTypeName, setSelectedPaymentTypeName] = useState(
-    paymentTypes[0]?.name || "Tithe"
+    paymentTypes[0]?.name || "Tithe",
   );
   const [amount, setAmount] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState<
@@ -599,7 +597,7 @@ function RecordPaymentModal({
 
   const currentPaymentType = useMemo(
     () => paymentTypes.find((p) => p.name === selectedPaymentTypeName),
-    [paymentTypes, selectedPaymentTypeName]
+    [paymentTypes, selectedPaymentTypeName],
   );
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -626,10 +624,12 @@ function RecordPaymentModal({
     const existingMember = members.find(
       (m) =>
         m.name.toLowerCase().trim() === memberName.toLowerCase().trim() ||
-        (phone.trim() && m.phone.replace(/\s+/g, "") === phone.replace(/\s+/g, ""))
+        (phone.trim() && m.phone.replace(/\s+/g, "") === phone.replace(/\s+/g, "")),
     );
 
-    const memberId = existingMember ? existingMember.memberId : `CHU-MBR-${String(members.length + 101).padStart(3, "0")}`;
+    const memberId = existingMember
+      ? existingMember.memberId
+      : `CHU-MBR-${String(members.length + 101).padStart(3, "0")}`;
 
     const newRecord: ChurchPaymentRecord = {
       id: `TX-CH-${Date.now()}`,
@@ -811,7 +811,8 @@ function RecordPaymentModal({
                 <strong>Church Project Payment:</strong> This receipt will be designated for{" "}
                 <span className="underline font-bold">
                   {currentPaymentType.projectName || currentPaymentType.name}
-                </span>.
+                </span>
+                .
               </span>
             </div>
           )}
@@ -871,12 +872,11 @@ function RecordPaymentModal({
 function DuesAndPaymentPage() {
   const [members, setMembers] = useState<NgoMember[]>(NGO_MEMBERS);
   const [paymentTypes, setPaymentTypes] = useState<ChurchPaymentType[]>(
-    DEFAULT_CHURCH_PAYMENT_TYPES
+    DEFAULT_CHURCH_PAYMENT_TYPES,
   );
   const [transactions, setTransactions] = useState<ChurchPaymentRecord[]>(CHURCH_PAYMENT_RECORDS);
   const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState<Role | "all">("all");
-  const [statusFilter, setStatusFilter] = useState<"all" | "Paid" | "Outstanding" | "Project">("all");
+  const [statusFilter, setStatusFilter] = useState<ChurchPaymentRecord["category"] | "all">("all");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
   // Modals
@@ -884,38 +884,40 @@ function DuesAndPaymentPage() {
   const [isCsvImportOpen, setIsCsvImportOpen] = useState(false);
   const [isRecordPaymentOpen, setIsRecordPaymentOpen] = useState(false);
   const [selectedMemberForPayment, setSelectedMemberForPayment] = useState<NgoMember | undefined>(
-    undefined
+    undefined,
   );
 
-  // Filtered members list
-  const filtered = useMemo(() => {
-    return members.filter((m) => {
-      const matchRole = roleFilter === "all" || m.role === roleFilter;
-      const matchStatus =
-        statusFilter === "all"
-          ? true
-          : statusFilter === "Project"
-          ? m.assignedPaymentTypes?.some((p) => p.toLowerCase().includes("project") || p.toLowerCase().includes("bus"))
-          : m.duesStatus === statusFilter;
-
-      const q = search.toLowerCase().trim();
-      const matchSearch =
-        q === "" ||
-        m.name.toLowerCase().includes(q) ||
-        m.memberId.toLowerCase().includes(q) ||
-        m.email.toLowerCase().includes(q) ||
-        m.role.toLowerCase().includes(q) ||
-        m.phone.toLowerCase().includes(q) ||
-        m.assignedPaymentTypes?.some((p) => p.toLowerCase().includes(q));
-
-      return matchRole && matchStatus && matchSearch;
+  const filteredPayments = useMemo(() => {
+    const query = search.toLowerCase().trim();
+    return transactions.filter((transaction) => {
+      const matchesCategory = statusFilter === "all" || transaction.category === statusFilter;
+      const matchesSearch =
+        !query ||
+        transaction.memberName.toLowerCase().includes(query) ||
+        transaction.memberId.toLowerCase().includes(query) ||
+        transaction.receiptNo.toLowerCase().includes(query) ||
+        transaction.paymentType.toLowerCase().includes(query) ||
+        transaction.paymentMethod.toLowerCase().includes(query);
+      return matchesCategory && matchesSearch;
     });
-  }, [members, roleFilter, statusFilter, search]);
+  }, [transactions, search, statusFilter]);
+  const filtered = members;
 
   const totalCollected = members.reduce((a, m) => a + m.totalPaid, 0);
   const totalArrears = members.reduce((a, m) => a + m.balanceDue, 0);
+  const totalTithes = transactions
+    .filter((transaction) => transaction.category === "Tithe")
+    .reduce((total, transaction) => total + transaction.amount, 0);
+  const totalSundayOfferings = transactions
+    .filter((transaction) => transaction.category === "Offering")
+    .reduce((total, transaction) => total + transaction.amount, 0);
+  const totalWelfare = transactions
+    .filter((transaction) => transaction.category === "Welfare")
+    .reduce((total, transaction) => total + transaction.amount, 0);
   const projectMembersCount = members.filter((m) =>
-    m.assignedPaymentTypes?.some((p) => p.toLowerCase().includes("project") || p.toLowerCase().includes("bus"))
+    m.assignedPaymentTypes?.some(
+      (p) => p.toLowerCase().includes("project") || p.toLowerCase().includes("bus"),
+    ),
   ).length;
 
   const handleAddCustomPaymentType = (newType: Omit<ChurchPaymentType, "id">) => {
@@ -932,10 +934,7 @@ function DuesAndPaymentPage() {
     setIsCsvImportOpen(false);
   };
 
-  const handleRecordPaymentSuccess = (
-    newRecord: ChurchPaymentRecord,
-    updatedMember: NgoMember
-  ) => {
+  const handleRecordPaymentSuccess = (newRecord: ChurchPaymentRecord, updatedMember: NgoMember) => {
     setTransactions([newRecord, ...transactions]);
     const exists = members.some((m) => m.id === updatedMember.id);
     if (exists) {
@@ -954,26 +953,6 @@ function DuesAndPaymentPage() {
         <div className="flex flex-wrap items-center gap-2">
           <Button
             size="sm"
-            onClick={() => {
-              setSelectedMemberForPayment(undefined);
-              setIsRecordPaymentOpen(true);
-            }}
-            className="bg-[#22c55e] text-white hover:bg-[#16a34a] h-8 text-xs gap-1.5"
-          >
-            <Plus className="size-3.5" />
-            <span>Record Member Payment</span>
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setIsCsvImportOpen(true)}
-            className="h-8 text-xs gap-1.5"
-          >
-            <FileSpreadsheet className="size-3.5 text-accent" />
-            <span>Import Members (CSV)</span>
-          </Button>
-          <Button
-            size="sm"
             variant="outline"
             onClick={() => setIsAddPaymentTypeOpen(true)}
             className="h-8 text-xs gap-1.5"
@@ -988,21 +967,7 @@ function DuesAndPaymentPage() {
           1. STAT SUMMARY CARDS
       ══════════════════════════════════════════════ */}
       <div className="mb-5 grid grid-cols-2 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Card 1: Total Members */}
-        <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Total Members
-            </p>
-            <span className="rounded-full bg-slate-100 p-1.5 sm:p-2 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-              <Users className="size-3.5 sm:size-4" />
-            </span>
-          </div>
-          <p className="mt-2 text-xl sm:text-2xl font-bold">{members.length}</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">Enrolled congregation</p>
-        </div>
-
-        {/* Card 2: Total Collections */}
+        {/* Card 1: Church Collections */}
         <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -1018,38 +983,52 @@ function DuesAndPaymentPage() {
           <p className="mt-0.5 text-xs text-muted-foreground">Tithes, Welfare & Dues</p>
         </div>
 
-        {/* Card 3: Project Contributors */}
+        {/* Card 2: Tithe */}
         <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Project Fund Pledges
+              Tithe
+            </p>
+            <span className="rounded-full bg-violet-50 p-1.5 sm:p-2 text-violet-600 dark:bg-violet-950/60 dark:text-violet-400">
+              <Coins className="size-3.5 sm:size-4" />
+            </span>
+          </div>
+          <p className="mt-2 text-xl sm:text-2xl font-bold text-violet-600 dark:text-violet-400">
+            {currency(totalTithes)}
+          </p>
+          <p className="mt-0.5 text-xs text-muted-foreground">Tithes received</p>
+        </div>
+
+        {/* Card 3: Sunday Offering */}
+        <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Sunday Offering
             </p>
             <span className="rounded-full bg-amber-50 p-1.5 sm:p-2 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
-              <FolderKanban className="size-3.5 sm:size-4" />
+              <Receipt className="size-3.5 sm:size-4" />
             </span>
           </div>
           <p className="mt-2 text-xl sm:text-2xl font-bold text-amber-600 dark:text-amber-400">
-            {projectMembersCount} Members
+            {currency(totalSundayOfferings)}
           </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">Building & Bus projects</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">Offerings received</p>
         </div>
 
-        {/* Card 4: Outstanding Dues */}
+        {/* Card 4: Welfare */}
         <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Outstanding Dues
+              Welfare
             </p>
-            <span className="rounded-full bg-rose-50 p-1.5 sm:p-2 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400">
-              <AlertCircle className="size-3.5 sm:size-4" />
+            <span className="rounded-full bg-teal-50 p-1.5 sm:p-2 text-teal-600 dark:bg-teal-950/60 dark:text-teal-400">
+              <Wallet className="size-3.5 sm:size-4" />
             </span>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-bold text-rose-600 dark:text-rose-400">
-            {currency(totalArrears)}
+          <p className="mt-2 text-xl sm:text-2xl font-bold text-teal-600 dark:text-teal-400">
+            {currency(totalWelfare)}
           </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {members.filter((m) => m.balanceDue > 0).length} pending payments
-          </p>
+          <p className="mt-0.5 text-xs text-muted-foreground">Welfare received</p>
         </div>
       </div>
 
@@ -1076,6 +1055,12 @@ function DuesAndPaymentPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
           {paymentTypes.map((pt) => {
             const isProj = Boolean(pt.isProject);
+            const displayName =
+              pt.category === "Offering"
+                ? "Sunday Offering"
+                : pt.category === "Welfare"
+                  ? "Welfare"
+                  : pt.name;
             return (
               <div
                 key={pt.id}
@@ -1083,17 +1068,14 @@ function DuesAndPaymentPage() {
                   "flex items-center justify-between p-2.5 rounded-xl border transition-colors",
                   isProj
                     ? "bg-amber-50/40 dark:bg-amber-950/20 border-amber-200/70 dark:border-amber-800/50"
-                    : "bg-secondary/30 border-border hover:bg-secondary/50"
+                    : "bg-secondary/30 border-border hover:bg-secondary/50",
                 )}
               >
                 <div className="min-w-0 flex-1 pr-2">
-                  <p className="font-semibold text-xs text-foreground truncate" title={pt.name}>
-                    {pt.name}
+                  <p className="font-semibold text-xs text-foreground truncate" title={displayName}>
+                    {displayName}
                   </p>
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-                      {currency(pt.defaultAmount)}
-                    </span>
                     {isProj && (
                       <span className="rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 px-1.5 py-0.2 text-[9px] font-bold">
                         🏗️ Project
@@ -1129,32 +1111,45 @@ function DuesAndPaymentPage() {
               "rounded-full px-3.5 py-1 text-xs font-semibold transition-all border shrink-0",
               statusFilter === "all"
                 ? "bg-foreground text-background border-transparent"
-                : "bg-card text-muted-foreground border-border hover:bg-secondary"
+                : "bg-card text-muted-foreground border-border hover:bg-secondary",
             )}
           >
-            All Members ({members.length})
+            All Payments ({transactions.length})
           </button>
           <button
-            onClick={() => setStatusFilter("Paid")}
+            onClick={() => setStatusFilter("Tithe")}
             className={cn(
               "rounded-full px-3.5 py-1 text-xs font-semibold transition-all border shrink-0",
-              statusFilter === "Paid"
+              statusFilter === "Tithe"
                 ? "bg-emerald-600 text-white border-emerald-600"
-                : "bg-card text-muted-foreground border-border hover:bg-secondary"
+                : "bg-card text-muted-foreground border-border hover:bg-secondary",
             )}
           >
-            Cleared Dues ({members.filter((m) => m.duesStatus === "Paid").length})
+            Tithe ({transactions.filter((transaction) => transaction.category === "Tithe").length})
           </button>
           <button
-            onClick={() => setStatusFilter("Outstanding")}
+            onClick={() => setStatusFilter("Offering")}
             className={cn(
               "rounded-full px-3.5 py-1 text-xs font-semibold transition-all border shrink-0",
-              statusFilter === "Outstanding"
-                ? "bg-rose-600 text-white border-rose-600"
-                : "bg-card text-muted-foreground border-border hover:bg-secondary"
+              statusFilter === "Offering"
+                ? "bg-sky-600 text-white border-sky-600"
+                : "bg-card text-muted-foreground border-border hover:bg-secondary",
             )}
           >
-            Outstanding ({members.filter((m) => m.duesStatus === "Outstanding").length})
+            Sunday Offering (
+            {transactions.filter((transaction) => transaction.category === "Offering").length})
+          </button>
+          <button
+            onClick={() => setStatusFilter("Welfare")}
+            className={cn(
+              "rounded-full px-3.5 py-1 text-xs font-semibold transition-all border shrink-0",
+              statusFilter === "Welfare"
+                ? "bg-teal-600 text-white border-teal-600"
+                : "bg-card text-muted-foreground border-border hover:bg-secondary",
+            )}
+          >
+            Welfare (
+            {transactions.filter((transaction) => transaction.category === "Welfare").length})
           </button>
           <button
             onClick={() => setStatusFilter("Project")}
@@ -1162,10 +1157,11 @@ function DuesAndPaymentPage() {
               "rounded-full px-3.5 py-1 text-xs font-semibold transition-all border shrink-0",
               statusFilter === "Project"
                 ? "bg-amber-600 text-white border-amber-600"
-                : "bg-card text-muted-foreground border-border hover:bg-secondary"
+                : "bg-card text-muted-foreground border-border hover:bg-secondary",
             )}
           >
-            Project Contributors ({projectMembersCount})
+            Projects (
+            {transactions.filter((transaction) => transaction.category === "Project").length})
           </button>
 
           <div className="shrink-0 ml-auto">
@@ -1175,9 +1171,95 @@ function DuesAndPaymentPage() {
       </div>
 
       {/* ══════════════════════════════════════════════
-          4. MEMBERS PAYMENT TABLE
+          4. INCOMING PAYMENTS LEDGER
       ══════════════════════════════════════════════ */}
-      <div className="rounded-xl border border-border bg-card overflow-hidden shadow-xs">
+      <div className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
+        <div className="flex items-center justify-between border-b border-border bg-muted/20 px-4 py-3">
+          <div>
+            <h2 className="text-sm font-bold text-foreground">Incoming Payments</h2>
+            <p className="text-xs text-muted-foreground">
+              Confirmed collections grouped by payment type
+            </p>
+          </div>
+          <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+            {filteredPayments.length} received
+          </span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px] text-left text-sm">
+            <thead className="border-b border-border bg-secondary/30 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              <tr>
+                <th className="px-5 py-2.5">Receipt</th>
+                <th className="px-5 py-2.5">Payment Type</th>
+                <th className="px-5 py-2.5">Received From</th>
+                <th className="px-5 py-2.5">Method</th>
+                <th className="px-5 py-2.5">Date</th>
+                <th className="px-5 py-2.5 text-right">Amount Received</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {filteredPayments.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-5 py-10 text-center text-sm text-muted-foreground">
+                    No incoming payments match this search or payment type.
+                  </td>
+                </tr>
+              ) : (
+                filteredPayments.map((payment) => {
+                  const paymentLabel =
+                    payment.category === "Offering"
+                      ? "Sunday Offering"
+                      : payment.category === "Welfare"
+                        ? "Welfare"
+                        : payment.paymentType;
+                  const badgeClass =
+                    payment.category === "Tithe"
+                      ? "bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300"
+                      : payment.category === "Offering"
+                        ? "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300"
+                        : payment.category === "Welfare"
+                          ? "bg-teal-50 text-teal-700 dark:bg-teal-950/40 dark:text-teal-300"
+                          : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300";
+                  return (
+                    <tr key={payment.id} className="transition-colors hover:bg-secondary/30">
+                      <td className="px-5 py-3 font-mono text-xs font-semibold text-foreground">
+                        {payment.receiptNo}
+                      </td>
+                      <td className="px-5 py-3">
+                        <span
+                          className={cn(
+                            "rounded-full px-2.5 py-1 text-xs font-semibold",
+                            badgeClass,
+                          )}
+                        >
+                          {paymentLabel}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3">
+                        <p className="font-medium text-foreground">{payment.memberName}</p>
+                        <p className="text-[11px] font-mono text-muted-foreground">
+                          {payment.memberId}
+                        </p>
+                      </td>
+                      <td className="px-5 py-3 text-xs text-muted-foreground">
+                        {payment.paymentMethod}
+                      </td>
+                      <td className="px-5 py-3 text-xs text-muted-foreground whitespace-nowrap">
+                        {payment.date}
+                      </td>
+                      <td className="px-5 py-3 text-right font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                        {currency(payment.amount)}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="hidden rounded-xl border border-border bg-card overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead className="bg-secondary/40 text-xs font-bold text-muted-foreground uppercase border-b border-border">
@@ -1199,33 +1281,55 @@ function DuesAndPaymentPage() {
                 </tr>
               ) : (
                 filtered.map((m, idx) => {
-                  const assigned = m.assignedPaymentTypes || ["Tithe", "Welfare & Benevolence Dues"];
+                  const assigned = m.assignedPaymentTypes || [
+                    "Tithe",
+                    "Welfare",
+                  ];
 
                   // Group payment types into categories for display
                   const CATEGORY_COLORS: Record<string, string> = {
-                    tithe:    "bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800",
-                    offering: "bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800",
-                    welfare:  "bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800",
-                    dues:     "bg-slate-50 dark:bg-slate-900/40 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700",
-                    project:  "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800",
-                    special:  "bg-pink-50 dark:bg-pink-950/40 text-pink-700 dark:text-pink-300 border-pink-200 dark:border-pink-800",
+                    tithe:
+                      "bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-800",
+                    offering:
+                      "bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800",
+                    welfare:
+                      "bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-800",
+                    dues: "bg-slate-50 dark:bg-slate-900/40 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700",
+                    project:
+                      "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800",
+                    special:
+                      "bg-pink-50 dark:bg-pink-950/40 text-pink-700 dark:text-pink-300 border-pink-200 dark:border-pink-800",
                   };
 
                   const getBadgeColor = (name: string) => {
                     const n = name.toLowerCase();
                     if (n.includes("tithe")) return CATEGORY_COLORS["tithe"];
                     if (n.includes("offering")) return CATEGORY_COLORS["offering"];
-                    if (n.includes("welfare") || n.includes("benevolence")) return CATEGORY_COLORS["welfare"];
-                    if (n.includes("project") || n.includes("bus") || n.includes("building") || n.includes("cathedral")) return CATEGORY_COLORS["project"];
+                    if (n.includes("welfare") || n.includes("benevolence"))
+                      return CATEGORY_COLORS["welfare"];
+                    if (
+                      n.includes("project") ||
+                      n.includes("bus") ||
+                      n.includes("building") ||
+                      n.includes("cathedral")
+                    )
+                      return CATEGORY_COLORS["project"];
                     if (n.includes("dues")) return CATEGORY_COLORS["dues"];
-                    if (n.includes("harvest") || n.includes("thanksgiving") || n.includes("special")) return CATEGORY_COLORS["special"];
+                    if (
+                      n.includes("harvest") ||
+                      n.includes("thanksgiving") ||
+                      n.includes("special")
+                    )
+                      return CATEGORY_COLORS["special"];
                     return CATEGORY_COLORS["dues"];
                   };
 
                   return (
                     <tr key={m.id} className="hover:bg-secondary/30 transition-colors">
                       {/* # */}
-                      <td className="px-4 py-4 text-xs font-bold text-muted-foreground">{idx + 1}</td>
+                      <td className="px-4 py-4 text-xs font-bold text-muted-foreground">
+                        {idx + 1}
+                      </td>
 
                       {/* Member Name */}
                       <td className="px-5 py-4">
@@ -1255,10 +1359,11 @@ function DuesAndPaymentPage() {
                                 key={pi}
                                 className={cn(
                                   "text-[10px] font-semibold px-2.5 py-0.5 rounded-full border",
-                                  getBadgeColor(pName)
+                                  getBadgeColor(pName),
                                 )}
                               >
-                                {isProject ? "🏗️ " : ""}{pName}
+                                {isProject ? "🏗️ " : ""}
+                                {pName}
                               </span>
                             );
                           })}

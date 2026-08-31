@@ -50,7 +50,6 @@ const branchColors: Record<string, string> = {
   takoradi: "bg-teal-600 text-white",
 };
 
-
 const statusColors: Record<string, string> = {
   settled: "bg-emerald-600 text-white",
   confirmed: "bg-emerald-600 text-white",
@@ -101,17 +100,39 @@ function Stat({
   const up = (delta ?? 0) >= 0;
 
   const colorMap = {
-    green:  { arrow: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-950/40", num: "text-emerald-700 dark:text-emerald-400", icon: "text-emerald-500" },
-    blue:   { arrow: "text-blue-600",    bg: "bg-blue-50 dark:bg-blue-950/40",       num: "text-blue-700 dark:text-blue-400",       icon: "text-blue-500" },
-    orange: { arrow: "text-orange-500",  bg: "bg-orange-50 dark:bg-orange-950/40",   num: "text-orange-700 dark:text-orange-400",   icon: "text-orange-500" },
-    red:    { arrow: "text-red-600",     bg: "bg-red-50 dark:bg-red-950/40",         num: "text-red-700 dark:text-red-400",         icon: "text-red-500" },
+    green: {
+      arrow: "text-emerald-600",
+      bg: "bg-emerald-50 dark:bg-emerald-950/40",
+      num: "text-emerald-700 dark:text-emerald-400",
+      icon: "text-emerald-500",
+    },
+    blue: {
+      arrow: "text-blue-600",
+      bg: "bg-blue-50 dark:bg-blue-950/40",
+      num: "text-blue-700 dark:text-blue-400",
+      icon: "text-blue-500",
+    },
+    orange: {
+      arrow: "text-orange-500",
+      bg: "bg-orange-50 dark:bg-orange-950/40",
+      num: "text-orange-700 dark:text-orange-400",
+      icon: "text-orange-500",
+    },
+    red: {
+      arrow: "text-red-600",
+      bg: "bg-red-50 dark:bg-red-950/40",
+      num: "text-red-700 dark:text-red-400",
+      icon: "text-red-500",
+    },
   };
   const colors = colorMap[up ? accentColor : "red"];
 
   return (
     <div data-testid="kpi-card" className="rounded-xl bg-card p-3 sm:p-4 shadow-xs">
       <div className="flex items-start justify-between">
-        <p className="text-[10px] sm:text-xs font-semibold tracking-wide text-muted-foreground uppercase leading-tight">{label}</p>
+        <p className="text-[10px] sm:text-xs font-semibold tracking-wide text-muted-foreground uppercase leading-tight">
+          {label}
+        </p>
         <div className={cn("grid size-6 sm:size-7 place-items-center rounded-lg", colors.bg)}>
           <Icon className={cn("size-3.5 sm:size-4 shrink-0", colors.icon)} />
         </div>
@@ -119,8 +140,18 @@ function Stat({
       <p className="num mt-2 text-base sm:text-2xl font-bold leading-tight">{value}</p>
       <div className="mt-1.5 flex items-center gap-1 text-[10px] sm:text-xs">
         {delta !== undefined && (
-          <span className={cn("num inline-flex items-center gap-0.5 font-semibold rounded-full px-1.5 py-0.5", colors.bg, colors.num)}>
-            {up ? <ArrowUpRight className="size-3 sm:size-3.5" /> : <ArrowDownRight className="size-3 sm:size-3.5" />}
+          <span
+            className={cn(
+              "num inline-flex items-center gap-0.5 font-semibold rounded-full px-1.5 py-0.5",
+              colors.bg,
+              colors.num,
+            )}
+          >
+            {up ? (
+              <ArrowUpRight className="size-3 sm:size-3.5" />
+            ) : (
+              <ArrowDownRight className="size-3 sm:size-3.5" />
+            )}
             {Math.abs(delta)}%
           </span>
         )}
@@ -145,13 +176,7 @@ const branchMetrics = [
 
 type ActivityRow = (typeof activityRows)[number];
 
-function TransactionModal({
-  row,
-  onClose,
-}: {
-  row: ActivityRow;
-  onClose: () => void;
-}) {
+function TransactionModal({ row, onClose }: { row: ActivityRow; onClose: () => void }) {
   const items = activityLineItems[row.id] ?? [];
   const subtotal = items.reduce((s, i) => s + i.qty * i.unitPrice, 0);
   const isRefund = row.amount < 0;
@@ -164,15 +189,15 @@ function TransactionModal({
       aria-label={`Transaction ${row.id}`}
     >
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
       {/* Panel */}
       <div className="relative z-10 w-full max-w-lg rounded-2xl bg-card shadow-2xl overflow-hidden">
         {/* Dark header bar — matches sidebar color */}
-        <div className="bg-[--sidebar] px-6 pt-5 pb-4" style={{ background: "oklch(0.213 0.006 17)" }}>
+        <div
+          className="bg-[--sidebar] px-6 pt-5 pb-4"
+          style={{ background: "oklch(0.213 0.006 17)" }}
+        >
           <div className="flex items-start justify-between gap-4">
             <div>
               <span className="inline-block rounded-full bg-white/10 px-2.5 py-0.5 num text-xs font-bold text-white/70">
@@ -201,8 +226,15 @@ function TransactionModal({
             { label: "Amount", value: currency(Math.abs(row.amount)) },
           ].map(({ label, value }) => (
             <div key={label} className="bg-card px-4 py-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-foreground/50">{label}</p>
-              <p className={cn("mt-0.5 text-sm font-semibold text-foreground", label === "Amount" && isRefund && "text-red-500")}>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-foreground/50">
+                {label}
+              </p>
+              <p
+                className={cn(
+                  "mt-0.5 text-sm font-semibold text-foreground",
+                  label === "Amount" && isRefund && "text-red-500",
+                )}
+              >
                 {label === "Amount" && isRefund ? `−${currency(Math.abs(row.amount))}` : value}
               </p>
             </div>
@@ -213,16 +245,25 @@ function TransactionModal({
         <div className="px-6 py-4">
           {items.length > 0 ? (
             <>
-              <h3 className="mb-3 text-sm font-bold text-foreground/50 uppercase tracking-wide">Items</h3>
+              <h3 className="mb-3 text-sm font-bold text-foreground/50 uppercase tracking-wide">
+                Items
+              </h3>
               <ul className="divide-y divide-border">
                 {items.map((item) => (
-                  <li key={item.sku} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                  <li
+                    key={item.sku}
+                    className="flex items-center justify-between gap-3 py-2.5 text-sm"
+                  >
                     <div className="min-w-0">
                       <p className="font-semibold leading-tight truncate">{item.name}</p>
-                      <p className="text-xs text-muted-foreground">{item.sku} · {currency(item.unitPrice)} each</p>
+                      <p className="text-xs text-muted-foreground">
+                        {item.sku} · {currency(item.unitPrice)} each
+                      </p>
                     </div>
                     <div className="shrink-0 text-right">
-                      <p className="num font-bold text-foreground">{currency(item.qty * item.unitPrice)}</p>
+                      <p className="num font-bold text-foreground">
+                        {currency(item.qty * item.unitPrice)}
+                      </p>
                       <p className="text-xs text-muted-foreground">× {item.qty}</p>
                     </div>
                   </li>
@@ -352,10 +393,14 @@ export function RetailDashboard() {
             {/* Foreground content layer (z-10) */}
             <div className="relative z-10">
               <div className="flex items-start justify-between">
-                <p className="text-[11px] font-bold uppercase tracking-widest opacity-80">Gross Sales</p>
+                <p className="text-[11px] font-bold uppercase tracking-widest opacity-80">
+                  Gross Sales
+                </p>
                 <Banknote className="size-6 opacity-70" />
               </div>
-              <p className="num mt-2 text-3xl font-extrabold tracking-tight">{currency(totals.sales)}</p>
+              <p className="num mt-2 text-3xl font-extrabold tracking-tight">
+                {currency(totals.sales)}
+              </p>
 
               <div className="mt-3">
                 <p className="text-[11px] font-bold uppercase tracking-widest opacity-80">
@@ -676,7 +721,6 @@ export function RetailDashboard() {
                 </li>
               )}
             </ul>
-
           </div>
         </section>
 
@@ -689,6 +733,13 @@ export function RetailDashboard() {
               </p>
             </div>
             <div className="flex flex-wrap gap-1.5">
+              <Chip
+                active={status === null}
+                onClick={() => setStatus(null)}
+                activeClass="bg-foreground text-background border-foreground"
+              >
+                All
+              </Chip>
               {["settled", "confirmed", "pending", "failed"].map((s) => (
                 <Chip
                   key={s}
@@ -731,7 +782,9 @@ export function RetailDashboard() {
                     >
                       {a.where}
                     </button>
-                    <span>{a.method} · {a.when}</span>
+                    <span>
+                      {a.method} · {a.when}
+                    </span>
                   </div>
                 </li>
               ))}
@@ -796,9 +849,7 @@ export function RetailDashboard() {
           </div>
         </section>
       </div>
-      {selectedRow && (
-        <TransactionModal row={selectedRow} onClose={() => setSelectedRow(null)} />
-      )}
+      {selectedRow && <TransactionModal row={selectedRow} onClose={() => setSelectedRow(null)} />}
     </AppShell>
   );
 }
