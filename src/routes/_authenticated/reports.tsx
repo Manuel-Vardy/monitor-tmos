@@ -38,6 +38,7 @@ import {
   FileText,
   Printer,
   FolderKanban,
+  ChevronDown,
 } from "lucide-react";
 import {
   Area,
@@ -72,6 +73,7 @@ import { useBranches } from "@/lib/branches-context";
 import { useInstitution } from "@/hooks/use-institution";
 import { useAcademicYear } from "@/contexts/academic-year-context";
 import { cn } from "@/lib/utils";
+import { AppSelect } from "@/components/app-select";
 import {
   SCHOOL_STUDENTS,
   FEE_TRANSACTIONS,
@@ -334,13 +336,14 @@ function StudentQuickModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg rounded-2xl border border-border bg-card shadow-2xl p-6 space-y-5"
+        className="w-full max-w-lg rounded-2xl border border-border bg-card shadow-2xl p-5 space-y-4 max-h-[90dvh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Header */}
         <div className="flex items-start justify-between">
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-xl font-bold">{student.name}</h3>
+          <div className="flex-1 min-w-0 pr-2">
+            <h3 className="text-lg font-bold leading-snug">{student.name}</h3>
+            <div className="flex items-center gap-1.5 flex-wrap mt-1">
               <span
                 className={cn(
                   "text-xs font-semibold px-2 py-0.5 rounded-full",
@@ -353,37 +356,37 @@ function StudentQuickModal({
                 {yearRange}
               </span>
             </div>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Index No: {student.studentId} · Cohort: {yearRange} · {student.term}
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Index No: {student.studentId} · {student.term}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="rounded-full p-1.5 text-muted-foreground hover:bg-secondary transition-colors"
+            className="rounded-full p-1.5 text-muted-foreground hover:bg-secondary transition-colors shrink-0"
           >
             <X className="size-5" />
           </button>
         </div>
 
-        {/* Breakdown cards */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="rounded-xl border border-border bg-secondary/30 p-3">
-            <p className="text-[11px] font-medium text-muted-foreground uppercase">Tuition Fee</p>
-            <p className="text-lg font-bold mt-1">{currency(student.tuitionFee)}</p>
+        {/* Breakdown cards — vertical on mobile, 3-col on sm+ */}
+        <div className="flex flex-col sm:grid sm:grid-cols-3 gap-2.5">
+          <div className="rounded-xl border border-border bg-secondary/30 p-3 flex sm:flex-col items-center sm:items-start justify-between sm:justify-start gap-2">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Tuition Fee</p>
+            <p className="text-base font-bold">{currency(student.tuitionFee)}</p>
           </div>
-          <div className="rounded-xl border border-border bg-emerald-500/10 p-3">
-            <p className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 uppercase">
+          <div className="rounded-xl border border-border bg-emerald-500/10 p-3 flex sm:flex-col items-center sm:items-start justify-between sm:justify-start gap-2">
+            <p className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">
               Paid Amount
             </p>
-            <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+            <p className="text-base font-bold text-emerald-600 dark:text-emerald-400">
               {currency(student.paidAmount)}
             </p>
           </div>
-          <div className="rounded-xl border border-border bg-rose-500/10 p-3">
-            <p className="text-[11px] font-medium text-rose-600 dark:text-rose-400 uppercase">
+          <div className="rounded-xl border border-border bg-rose-500/10 p-3 flex sm:flex-col items-center sm:items-start justify-between sm:justify-start gap-2">
+            <p className="text-[11px] font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wide">
               Balance Due
             </p>
-            <p className="text-lg font-bold text-rose-600 dark:text-rose-400 mt-1">
+            <p className="text-base font-bold text-rose-600 dark:text-rose-400">
               {currency(student.balanceDue)}
             </p>
           </div>
@@ -744,9 +747,6 @@ function SchoolReports() {
       <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border/80">
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-accent/10 text-accent">
-              <Filter className="size-4" />
-            </div>
             <div>
               <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
                 Filter Academic Reports
@@ -819,18 +819,14 @@ function SchoolReports() {
             <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">
               Academic Department
             </label>
-            <select
+            <AppSelect
               value={deptFilter}
-              onChange={(e) => setDeptFilter(e.target.value)}
-              className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-            >
-              <option value="all">All Tertiary Departments</option>
-              {TERTIARY_ACADEMIC_DEPTS.map((d) => (
-                <option key={d.key} value={d.name}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
+              onChange={setDeptFilter}
+              options={[
+                { value: "all", label: "All Tertiary Departments" },
+                ...TERTIARY_ACADEMIC_DEPTS.map((d) => ({ value: d.name, label: d.name })),
+              ]}
+            />
           </div>
 
           {/* 3. Academic Year Range / Cohort */}
@@ -838,10 +834,9 @@ function SchoolReports() {
             <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">
               Academic Year Range
             </label>
-            <select
+            <AppSelect
               value={cohortYearFilter}
-              onChange={(e) => {
-                const nextValue = e.target.value;
+              onChange={(nextValue) => {
                 setCohortYearFilter(nextValue);
                 if (nextValue === "custom") {
                   setCustomRangeDraftStart(customStartYear);
@@ -849,16 +844,12 @@ function SchoolReports() {
                   setIsCustomYearRangeEditing(true);
                 }
               }}
-              className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-            >
-              <option value="all">All Academic Years</option>
-              {availableYearRanges.map((yr) => (
-                <option key={yr} value={yr}>
-                  {yr}
-                </option>
-              ))}
-              <option value="custom">Type Custom Year Range...</option>
-            </select>
+              options={[
+                { value: "all", label: "All Academic Years" },
+                ...availableYearRanges.map((yr) => ({ value: yr, label: yr })),
+                { value: "custom", label: "Type Custom Year Range..." },
+              ]}
+            />
             {cohortYearFilter === "custom" &&
               (isCustomYearRangeEditing || !customStartYear || !customEndYear ? (
                 <div className="mt-2.5 rounded-xl border border-accent/20 bg-accent/5 p-3">
@@ -945,16 +936,16 @@ function SchoolReports() {
             <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">
               Payment Standing
             </label>
-            <select
+            <AppSelect
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-            >
-              <option value="all">All Payment Statuses</option>
-              <option value="Paid Full">Paid Full (Cleared)</option>
-              <option value="Partial Payment">Partial Payment</option>
-              <option value="Overdue">Overdue (Unpaid)</option>
-            </select>
+              onChange={setStatusFilter}
+              options={[
+                { value: "all", label: "All Payment Statuses" },
+                { value: "Paid Full", label: "Paid Full (Cleared)" },
+                { value: "Partial Payment", label: "Partial Payment" },
+                { value: "Overdue", label: "Overdue (Unpaid)" },
+              ]}
+            />
           </div>
 
           {/* Balance / arrears filter removed from this report view */}
@@ -963,16 +954,16 @@ function SchoolReports() {
               <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">
                 Balance / Arrears
               </label>
-              <select
+              <AppSelect
                 value={balanceFilter}
-                onChange={(e) => setBalanceFilter(e.target.value)}
-                className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-              >
-                <option value="all">All Balances</option>
-                <option value="has-balance">Has Balance Due (&gt; GH₵0)</option>
-                <option value="cleared">Fully Cleared (= GH₵0)</option>
-                <option value="high-arrears">High Arrears (≥ GH₵1,000)</option>
-              </select>
+                onChange={setBalanceFilter}
+                options={[
+                  { value: "all", label: "All Balances" },
+                  { value: "has-balance", label: "Has Balance Due (> GH₵0)" },
+                  { value: "cleared", label: "Fully Cleared (= GH₵0)" },
+                  { value: "high-arrears", label: "High Arrears (≥ GH₵1,000)" },
+                ]}
+              />
             </div>
           )}
 
@@ -981,15 +972,15 @@ function SchoolReports() {
             <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">
               Payment Channel
             </label>
-            <select
+            <AppSelect
               value={paymentMethodFilter}
-              onChange={(e) => setPaymentMethodFilter(e.target.value)}
-              className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-            >
-              <option value="all">All Payment Channels</option>
-              <option value="Mobile Money">Mobile Money</option>
-              <option value="Bank Transfer">Bank Transfer</option>
-            </select>
+              onChange={setPaymentMethodFilter}
+              options={[
+                { value: "all", label: "All Payment Channels" },
+                { value: "Mobile Money", label: "Mobile Money" },
+                { value: "Bank Transfer", label: "Bank Transfer" },
+              ]}
+            />
           </div>
 
           {/* 7. Academic Term */}
@@ -997,16 +988,16 @@ function SchoolReports() {
             <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">
               Academic Term
             </label>
-            <select
+            <AppSelect
               value={termFilter}
-              onChange={(e) => setTermFilter(e.target.value)}
-              className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-            >
-              <option value="all">All Terms</option>
-              <option value="Term 3, 2026">Term 3, 2026 (Current)</option>
-              <option value="Term 2, 2026">Term 2, 2026</option>
-              <option value="Term 1, 2026">Term 1, 2026</option>
-            </select>
+              onChange={setTermFilter}
+              options={[
+                { value: "all", label: "All Terms" },
+                { value: "Term 3, 2026", label: "Term 3, 2026 (Current)" },
+                { value: "Term 2, 2026", label: "Term 2, 2026" },
+                { value: "Term 1, 2026", label: "Term 1, 2026" },
+              ]}
+            />
           </div>
 
           {showBalanceAndSortControls /* Sort order control removed from this report view */ && (
@@ -1014,19 +1005,19 @@ function SchoolReports() {
               <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">
                 Sort Order
               </label>
-              <select
+              <AppSelect
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-              >
-                <option value="balance-desc">Highest Balance Due</option>
-                <option value="balance-asc">Lowest Balance Due</option>
-                <option value="name-asc">Student Name (A - Z)</option>
-                <option value="tuition-desc">Tuition Fee (High - Low)</option>
-                <option value="tuition-asc">Tuition Fee (Low - High)</option>
-                <option value="cohort-desc">Cohort Years (Newest First)</option>
-                <option value="cohort-asc">Cohort Years (Oldest First)</option>
-              </select>
+                onChange={(v) => setSortBy(v as typeof sortBy)}
+                options={[
+                  { value: "balance-desc", label: "Highest Balance Due" },
+                  { value: "balance-asc", label: "Lowest Balance Due" },
+                  { value: "name-asc", label: "Student Name (A - Z)" },
+                  { value: "tuition-desc", label: "Tuition Fee (High - Low)" },
+                  { value: "tuition-asc", label: "Tuition Fee (Low - High)" },
+                  { value: "cohort-desc", label: "Cohort Years (Newest First)" },
+                  { value: "cohort-asc", label: "Cohort Years (Oldest First)" },
+                ]}
+              />
             </div>
           )}
 
@@ -1160,7 +1151,55 @@ function SchoolReports() {
       {activeTab === "collection" && (
         <div className="space-y-6">
           {/* Dynamic KPI Cards */}
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {/* ── MOBILE: green hero + 3 cards below ── */}
+          <div className="lg:hidden space-y-2.5">
+            {/* Hero: Fees Collected */}
+            <div className="relative rounded-2xl bg-[#22c55e] p-5 shadow-lg text-white overflow-hidden">
+              <div className="pointer-events-none absolute rounded-full bg-white/10"
+                style={{ width: "220px", height: "220px", bottom: "-100px", right: "-50px" }} />
+              <div className="relative z-10">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-white/80">Fees Collected</p>
+                <p className="mt-1.5 text-3xl font-extrabold">{currency(totalCollected)}</p>
+                <p className="mt-1 text-[11px] text-white/75">{fullyPaidCount} students fully cleared</p>
+              </div>
+            </div>
+            {/* 3 smaller cards */}
+            <div className="flex flex-col gap-2">
+              <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+                <div className="flex items-start justify-between mb-1.5">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground leading-tight">Fee Arrears</p>
+                  <span className="rounded-lg bg-rose-50 p-1 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400 shrink-0">
+                    <AlertCircle className="size-3" />
+                  </span>
+                </div>
+                <p className="text-sm font-extrabold text-rose-600 dark:text-rose-400">{currency(totalOutstanding)}</p>
+                <p className="mt-0.5 text-[10px] text-muted-foreground">{overdueCount + partialCount} due</p>
+              </div>
+              <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+                <div className="flex items-start justify-between mb-1.5">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground leading-tight">Expected</p>
+                  <span className="rounded-lg bg-purple-50 p-1 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400 shrink-0">
+                    <Receipt className="size-3" />
+                  </span>
+                </div>
+                <p className="text-sm font-extrabold text-purple-600 dark:text-purple-400">{currency(totalExpected)}</p>
+                <p className="mt-0.5 text-[10px] text-muted-foreground">{filteredStudents.length} students</p>
+              </div>
+              <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+                <div className="flex items-start justify-between mb-1.5">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground leading-tight">Rate</p>
+                  <span className="rounded-lg bg-blue-50 p-1 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 shrink-0">
+                    <TrendingUp className="size-3" />
+                  </span>
+                </div>
+                <p className="text-sm font-extrabold text-blue-600 dark:text-blue-400">{collectionRate}%</p>
+                <p className="mt-0.5 text-[10px] text-muted-foreground">Collection</p>
+              </div>
+            </div>
+          </div>
+
+          {/* ── DESKTOP: original 4-col grid ── */}
+          <div className="hidden lg:grid grid-cols-4 gap-3">
             <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -1345,18 +1384,25 @@ function SchoolReports() {
       ══════════════════════════════════════════════ */}
       {activeTab === "methods" && (
         <div className="rounded-xl border border-border bg-card shadow-2xs">
-          <div className="border-b border-border px-5 py-4 flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-bold">Payment Method Breakdown</h2>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                Filtered share of fees collected by channel ({collectedByMethod.length} channels
-                active)
-              </p>
+          {/* Header */}
+          <div className="border-b border-border px-4 sm:px-5 py-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-base sm:text-lg font-bold">Payment Method Breakdown</h2>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Filtered share of fees collected by channel ({collectedByMethod.length} channels
+                  active)
+                </p>
+              </div>
+              <div className="text-right shrink-0">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Total</p>
+                <p className="text-sm sm:text-base font-bold text-emerald-600 dark:text-emerald-400">
+                  {currency(totalMethodAmount)}
+                </p>
+              </div>
             </div>
-            <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
-              Total: {currency(totalMethodAmount)}
-            </span>
           </div>
+
           {collectedByMethod.length === 0 ? (
             <div className="p-12 text-center text-sm text-muted-foreground">
               No payment transactions match your current filters.
@@ -1371,30 +1417,59 @@ function SchoolReports() {
                 return (
                   <li
                     key={m.method}
-                    className="flex items-center gap-4 px-5 py-3.5 hover:bg-secondary/40 transition-colors"
+                    className="px-4 sm:px-5 py-4 hover:bg-secondary/40 transition-colors"
                   >
-                    <span
-                      className="grid size-9 shrink-0 place-items-center rounded-xl"
-                      style={{ backgroundColor: `${color}1A`, color }}
-                    >
-                      <Icon className="size-4" />
-                    </span>
-                    <div className="w-44 shrink-0">
-                      <p className="text-sm font-medium">{m.method}</p>
-                      <p className="text-xs text-muted-foreground">{m.count} receipt(s)</p>
-                    </div>
-                    <div className="flex-1">
-                      <div className="h-2 overflow-hidden rounded-full bg-secondary">
-                        <div
-                          className="h-full rounded-full bg-accent transition-all"
-                          style={{ width: `${pct}%` }}
-                        />
+                    {/* Mobile layout */}
+                    <div className="flex items-center gap-3 sm:hidden">
+                      <span
+                        className="grid size-10 shrink-0 place-items-center rounded-xl"
+                        style={{ backgroundColor: `${color}1A`, color }}
+                      >
+                        <Icon className="size-4.5" />
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-sm font-semibold truncate">{m.method}</p>
+                          <p className="text-sm font-bold shrink-0" style={{ color }}>{currency(m.amount)}</p>
+                        </div>
+                        <div className="flex items-center gap-2 mt-1.5">
+                          <div className="flex-1 h-2 overflow-hidden rounded-full bg-secondary">
+                            <div
+                              className="h-full rounded-full transition-all"
+                              style={{ width: `${pct}%`, backgroundColor: color }}
+                            />
+                          </div>
+                          <span className="text-xs font-semibold text-muted-foreground shrink-0">{pct}%</span>
+                          <span className="text-xs text-muted-foreground shrink-0">{m.count} receipt(s)</span>
+                        </div>
                       </div>
                     </div>
-                    <span className="w-12 text-right text-xs font-semibold text-muted-foreground">
-                      {pct}%
-                    </span>
-                    <span className="w-28 text-right text-sm font-bold">{currency(m.amount)}</span>
+
+                    {/* Desktop layout */}
+                    <div className="hidden sm:flex items-center gap-4">
+                      <span
+                        className="grid size-9 shrink-0 place-items-center rounded-xl"
+                        style={{ backgroundColor: `${color}1A`, color }}
+                      >
+                        <Icon className="size-4" />
+                      </span>
+                      <div className="w-44 shrink-0">
+                        <p className="text-sm font-medium">{m.method}</p>
+                        <p className="text-xs text-muted-foreground">{m.count} receipt(s)</p>
+                      </div>
+                      <div className="flex-1">
+                        <div className="h-2 overflow-hidden rounded-full bg-secondary">
+                          <div
+                            className="h-full rounded-full bg-accent transition-all"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+                      <span className="w-12 text-right text-xs font-semibold text-muted-foreground">
+                        {pct}%
+                      </span>
+                      <span className="w-28 text-right text-sm font-bold">{currency(m.amount)}</span>
+                    </div>
                   </li>
                 );
               })}
@@ -1893,7 +1968,8 @@ function ChurchReports() {
   const [datePeriod, setDatePeriod] = useState<
     "all" | "today" | "week" | "month" | "year" | "custom"
   >("all");
-  const [projectFilter, setProjectFilter] = useState("all");
+  const [projectStatusFilter, setProjectStatusFilter] = useState("all");
+  const [selectedProjectId, setSelectedProjectId] = useState("all");
 
   const members = NGO_MEMBERS;
   const transactions = CHURCH_PAYMENT_RECORDS;
@@ -1998,7 +2074,10 @@ function ChurchReports() {
 
   const filteredProjects = useMemo(() => {
     return projects.filter((p) => {
-      if (projectFilter !== "all" && p.status !== projectFilter) return false;
+      // Status pill filter
+      if (projectStatusFilter !== "all" && p.status !== projectStatusFilter) return false;
+      // Specific project dropdown filter
+      if (selectedProjectId !== "all" && p.id !== selectedProjectId) return false;
       if (search.trim()) {
         const q = search.toLowerCase().trim();
         const matchTitle = p.title.toLowerCase().includes(q);
@@ -2009,71 +2088,79 @@ function ChurchReports() {
       }
       return true;
     });
-  }, [projects, projectFilter, search]);
+  }, [projects, projectStatusFilter, selectedProjectId, search]);
 
   return (
     <div className="space-y-6">
       {/* ── Top Summary KPIs ── */}
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-xl border border-border bg-card p-4 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Total Church Revenue
-            </p>
-            <span className="rounded-full bg-emerald-50 p-2 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
-              <Coins className="size-4" />
-            </span>
+      {/* Mobile: green hero + 3 stacked */}
+      <div className="lg:hidden space-y-2.5">
+        <div className="relative rounded-2xl bg-[#22c55e] p-5 shadow-lg text-white overflow-hidden">
+          <div className="pointer-events-none absolute rounded-full bg-white/10"
+            style={{ width: "220px", height: "220px", bottom: "-100px", right: "-50px" }} />
+          <div className="relative z-10">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-white/80">Total Church Revenue</p>
+            <p className="mt-1.5 text-3xl font-extrabold">{currency(totalChurchRevenue)}</p>
+            <p className="mt-1 text-[11px] text-white/75">From {members.length} registered members</p>
           </div>
-          <p className="mt-2 text-2xl font-black text-emerald-600 dark:text-emerald-400">
-            {currency(totalChurchRevenue)}
-          </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            From {members.length} registered members
-          </p>
         </div>
+        <div className="flex flex-col gap-2">
+          <div className="rounded-xl border border-border bg-card p-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="rounded-lg bg-secondary p-2 text-muted-foreground shrink-0"><Banknote className="size-3.5" /></span>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tithe</p>
+            </div>
+            <p className="text-base font-extrabold text-foreground">{currency(totalTithes)}</p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="rounded-lg bg-secondary p-2 text-muted-foreground shrink-0"><Receipt className="size-3.5" /></span>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Offering</p>
+            </div>
+            <p className="text-base font-extrabold text-foreground">{currency(totalOfferings)}</p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="rounded-lg bg-secondary p-2 text-muted-foreground shrink-0"><Users className="size-3.5" /></span>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Welfare</p>
+            </div>
+            <p className="text-base font-extrabold text-foreground">{currency(totalWelfare)}</p>
+          </div>
+        </div>
+      </div>
 
+      {/* Desktop: 4-col grid */}
+      <div className="hidden lg:grid grid-cols-4 gap-2.5">
         <div className="rounded-xl border border-border bg-card p-4 shadow-2xs">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Tithe
-            </p>
-            <span className="rounded-full bg-violet-50 p-2 text-violet-600 dark:bg-violet-950/60 dark:text-violet-400">
-              <Banknote className="size-4" />
-            </span>
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Total Church Revenue</p>
+            <span className="rounded-full bg-secondary p-2 text-muted-foreground"><Coins className="size-4" /></span>
           </div>
-          <p className="mt-2 text-2xl font-black text-violet-600 dark:text-violet-400">
-            {currency(totalTithes)}
-          </p>
+          <p className="mt-2 text-2xl font-black text-foreground">{currency(totalChurchRevenue)}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">From {members.length} registered members</p>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-4 shadow-2xs">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Tithe</p>
+            <span className="rounded-full bg-secondary p-2 text-muted-foreground"><Banknote className="size-4" /></span>
+          </div>
+          <p className="mt-2 text-2xl font-black text-foreground">{currency(totalTithes)}</p>
           <p className="mt-0.5 text-xs text-muted-foreground">Ministry operations fund</p>
         </div>
-
         <div className="rounded-xl border border-border bg-card p-4 shadow-2xs">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Offering
-            </p>
-            <span className="rounded-full bg-emerald-50 p-2 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
-              <Receipt className="size-4" />
-            </span>
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Offering</p>
+            <span className="rounded-full bg-secondary p-2 text-muted-foreground"><Receipt className="size-4" /></span>
           </div>
-          <p className="mt-2 text-2xl font-black text-emerald-600 dark:text-emerald-400">
-            {currency(totalOfferings)}
-          </p>
+          <p className="mt-2 text-2xl font-black text-foreground">{currency(totalOfferings)}</p>
           <p className="mt-0.5 text-xs text-muted-foreground">Sunday & special offerings</p>
         </div>
-
         <div className="rounded-xl border border-border bg-card p-4 shadow-2xs">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Welfare
-            </p>
-            <span className="rounded-full bg-teal-50 p-2 text-teal-600 dark:bg-teal-950/60 dark:text-teal-400">
-              <Users className="size-4" />
-            </span>
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Welfare</p>
+            <span className="rounded-full bg-secondary p-2 text-muted-foreground"><Users className="size-4" /></span>
           </div>
-          <p className="mt-2 text-2xl font-black text-teal-600 dark:text-teal-400">
-            {currency(totalWelfare)}
-          </p>
+          <p className="mt-2 text-2xl font-black text-foreground">{currency(totalWelfare)}</p>
           <p className="mt-0.5 text-xs text-muted-foreground">Member benevolence support</p>
         </div>
       </div>
@@ -2090,7 +2177,8 @@ function ChurchReports() {
                 : "bg-secondary text-muted-foreground hover:text-foreground",
             )}
           >
-             Receipts & Payment Ledger ({filteredTransactions.length})
+            <span className="sm:hidden">Receipts & Payments ({filteredTransactions.length})</span>
+            <span className="hidden sm:inline">Receipts & Payment Ledger ({filteredTransactions.length})</span>
           </button>
           <button
             onClick={() => setActiveTab("projects")}
@@ -2101,7 +2189,8 @@ function ChurchReports() {
                 : "bg-secondary text-muted-foreground hover:text-foreground",
             )}
           >
-            Projects Directory ({filteredProjects.length})
+            <span className="sm:hidden">Projects Directory ({filteredProjects.length})</span>
+            <span className="hidden sm:inline">Projects Directory ({filteredProjects.length})</span>
           </button>
         </div>
 
@@ -2137,65 +2226,77 @@ function ChurchReports() {
         </div>
 
         {/* Row 1: Category Filter */}
-        <div className="flex flex-wrap items-center gap-2">
+        {/* Mobile: dropdown */}
+        <div className="flex gap-2 sm:hidden">
+          <div className="flex-1">
+            <AppSelect value={categoryFilter} onChange={setCategoryFilter} options={[
+              { value: "all", label: "All Categories" },
+              { value: "Tithe", label: "Tithes" },
+              { value: "Offering", label: "Offerings" },
+              { value: "Welfare", label: "Welfare" },
+              { value: "Project", label: "🏗️ Projects" },
+            ]} />
+          </div>
+          <div className="flex-1">
+            <AppSelect value={methodFilter} onChange={setMethodFilter} options={[
+              { value: "all", label: "All Channels" },
+              { value: "Mobile Money", label: "Mobile Money" },
+              { value: "Bank Transfer", label: "Bank Transfer" },
+              { value: "Cash Deposit", label: "Cash Deposit" },
+            ]} />
+          </div>
+        </div>
+
+        {/* Desktop: pill filters */}
+        <div className="hidden sm:flex flex-wrap items-center gap-2">
           <span className="text-xs font-semibold text-muted-foreground">Category:</span>
           {[
-            {
-              val: "all",
-              label: "All",
-              activeClass: "bg-foreground text-background border-transparent",
-            },
-            {
-              val: "Tithe",
-              label: "Tithes",
-              activeClass: "bg-violet-600 text-white border-violet-600",
-            },
-            {
-              val: "Offering",
-              label: "Offerings",
-              activeClass: "bg-emerald-600 text-white border-emerald-600",
-            },
-            {
-              val: "Welfare",
-              label: "Welfare",
-              activeClass: "bg-teal-600 text-white border-teal-600",
-            },
-            {
-              val: "Project",
-              label: "🏗️ Projects",
-              activeClass: "bg-amber-600 text-white border-amber-600",
-            },
+            { val: "all", label: "All", activeClass: "bg-foreground text-background border-transparent" },
+            { val: "Tithe", label: "Tithes", activeClass: "bg-violet-600 text-white border-violet-600" },
+            { val: "Offering", label: "Offerings", activeClass: "bg-emerald-600 text-white border-emerald-600" },
+            { val: "Welfare", label: "Welfare", activeClass: "bg-teal-600 text-white border-teal-600" },
+            { val: "Project", label: "🏗️ Projects", activeClass: "bg-amber-600 text-white border-amber-600" },
           ].map(({ val, label, activeClass }) => (
-            <button
-              key={val}
-              onClick={() => setCategoryFilter(val)}
-              className={cn(
-                "rounded-full px-3 py-1 text-xs font-semibold transition-all border",
-                categoryFilter === val
-                  ? activeClass
-                  : "bg-card text-muted-foreground border-border hover:bg-secondary",
-              )}
-            >
+            <button key={val} onClick={() => setCategoryFilter(val)}
+              className={cn("rounded-full px-3 py-1 text-xs font-semibold transition-all border",
+                categoryFilter === val ? activeClass : "bg-card text-muted-foreground border-border hover:bg-secondary"
+              )}>
               {label}
             </button>
           ))}
-
           <div className="ml-auto">
-            <select
-              value={methodFilter}
-              onChange={(e) => setMethodFilter(e.target.value)}
-              className="h-8 px-2.5 rounded-lg border border-border bg-card text-xs text-foreground focus:outline-none"
-            >
-              <option value="all">All Payment Channels</option>
-              <option value="Mobile Money">Mobile Money (MoMo)</option>
-              <option value="Bank Transfer">Bank Transfer</option>
-              <option value="Cash Deposit">Cash Deposit</option>
-            </select>
+            <AppSelect value={methodFilter} onChange={setMethodFilter} options={[
+              { value: "all", label: "All Payment Channels" },
+              { value: "Mobile Money", label: "Mobile Money (MoMo)" },
+              { value: "Bank Transfer", label: "Bank Transfer" },
+              { value: "Cash Deposit", label: "Cash Deposit" },
+            ]} triggerClassName="h-8 text-xs" />
           </div>
         </div>
 
         {/* Row 2: Date Period & Date Preset Picker */}
-        <div className="flex flex-wrap items-center gap-2">
+        {/* Mobile: dropdown */}
+        <div className="flex gap-2 sm:hidden">
+          <div className="flex-1">
+            <AppSelect
+              value={datePeriod}
+              onChange={(v) => { setDatePeriod(v as typeof datePeriod); if (v !== "custom") setDateRange(undefined); }}
+              options={[
+                { value: "all", label: "All Time" },
+                { value: "today", label: "Today" },
+                { value: "week", label: "This Week" },
+                { value: "month", label: "This Month" },
+                { value: "year", label: "This Year" },
+              ]}
+            />
+          </div>
+          <div className="shrink-0">
+            <DateRangePicker value={dateRange} onChange={(range) => { setDateRange(range); if (range?.from) setDatePeriod("custom"); else setDatePeriod("all"); }} />
+          </div>
+        </div>
+
+        {/* Desktop: pill period filters */}
+        <div className="hidden sm:flex flex-wrap items-center gap-2">
           <span className="text-xs font-semibold text-muted-foreground">Period:</span>
           {[
             { val: "all", label: "All Time" },
@@ -2204,37 +2305,16 @@ function ChurchReports() {
             { val: "month", label: "This Month" },
             { val: "year", label: "This Year" },
           ].map(({ val, label }) => (
-            <button
-              key={val}
-              onClick={() => {
-                setDatePeriod(val as typeof datePeriod);
-                if (val !== "custom") setDateRange(undefined);
-              }}
-              className={cn(
-                "rounded-full px-3 py-1 text-xs font-semibold transition-all border",
+            <button key={val} onClick={() => { setDatePeriod(val as typeof datePeriod); if (val !== "custom") setDateRange(undefined); }}
+              className={cn("rounded-full px-3 py-1 text-xs font-semibold transition-all border",
                 datePeriod === val && !dateRange?.from
                   ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-card text-muted-foreground border-border hover:bg-secondary",
-              )}
-            >
+                  : "bg-card text-muted-foreground border-border hover:bg-secondary"
+              )}>
               {label}
             </button>
           ))}
-
-          {/* Preset & Custom Range Dropdown (Same as all other pages) */}
-          <DateRangePicker
-            value={dateRange}
-            onChange={(range) => {
-              setDateRange(range);
-              if (range?.from) {
-                setDatePeriod("custom");
-              } else {
-                setDatePeriod("all");
-              }
-            }}
-          />
-
-          {/* Active record count indicator */}
+          <DateRangePicker value={dateRange} onChange={(range) => { setDateRange(range); if (range?.from) setDatePeriod("custom"); else setDatePeriod("all"); }} />
           {(datePeriod !== "all" || dateRange?.from) && (
             <span className="ml-1 text-[11px] text-blue-600 dark:text-blue-400 font-semibold">
               · {filteredTransactions.length} record{filteredTransactions.length !== 1 ? "s" : ""}
@@ -2348,39 +2428,38 @@ function ChurchReports() {
                   Showing {filteredProjects.length} of {projects.length} church projects
                 </p>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-muted-foreground">Filter:</span>
-                {[
-                  { val: "all", label: "All" },
-                  { val: "Active Implementation", label: "Active" },
-                  { val: "Planning Phase", label: "Planning" },
-                  { val: "Completed", label: "Completed" },
-                ].map(({ val, label }) => (
-                  <button
-                    key={val}
-                    onClick={() => setProjectFilter(val)}
-                    className={cn(
-                      "rounded-full px-3 py-1 text-xs font-semibold transition-all border",
-                      projectFilter === val
-                        ? "bg-amber-600 text-white border-amber-600"
-                        : "bg-card text-muted-foreground border-border hover:bg-secondary",
-                    )}
-                  >
-                    {label}
-                  </button>
-                ))}
-                <select
-                  value={projectFilter}
-                  onChange={(e) => setProjectFilter(e.target.value)}
-                  className="h-8 px-2.5 rounded-lg border border-border bg-card text-xs text-foreground focus:outline-none"
-                >
-                  <option value="all">All Projects</option>
-                  {projects.map((p) => (
-                    <option key={p.id} value={p.status}>
-                      {p.code} — {p.title}
-                    </option>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-semibold text-muted-foreground">Filter:</span>
+                  {[
+                    { val: "all", label: "All" },
+                    { val: "Active Implementation", label: "Active" },
+                    { val: "Planning Phase", label: "Planning" },
+                    { val: "Completed", label: "Completed" },
+                  ].map(({ val, label }) => (
+                    <button
+                      key={val}
+                      onClick={() => setProjectStatusFilter(val)}
+                      className={cn(
+                        "rounded-full px-3 py-1 text-xs font-semibold transition-all border",
+                        projectStatusFilter === val
+                          ? "bg-amber-600 text-white border-amber-600"
+                          : "bg-card text-muted-foreground border-border hover:bg-secondary",
+                      )}
+                    >
+                      {label}
+                    </button>
                   ))}
-                </select>
+                </div>
+                <AppSelect
+                  value={selectedProjectId}
+                  onChange={setSelectedProjectId}
+                  options={[
+                    { value: "all", label: "All Projects" },
+                    ...projects.map((p) => ({ value: p.id, label: `${p.code} — ${p.title}` })),
+                  ]}
+                  triggerClassName="h-8 text-xs w-full sm:w-auto"
+                />
               </div>
             </div>
           </div>
@@ -2457,6 +2536,8 @@ function ChurchReports() {
               </table>
             </div>
           </div>
+
+
         </div>
       )}
 
@@ -2514,9 +2595,9 @@ function Reports() {
       actions={
         <Button
           size="sm"
-          className="h-8 px-2.5 sm:h-9 sm:px-3 text-xs sm:text-sm bg-accent text-accent-foreground hover:bg-accent/85"
+          className="h-8 px-3 text-xs bg-accent text-accent-foreground hover:bg-accent/85 gap-1.5"
         >
-          <Download className="size-3.5 sm:size-4" />
+          <Download className="size-3.5" />
           <span className="hidden sm:inline">Export CSV</span>
           <span className="sm:hidden">Export</span>
         </Button>
@@ -2529,22 +2610,24 @@ function Reports() {
       ) : (
         <div className="space-y-6">
           {/* ── Tab bar ── */}
-          <div className="flex items-center gap-1.5 border-b border-border">
-            {tabs.map((t) => (
-              <button
-                key={t.key}
-                onClick={() => setActiveTab(t.key)}
-                className={cn(
-                  "flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors",
-                  activeTab === t.key
-                    ? "border-accent text-accent"
-                    : "border-transparent text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <t.icon className="size-4 shrink-0" />
-                {t.label}
-              </button>
-            ))}
+          <div className="overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0">
+            <div className="flex items-center gap-1 border-b border-border min-w-max lg:min-w-0">
+              {tabs.map((t) => (
+                <button
+                  key={t.key}
+                  onClick={() => setActiveTab(t.key)}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-2.5 text-xs sm:text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0",
+                    activeTab === t.key
+                      ? "border-accent text-accent"
+                      : "border-transparent text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <t.icon className="size-3.5 sm:size-4 shrink-0" />
+                  {t.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* ══════════════════════════════════════════════
@@ -2553,16 +2636,33 @@ function Reports() {
           {activeTab === "today" && (
             <div className="space-y-6">
               {/* KPI cards */}
-              <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-3 lg:grid-cols-4">
+                {/* Gross Sales Today — full-width green hero card on mobile */}
+                <div className="relative overflow-hidden rounded-2xl bg-[#22c55e] p-5 text-white shadow-xs sm:rounded-xl sm:p-4 lg:col-span-1">
+                  <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden sm:hidden">
+                    <div
+                      className="absolute rounded-full bg-white/10"
+                      style={{ width: "260px", height: "260px", bottom: "-120px", right: "-60px" }}
+                    />
+                  </div>
+                  <div className="relative z-10">
+                    <div className="flex items-start justify-between">
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-white/80">
+                        Gross Sales Today
+                      </p>
+                      <div className="rounded-lg border border-white/40 bg-white/10 p-1.5 backdrop-blur-xs">
+                        <Banknote className="size-5 text-white" />
+                      </div>
+                    </div>
+                    <p className="num mt-2 text-3xl sm:text-2xl font-extrabold tracking-tight text-white">
+                      {currency(todayGross)}
+                    </p>
+                    <p className="mt-1.5 text-xs text-white/75">{todayTxns} transactions</p>
+                  </div>
+                </div>
+
+                {/* Remaining 3 cards */}
                 {[
-                  {
-                    label: "Gross Sales Today",
-                    value: currency(todayGross),
-                    sub: `${todayTxns} transactions`,
-                    icon: Banknote,
-                    color: "text-emerald-600 dark:text-emerald-400",
-                    bg: "bg-emerald-50 dark:bg-emerald-950/60",
-                  },
                   {
                     label: "Settled Today",
                     value: currency(todaySettled),
@@ -2600,7 +2700,7 @@ function Reports() {
                         <c.icon className="size-3.5 sm:size-4" />
                       </span>
                     </div>
-                    <p className={cn("mt-2 text-xl sm:text-2xl font-bold", c.color)}>{c.value}</p>
+                    <p className={cn("mt-2 text-base sm:text-2xl font-bold num", c.color)}>{c.value}</p>
                     <p className="mt-0.5 text-xs text-muted-foreground">{c.sub}</p>
                   </div>
                 ))}
@@ -2710,59 +2810,79 @@ function Reports() {
           {activeTab === "products" && (
             <div className="space-y-6">
               {/* Summary cards */}
-              <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                {[
-                  {
-                    label: "Total SKUs",
-                    value: products.length.toString(),
-                    sub: "across all branches",
-                    icon: Boxes,
-                    color: "text-emerald-600 dark:text-emerald-400",
-                    bg: "bg-emerald-50 dark:bg-emerald-950/60",
-                  },
-                  {
-                    label: "Stock Value",
-                    value: currency(products.reduce((s, p) => s + p.price * p.stock, 0)),
-                    sub: "on hand",
-                    icon: Banknote,
-                    color: "text-blue-600 dark:text-blue-400",
-                    bg: "bg-blue-50 dark:bg-blue-950/60",
-                  },
-                  {
-                    label: "Low Stock SKUs",
-                    value: products
-                      .filter((p) => p.stock > 0 && p.stock <= p.threshold)
-                      .length.toString(),
-                    sub: "need restocking",
-                    icon: TrendingDown,
-                    color: "text-amber-600 dark:text-amber-400",
-                    bg: "bg-amber-50 dark:bg-amber-950/60",
-                  },
-                  {
-                    label: "Out of Stock",
-                    value: products.filter((p) => p.stock === 0).length.toString(),
-                    sub: "zero units",
-                    icon: PackageCheck,
-                    color: "text-rose-600 dark:text-rose-400",
-                    bg: "bg-rose-50 dark:bg-rose-950/60",
-                  },
-                ].map((c) => (
-                  <div
-                    key={c.label}
-                    className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs"
-                  >
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                        {c.label}
-                      </p>
-                      <span className={cn("rounded-full p-1.5 sm:p-2", c.bg, c.color)}>
-                        <c.icon className="size-3.5 sm:size-4" />
-                      </span>
-                    </div>
-                    <p className={cn("mt-2 text-xl sm:text-2xl font-bold", c.color)}>{c.value}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">{c.sub}</p>
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">
+                {/* Hero green card — full width stacked on mobile, first col on desktop */}
+                <div className="relative overflow-hidden rounded-2xl bg-[#22c55e] p-5 text-white shadow-xs lg:col-span-1">
+                  {/* Decorative circles — large background orb */}
+                  <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+                    <div
+                      className="absolute rounded-full bg-white/10"
+                      style={{ width: "260px", height: "260px", bottom: "-120px", right: "-60px" }}
+                    />
                   </div>
-                ))}
+                  <div className="relative z-10">
+                    <div className="flex items-start justify-between">
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-white/80">
+                        Total SKUs
+                      </p>
+                      <div className="rounded-lg border border-white/40 bg-white/10 p-1.5 backdrop-blur-xs">
+                        <Boxes className="size-5 text-white" />
+                      </div>
+                    </div>
+                    <p className="mt-2 text-3xl font-extrabold tracking-tight text-white">
+                      {products.length.toString()}
+                    </p>
+                    <p className="mt-1.5 text-xs text-white/75">across all branches</p>
+                  </div>
+                </div>
+
+                {/* Remaining 3 cards — stacked on mobile, spread on desktop */}
+                <div className="grid grid-cols-1 gap-3 lg:contents">
+                  {[
+                    {
+                      label: "Stock Value",
+                      value: currency(products.reduce((s, p) => s + p.price * p.stock, 0)),
+                      sub: "on hand",
+                      icon: Banknote,
+                      color: "text-blue-600 dark:text-blue-400",
+                      iconBg: "bg-blue-50 dark:bg-blue-950/60",
+                    },
+                    {
+                      label: "Low Stock SKUs",
+                      value: products
+                        .filter((p) => p.stock > 0 && p.stock <= p.threshold)
+                        .length.toString(),
+                      sub: "need restocking",
+                      icon: TrendingDown,
+                      color: "text-amber-600 dark:text-amber-400",
+                      iconBg: "bg-amber-50 dark:bg-amber-950/60",
+                    },
+                    {
+                      label: "Out of Stock",
+                      value: products.filter((p) => p.stock === 0).length.toString(),
+                      sub: "zero units",
+                      icon: PackageCheck,
+                      color: "text-rose-600 dark:text-rose-400",
+                      iconBg: "bg-rose-50 dark:bg-rose-950/60",
+                    },
+                  ].map((c) => (
+                    <div
+                      key={c.label}
+                      className="rounded-2xl border border-border bg-card p-4 shadow-xs"
+                    >
+                      <div className="flex items-start justify-between">
+                        <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                          {c.label}
+                        </p>
+                        <span className={cn("rounded-xl p-1.5", c.iconBg, c.color)}>
+                          <c.icon className="size-3.5" />
+                        </span>
+                      </div>
+                      <p className={cn("mt-2 text-xl font-extrabold", c.color)}>{c.value}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{c.sub}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* Product table */}
@@ -2955,57 +3075,76 @@ function Reports() {
               </div>
 
               {/* Period KPIs */}
-              <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                {[
-                  {
-                    label: "Total Gross Sales",
-                    value: currency(totalGross),
-                    sub: "30-day period",
-                    icon: Banknote,
-                    color: "text-emerald-600 dark:text-emerald-400",
-                    bg: "bg-emerald-50 dark:bg-emerald-950/60",
-                  },
-                  {
-                    label: "Total Settled",
-                    value: currency(totalSettled),
-                    sub: `${Math.round((totalSettled / totalGross) * 100)}% of gross`,
-                    icon: PackageCheck,
-                    color: "text-blue-600 dark:text-blue-400",
-                    bg: "bg-blue-50 dark:bg-blue-950/60",
-                  },
-                  {
-                    label: "Unsettled Gap",
-                    value: currency(totalGross - totalSettled),
-                    sub: "in transit / pending",
-                    icon: TrendingUp,
-                    color: "text-amber-600 dark:text-amber-400",
-                    bg: "bg-amber-50 dark:bg-amber-950/60",
-                  },
-                  {
-                    label: "Active Branches",
-                    value: branchOptions.length.toString(),
-                    sub: `${branches[0]!.staff} total staff`,
-                    icon: ShoppingCart,
-                    color: "text-violet-600 dark:text-violet-400",
-                    bg: "bg-violet-50 dark:bg-violet-950/60",
-                  },
-                ].map((c) => (
-                  <div
-                    key={c.label}
-                    className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs"
-                  >
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                        {c.label}
-                      </p>
-                      <span className={cn("rounded-full p-1.5 sm:p-2", c.bg, c.color)}>
-                        <c.icon className="size-3.5 sm:size-4" />
-                      </span>
-                    </div>
-                    <p className={cn("mt-2 text-xl sm:text-2xl font-bold", c.color)}>{c.value}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">{c.sub}</p>
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">
+                {/* Hero green card */}
+                <div className="relative overflow-hidden rounded-2xl bg-[#22c55e] p-5 text-white shadow-xs lg:col-span-1">
+                  <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+                    <div
+                      className="absolute rounded-full bg-white/10"
+                      style={{ width: "260px", height: "260px", bottom: "-120px", right: "-60px" }}
+                    />
                   </div>
-                ))}
+                  <div className="relative z-10">
+                    <div className="flex items-start justify-between">
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-white/80">
+                        Total Gross Sales
+                      </p>
+                      <div className="rounded-lg border border-white/40 bg-white/10 p-1.5 backdrop-blur-xs">
+                        <Banknote className="size-5 text-white" />
+                      </div>
+                    </div>
+                    <p className="mt-2 text-3xl font-extrabold tracking-tight text-white">
+                      {currency(totalGross)}
+                    </p>
+                    <p className="mt-1.5 text-xs text-white/75">30-day period</p>
+                  </div>
+                </div>
+
+                {/* Remaining 3 cards — stacked on mobile, spread on desktop */}
+                <div className="grid grid-cols-1 gap-3 lg:contents">
+                  {[
+                    {
+                      label: "Total Settled",
+                      value: currency(totalSettled),
+                      sub: `${Math.round((totalSettled / totalGross) * 100)}% of gross`,
+                      icon: PackageCheck,
+                      color: "text-blue-600 dark:text-blue-400",
+                      iconBg: "bg-blue-50 dark:bg-blue-950/60",
+                    },
+                    {
+                      label: "Unsettled Gap",
+                      value: currency(totalGross - totalSettled),
+                      sub: "in transit / pending",
+                      icon: TrendingUp,
+                      color: "text-amber-600 dark:text-amber-400",
+                      iconBg: "bg-amber-50 dark:bg-amber-950/60",
+                    },
+                    {
+                      label: "Active Branches",
+                      value: branchOptions.length.toString(),
+                      sub: `${branches[0]!.staff} total staff`,
+                      icon: ShoppingCart,
+                      color: "text-violet-600 dark:text-violet-400",
+                      iconBg: "bg-violet-50 dark:bg-violet-950/60",
+                    },
+                  ].map((c) => (
+                    <div
+                      key={c.label}
+                      className="rounded-2xl border border-border bg-card p-4 shadow-xs"
+                    >
+                      <div className="flex items-start justify-between">
+                        <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                          {c.label}
+                        </p>
+                        <span className={cn("rounded-xl p-1.5", c.iconBg, c.color)}>
+                          <c.icon className="size-3.5" />
+                        </span>
+                      </div>
+                      <p className={cn("mt-2 text-xl font-extrabold", c.color)}>{c.value}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{c.sub}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* 30-day trend */}
@@ -3199,57 +3338,76 @@ function Reports() {
           {activeTab === "interbranch" && (
             <div className="space-y-6">
               {/* KPI cards */}
-              <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                {[
-                  {
-                    label: "Total Branches",
-                    value: branchOptions.length.toString(),
-                    sub: "active locations",
-                    icon: GitCompare,
-                    color: "text-emerald-600 dark:text-emerald-400",
-                    bg: "bg-emerald-50 dark:bg-emerald-950/60",
-                  },
-                  {
-                    label: "Combined Revenue",
-                    value: currency(branchOptions.reduce((s, b) => s + b.revenue, 0)),
-                    sub: "all branches",
-                    icon: Banknote,
-                    color: "text-blue-600 dark:text-blue-400",
-                    bg: "bg-blue-50 dark:bg-blue-950/60",
-                  },
-                  {
-                    label: "Combined Stock",
-                    value: currency(branchOptions.reduce((s, b) => s + b.stockValue, 0)),
-                    sub: "total inventory value",
-                    icon: Boxes,
-                    color: "text-violet-600 dark:text-violet-400",
-                    bg: "bg-violet-50 dark:bg-violet-950/60",
-                  },
-                  {
-                    label: "Total Staff",
-                    value: branchOptions.reduce((s, b) => s + b.staff, 0).toString(),
-                    sub: "across all locations",
-                    icon: ShoppingCart,
-                    color: "text-amber-600 dark:text-amber-400",
-                    bg: "bg-amber-50 dark:bg-amber-950/60",
-                  },
-                ].map((c) => (
-                  <div
-                    key={c.label}
-                    className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs"
-                  >
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                        {c.label}
-                      </p>
-                      <span className={cn("rounded-full p-1.5 sm:p-2", c.bg, c.color)}>
-                        <c.icon className="size-3.5 sm:size-4" />
-                      </span>
-                    </div>
-                    <p className={cn("mt-2 text-xl sm:text-2xl font-bold", c.color)}>{c.value}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">{c.sub}</p>
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">
+                {/* Hero green card — Total Branches */}
+                <div className="relative overflow-hidden rounded-2xl bg-[#22c55e] p-5 text-white shadow-xs lg:col-span-1">
+                  <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+                    <div
+                      className="absolute rounded-full bg-white/10"
+                      style={{ width: "260px", height: "260px", bottom: "-120px", right: "-60px" }}
+                    />
                   </div>
-                ))}
+                  <div className="relative z-10">
+                    <div className="flex items-start justify-between">
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-white/80">
+                        Total Branches
+                      </p>
+                      <div className="rounded-lg border border-white/40 bg-white/10 p-1.5 backdrop-blur-xs">
+                        <GitCompare className="size-5 text-white" />
+                      </div>
+                    </div>
+                    <p className="mt-2 text-3xl font-extrabold tracking-tight text-white">
+                      {branchOptions.length.toString()}
+                    </p>
+                    <p className="mt-1.5 text-xs text-white/75">active locations</p>
+                  </div>
+                </div>
+
+                {/* Remaining 3 cards — stacked on mobile, spread on desktop */}
+                <div className="grid grid-cols-1 gap-3 lg:contents">
+                  {[
+                    {
+                      label: "Combined Revenue",
+                      value: currency(branchOptions.reduce((s, b) => s + b.revenue, 0)),
+                      sub: "all branches",
+                      icon: Banknote,
+                      color: "text-blue-600 dark:text-blue-400",
+                      iconBg: "bg-blue-50 dark:bg-blue-950/60",
+                    },
+                    {
+                      label: "Combined Stock",
+                      value: currency(branchOptions.reduce((s, b) => s + b.stockValue, 0)),
+                      sub: "total inventory value",
+                      icon: Boxes,
+                      color: "text-violet-600 dark:text-violet-400",
+                      iconBg: "bg-violet-50 dark:bg-violet-950/60",
+                    },
+                    {
+                      label: "Total Staff",
+                      value: branchOptions.reduce((s, b) => s + b.staff, 0).toString(),
+                      sub: "across all locations",
+                      icon: ShoppingCart,
+                      color: "text-amber-600 dark:text-amber-400",
+                      iconBg: "bg-amber-50 dark:bg-amber-950/60",
+                    },
+                  ].map((c) => (
+                    <div
+                      key={c.label}
+                      className="rounded-2xl border border-border bg-card p-4 shadow-xs"
+                    >
+                      <div className="flex items-start justify-between">
+                        <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                          {c.label}
+                        </p>
+                        <span className={cn("rounded-xl p-1.5", c.iconBg, c.color)}>
+                          <c.icon className="size-3.5" />
+                        </span>
+                      </div>
+                      <p className={cn("mt-2 text-xl font-extrabold", c.color)}>{c.value}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{c.sub}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* Side-by-side branch comparison chart */}

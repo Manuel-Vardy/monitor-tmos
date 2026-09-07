@@ -19,6 +19,7 @@ import {
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { DateRangePicker } from "@/components/date-range-picker";
+import { AppSelect } from "@/components/app-select";
 import { currency } from "@/lib/mos-data";
 import { NGO_PROJECTS, NGO_SUMMARY, type NgoProject } from "@/lib/ngo-data";
 
@@ -612,26 +613,66 @@ function ProjectsPage() {
         onSubmit={handleEditProject}
       />
       {/* Stat Cards */}
-      <div className="mb-6 grid gap-3 sm:grid-cols-3 lg:grid-cols-3">
+      {/* ── MOBILE: green hero + 2 stacked cards ── */}
+      <div className="mb-6 lg:hidden space-y-2.5">
+        <div className="relative rounded-2xl bg-[#22c55e] p-5 shadow-lg text-white overflow-hidden">
+          <div className="pointer-events-none absolute rounded-full bg-white/10"
+            style={{ width: "220px", height: "220px", bottom: "-100px", right: "-50px" }} />
+          <div className="relative z-10">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-white/80">Total Projects</p>
+            <p className="mt-1.5 text-3xl font-extrabold">{projects.length}</p>
+            <p className="mt-1 text-[11px] text-white/75">Community initiatives</p>
+          </div>
+        </div>
+        <div className="flex flex-col gap-2">
+          <div className="rounded-xl border border-border bg-card p-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="rounded-lg bg-secondary p-2 text-muted-foreground shrink-0">
+                <Clock className="size-3.5" />
+              </span>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Active Field Projects</p>
+                <p className="text-base font-extrabold text-foreground">{totalActiveProjects} active</p>
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground">Under execution</p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="rounded-lg bg-secondary p-2 text-muted-foreground shrink-0">
+                <FolderKanban className="size-3.5" />
+              </span>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Total Target</p>
+                <p className="text-base font-extrabold text-foreground">{currency(totalTargetFunding)}</p>
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground">Target budget</p>
+          </div>
+        </div>
+      </div>
+
+      {/* ── DESKTOP: 3-col grid ── */}
+      <div className="mb-6 hidden lg:grid gap-3 grid-cols-3">
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Total Projects</p>
-            <span className="rounded-full bg-slate-100 p-2 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+            <span className="rounded-full bg-secondary p-2 text-muted-foreground">
               <FolderKanban className="size-4" />
             </span>
           </div>
-          <p className="mt-3 text-2xl font-bold">{projects.length}</p>
+          <p className="mt-3 text-2xl font-bold text-foreground">{projects.length}</p>
           <p className="mt-0.5 text-xs text-muted-foreground">Community initiatives</p>
         </div>
 
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Active Field Projects</p>
-            <span className="rounded-full bg-emerald-50 p-2 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
+            <span className="rounded-full bg-secondary p-2 text-muted-foreground">
               <Clock className="size-4" />
             </span>
           </div>
-          <p className="mt-3 text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+          <p className="mt-3 text-2xl font-bold text-foreground">
             {totalActiveProjects} active
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">Under execution</p>
@@ -640,11 +681,11 @@ function ProjectsPage() {
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Total Target</p>
-            <span className="rounded-full bg-purple-50 p-2 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400">
+            <span className="rounded-full bg-secondary p-2 text-muted-foreground">
               <FolderKanban className="size-4" />
             </span>
           </div>
-          <p className="mt-3 text-2xl font-bold text-purple-600 dark:text-purple-400">
+          <p className="mt-3 text-2xl font-bold text-foreground">
             {currency(totalTargetFunding)}
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">Target funding budget</p>
@@ -688,18 +729,15 @@ function ProjectsPage() {
               </button>
             );
           })}
-          <select
+          <AppSelect
             value={selectedProjectId || ""}
-            onChange={(e) => setSelectedProjectId(e.target.value || null)}
-            className="h-8 rounded-md border border-border bg-card px-2.5 text-xs outline-none focus:border-ring"
-          >
-            <option value="">All Projects</option>
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.code} — {p.title}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => setSelectedProjectId(v || null)}
+            options={[
+              { value: "", label: "All Projects" },
+              ...projects.map((p) => ({ value: p.id, label: `${p.code} — ${p.title}` })),
+            ]}
+            triggerClassName="h-8 text-xs"
+          />
           <DateRangePicker value={dateRange} onChange={setDateRange} />
         </div>
       </div>

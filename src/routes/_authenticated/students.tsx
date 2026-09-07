@@ -32,6 +32,7 @@ import {
   Landmark,
   ArrowRight,
   ChevronLeft,
+  ChevronDown,
   Coins,
   Pencil,
   Banknote,
@@ -54,6 +55,8 @@ import {
   type FeeType,
 } from "@/lib/school-data";
 import { cn } from "@/lib/utils";
+import { AppSelect } from "@/components/app-select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/students")({
   head: () => ({
@@ -617,10 +620,9 @@ function EditStudentModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-muted-foreground mb-1">Department</label>
-              <select
+              <Select
                 value={dept}
-                onChange={(e) => {
-                  const newDept = e.target.value;
+                onValueChange={(newDept) => {
                   setDept(newDept);
                   const targetDeptObj = departments.find((d) => d.name === newDept);
                   const nextSubCourses = targetDeptObj?.subCourses && targetDeptObj.subCourses.length > 0
@@ -628,31 +630,36 @@ function EditStudentModal({
                     : ["General Studies"];
                   setSubCourse(nextSubCourses[0] || "General Studies");
                 }}
-                className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
               >
-                {departments.map((d) => (
-                  <option key={d.id} value={d.name}>
-                    {d.name}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="h-9 w-full text-sm font-medium">
+                  <SelectValue placeholder="Select department..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {departments.map((d) => (
+                    <SelectItem key={d.id} value={d.name}>
+                      {d.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-muted-foreground mb-1">
                 Sub-Course / Major *
               </label>
-              <select
-                value={subCourse}
-                onChange={(e) => setSubCourse(e.target.value)}
-                className="w-full h-9 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-              >
-                {availableSubCourses.map((sc, i) => (
-                  <option key={i} value={sc}>
-                    {sc}
-                  </option>
-                ))}
-              </select>
+              <Select value={subCourse} onValueChange={setSubCourse}>
+                <SelectTrigger className="h-9 w-full text-sm font-medium">
+                  <SelectValue placeholder="Select sub-course..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableSubCourses.map((sc, i) => (
+                    <SelectItem key={i} value={sc}>
+                      {sc}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -1090,20 +1097,24 @@ function UploadStudentsCsvModal({
               <label className="block text-xs font-semibold text-muted-foreground mb-1">
                 Department
               </label>
-              <select
+              <Select
                 value={targetDept}
-                onChange={(e) => {
-                  setTargetDept(e.target.value);
-                  setParsedRows((prev) => prev.map((r) => ({ ...r, dept: e.target.value })));
+                onValueChange={(val) => {
+                  setTargetDept(val);
+                  setParsedRows((prev) => prev.map((r) => ({ ...r, dept: val })));
                 }}
-                className="h-10 px-3 rounded-lg border border-border bg-background text-sm font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-accent/50 w-full"
               >
-                {departments.map((d) => (
-                  <option key={d.id} value={d.name}>
-                    {d.name} ({d.code}) — Tuition: {currency(d.defaultTuition || 3000)}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="h-10 w-full text-sm font-medium">
+                  <SelectValue placeholder="Select department..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {departments.map((d) => (
+                    <SelectItem key={d.id} value={d.name}>
+                      {d.name} ({d.code}) — Tuition: {currency(d.defaultTuition || 3000)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
@@ -1219,14 +1230,14 @@ function StudentStatementModal({
       onClick={onClose}
     >
       <div
-        className="relative z-10 w-full max-w-md rounded-2xl bg-card shadow-2xl overflow-hidden border border-border p-6 space-y-4 max-h-[90vh] overflow-y-auto"
+        className="relative z-10 w-full sm:max-w-md mx-3 sm:mx-auto rounded-2xl bg-card shadow-2xl overflow-hidden border border-border p-4 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between border-b border-border pb-3">
-          <div>
-            <h2 className="text-lg font-bold">{student.name}</h2>
-            <p className="text-xs font-mono text-muted-foreground">
-              Index No: {student.studentId} · {deptName}
+          <div className="min-w-0 flex-1 pr-2">
+            <h2 className="text-base font-bold leading-tight">{student.name}</h2>
+            <p className="text-[11px] font-mono text-muted-foreground mt-0.5 truncate">
+              {student.studentId} · {deptName}
             </p>
           </div>
           <button
@@ -1238,57 +1249,50 @@ function StudentStatementModal({
           </button>
         </div>
 
-        <div className="space-y-4">
-          <div className="rounded-xl bg-secondary/30 p-3 text-sm space-y-1">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+        <div className="space-y-3.5">
+          <div className="rounded-xl bg-secondary/30 p-3 space-y-1">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
               Phone Number
             </p>
-            <p className="text-sm font-medium flex items-center gap-1.5">
-              <Phone className="size-3.5 text-muted-foreground" />
+            <p className="text-xs font-medium flex items-center gap-1.5">
+              <Phone className="size-3.5 text-muted-foreground shrink-0" />
               <span className="font-mono">{student.guardianPhone}</span>
             </p>
           </div>
 
-          {/* Assigned Fee Types Taking */}
+          {/* Fee Types */}
           <div>
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
-              Fee Types Taking ({assignedFees.length})
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
+              Fee Types ({assignedFees.length})
             </p>
-            <div className="flex flex-wrap gap-1.5 p-2.5 rounded-xl border border-border bg-secondary/20">
+            <div className="rounded-xl border border-border bg-secondary/20 divide-y divide-border overflow-hidden">
               {assignedFees.map((ft, i) => (
-                <span
-                  key={i}
-                  className="px-2.5 py-1 rounded-lg bg-card text-xs font-medium text-foreground border border-border shadow-2xs"
-                >
+                <div key={i} className="px-3 py-2 text-xs font-medium text-foreground">
                   {ft}
-                </span>
+                </div>
               ))}
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 text-center">
-            <div className="rounded-xl border border-border p-2 bg-card">
-              <p className="text-[10px] uppercase font-semibold text-muted-foreground">Total Fee</p>
-              <p className="font-bold text-sm mt-0.5">{currency(student.tuitionFee)}</p>
+          {/* Fee summary — vertical stack */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between rounded-xl border border-border px-4 py-2.5 bg-card">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Total Fee</p>
+              <p className="font-bold text-sm">{currency(student.tuitionFee)}</p>
             </div>
-            <div className="rounded-xl border border-border p-2 bg-emerald-500/10">
-              <p className="text-[10px] uppercase font-semibold text-emerald-600 dark:text-emerald-400">Paid</p>
-              <p className="font-bold text-sm text-emerald-600 dark:text-emerald-400 mt-0.5">
-                {currency(student.paidAmount)}
-              </p>
+            <div className="flex items-center justify-between rounded-xl border border-emerald-200 dark:border-emerald-800 px-4 py-2.5 bg-emerald-500/10">
+              <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">Paid</p>
+              <p className="font-bold text-sm text-emerald-600 dark:text-emerald-400">{currency(student.paidAmount)}</p>
             </div>
-            <div className="rounded-xl border border-border p-2 bg-rose-500/10">
-              <p className="text-[10px] uppercase font-semibold text-rose-600 dark:text-rose-400">Balance</p>
-              <p
-                className={`font-bold text-sm mt-0.5 ${
-                  student.balanceDue > 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"
-                }`}
-              >
+            <div className="flex items-center justify-between rounded-xl border border-rose-200 dark:border-rose-800 px-4 py-2.5 bg-rose-500/10">
+              <p className="text-xs font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wide">Balance Due</p>
+              <p className={`font-bold text-sm ${student.balanceDue > 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`}>
                 {currency(student.balanceDue)}
               </p>
             </div>
           </div>
 
+          {/* Progress */}
           <div>
             <div className="flex justify-between text-[11px] font-semibold mb-1">
               <span className="text-muted-foreground">Payment Fulfillment</span>
@@ -1296,8 +1300,7 @@ function StudentStatementModal({
             </div>
             <div className="h-2 w-full rounded-full bg-secondary overflow-hidden">
               <div
-                className={cn(
-                  "h-full rounded-full transition-all",
+                className={cn("h-full rounded-full transition-all",
                   pctPaid >= 100 ? "bg-emerald-500" : pctPaid > 0 ? "bg-amber-500" : "bg-rose-500"
                 )}
                 style={{ width: `${Math.min(100, pctPaid)}%` }}
@@ -1305,26 +1308,24 @@ function StudentStatementModal({
             </div>
           </div>
 
+          {/* Receipt history */}
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
+            <h3 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
               Receipt History ({history.length})
             </h3>
             {history.length === 0 ? (
-              <p className="text-xs text-muted-foreground italic py-2">No payments recorded yet for this student.</p>
+              <p className="text-[11px] text-muted-foreground italic py-1">No payments recorded yet for this student.</p>
             ) : (
               <ul className="divide-y divide-border rounded-xl border border-border max-h-36 overflow-y-auto">
                 {history.map((t) => (
-                  <li
-                    key={t.id}
-                    className="flex items-center justify-between gap-2 px-3 py-2 text-xs"
-                  >
-                    <div>
+                  <li key={t.id} className="flex items-center justify-between gap-2 px-3 py-2 text-xs">
+                    <div className="min-w-0">
                       <p className="font-bold text-emerald-600 dark:text-emerald-400">+{currency(t.amountPaid)}</p>
-                      <p className="text-[10px] text-muted-foreground">
-                        {t.date} · {t.paymentMethod} {t.feeType ? `· ${t.feeType}` : ""}
+                      <p className="text-[10px] text-muted-foreground truncate">
+                        {t.date} · {t.paymentMethod}{t.feeType ? ` · ${t.feeType}` : ""}
                       </p>
                     </div>
-                    <span className="font-mono text-[10px] text-muted-foreground">{t.receiptNo}</span>
+                    <span className="font-mono text-[10px] text-muted-foreground shrink-0">{t.receiptNo}</span>
                   </li>
                 ))}
               </ul>
@@ -1333,9 +1334,7 @@ function StudentStatementModal({
         </div>
 
         <div className="flex justify-end pt-2 border-t border-border">
-          <Button variant="outline" size="sm" onClick={onClose}>
-            Close
-          </Button>
+          <Button variant="outline" size="sm" onClick={onClose}>Close</Button>
         </div>
       </div>
     </div>
@@ -1417,18 +1416,19 @@ function StudentCollectModal({
             <label className="mb-1 block text-xs font-semibold text-muted-foreground">
               Type of Fee Paying *
             </label>
-            <select
-              value={feeType}
-              onChange={(e) => setFeeType(e.target.value)}
-              className={inputClass}
-            >
-              {assignedFees.map((ft, i) => (
-                <option key={i} value={ft}>
-                  {ft}
-                </option>
-              ))}
-              <option value="General Semester Fee">General Semester Fee Balance</option>
-            </select>
+            <Select value={feeType} onValueChange={setFeeType}>
+              <SelectTrigger className="h-9 w-full text-sm font-medium">
+                <SelectValue placeholder="Select fee type..." />
+              </SelectTrigger>
+              <SelectContent>
+                {assignedFees.map((ft, i) => (
+                  <SelectItem key={i} value={ft}>
+                    {ft}
+                  </SelectItem>
+                ))}
+                <SelectItem value="General Semester Fee">General Semester Fee Balance</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
@@ -1449,17 +1449,18 @@ function StudentCollectModal({
             <label className="mb-1 block text-xs font-semibold text-muted-foreground">
               Payment Method *
             </label>
-            <select
-              value={method}
-              onChange={(e) => setMethod(e.target.value as any)}
-              className={inputClass}
-            >
-              {PAYMENT_METHODS.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
+            <Select value={method} onValueChange={(val) => setMethod(val as any)}>
+              <SelectTrigger className="h-9 w-full text-sm font-medium">
+                <SelectValue placeholder="Select method..." />
+              </SelectTrigger>
+              <SelectContent>
+                {PAYMENT_METHODS.map((m) => (
+                  <SelectItem key={m} value={m}>
+                    {m}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">
@@ -1632,10 +1633,9 @@ function EnrollStudentModal({
               <label className="mb-1 block text-xs font-semibold text-muted-foreground">
                 Department *
               </label>
-              <select
+              <Select
                 value={dept}
-                onChange={(e) => {
-                  const newDept = e.target.value;
+                onValueChange={(newDept) => {
                   setDept(newDept);
                   const targetDeptObj = departments.find((d) => d.name === newDept);
                   const nextSubCourses = targetDeptObj?.subCourses && targetDeptObj.subCourses.length > 0
@@ -1643,31 +1643,36 @@ function EnrollStudentModal({
                     : ["General Studies"];
                   setSubCourse(nextSubCourses[0] || "General Studies");
                 }}
-                className={inputClass}
               >
-                {departments.map((d) => (
-                  <option key={d.id} value={d.name}>
-                    {d.name}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="h-9 w-full text-sm font-medium">
+                  <SelectValue placeholder="Select department..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {departments.map((d) => (
+                    <SelectItem key={d.id} value={d.name}>
+                      {d.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
               <label className="mb-1 block text-xs font-semibold text-muted-foreground">
                 Sub-Course / Major *
               </label>
-              <select
-                value={subCourse}
-                onChange={(e) => setSubCourse(e.target.value)}
-                className={inputClass}
-              >
-                {availableSubCourses.map((sc, i) => (
-                  <option key={i} value={sc}>
-                    {sc}
-                  </option>
-                ))}
-              </select>
+              <Select value={subCourse} onValueChange={setSubCourse}>
+                <SelectTrigger className="h-9 w-full text-sm font-medium">
+                  <SelectValue placeholder="Select sub-course..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableSubCourses.map((sc, i) => (
+                    <SelectItem key={i} value={sc}>
+                      {sc}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -2179,7 +2184,7 @@ function StudentsPage() {
               size="sm"
               variant="outline"
               onClick={() => setSelectedDept("all")}
-              className="h-8 px-2.5 text-xs gap-1"
+              className="hidden sm:flex h-8 px-2.5 text-xs gap-1"
             >
               <ChevronLeft className="size-3.5" />
               <span>All Departments</span>
@@ -2209,82 +2214,113 @@ function StudentsPage() {
       }
     >
       {/* ══════════════════════════════════════════════
-          TOP SUMMARY KPI CARDS (Maintained fees collected)
+          TOP SUMMARY KPI CARDS
       ══════════════════════════════════════════════ */}
-      <div className="mb-6 grid gap-3 grid-cols-2 lg:grid-cols-4">
-        {/* Card 1: Selected Department Info */}
-        <div className="rounded-xl border border-border bg-card p-4 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-bold uppercase tracking-wider text-foreground">
-              {isOverview ? "Total Enrolled" : "Department Cohort"}
-            </p>
-            <span className="rounded-full bg-slate-100 p-2 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-              <Building2 className="size-4" />
-            </span>
+      <div className="mb-6">
+        {/* ── MOBILE: green hero + 3 stacked cards ── */}
+        <div className="lg:hidden space-y-2.5">
+          {/* Total Enrolled — green hero */}
+          <div className="relative rounded-2xl bg-[#22c55e] p-5 shadow-lg text-white overflow-hidden">
+            <div className="pointer-events-none absolute rounded-full bg-white/10"
+              style={{ width: "260px", height: "260px", bottom: "-120px", right: "-60px" }} />
+            <div className="relative z-10">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-white/80">
+                {isOverview ? "Total Enrolled" : "Department Cohort"}
+              </p>
+              <p className="mt-2 text-4xl font-extrabold">
+                {isOverview ? students.length : departmentStudents.length}
+              </p>
+              <p className="mt-1 text-[11px] text-white/75">
+                {isOverview ? `Across ${departments.length} departments` : `In ${selectedDept}`}
+              </p>
+            </div>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-extrabold truncate text-foreground">
-            {isOverview ? `${students.length} Students` : `${departmentStudents.length} Students`}
-          </p>
-          <p className="mt-0.5 text-xs font-semibold text-foreground/90">
-            {isOverview ? `Across ${departments.length} departments` : `In ${selectedDept}`}
-          </p>
+
+          {/* 3 stacked white cards */}
+          <div className="flex flex-col gap-2">
+            <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+              <div className="flex items-start justify-between">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Fees Collected</p>
+                <span className="rounded-lg bg-emerald-50 p-1.5 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
+                  <CheckCircle2 className="size-3.5" />
+                </span>
+              </div>
+              <p className="mt-2 text-base font-extrabold text-foreground num">{currency(totalCollected)}</p>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">{clearedCount} fully cleared · {partialCount} partial</p>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+              <div className="flex items-start justify-between">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Fee Arrears (Unpaid)</p>
+                <span className="rounded-lg bg-rose-50 p-1.5 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400">
+                  <AlertCircle className="size-3.5" />
+                </span>
+              </div>
+              <p className="mt-2 text-base font-extrabold text-foreground num">{currency(totalArrears)}</p>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">{overdueCount} students with overdue balances</p>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+              <div className="flex items-start justify-between">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Collection Efficiency</p>
+                <span className="rounded-lg bg-blue-50 p-1.5 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
+                  <Coins className="size-3.5" />
+                </span>
+              </div>
+              <p className="mt-2 text-base font-extrabold text-foreground num">{collectionRate}%</p>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">Target: {currency(totalExpected)}</p>
+            </div>
+          </div>
         </div>
 
-        {/* Card 2: Fees Collected (Maintained as requested) */}
-        <div className="rounded-xl border border-border bg-card p-4 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-bold uppercase tracking-wider text-foreground">
-              Fees Collected
+        {/* ── DESKTOP: original 4-card grid ── */}
+        <div className="hidden lg:grid gap-3 lg:grid-cols-4">
+          <div className="rounded-xl border border-border bg-card p-4 shadow-2xs">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold uppercase tracking-wider text-foreground">
+                {isOverview ? "Total Enrolled" : "Department Cohort"}
+              </p>
+              <span className="rounded-full bg-slate-100 p-2 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                <Building2 className="size-4" />
+              </span>
+            </div>
+            <p className="mt-2 text-xl sm:text-2xl font-extrabold truncate text-foreground">
+              {isOverview ? `${students.length} Students` : `${departmentStudents.length} Students`}
             </p>
-            <span className="rounded-full bg-emerald-50 p-2 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
-              <CheckCircle2 className="size-4" />
-            </span>
-          </div>
-          <p className="mt-2 text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 num">
-            {currency(totalCollected)}
-          </p>
-          <p className="mt-0.5 text-xs font-semibold text-foreground/90">
-            {clearedCount} fully cleared · {partialCount} partial
-          </p>
-        </div>
-
-        {/* Card 3: Receivables / Unpaid Arrears */}
-        <div className="rounded-xl border border-border bg-card p-4 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-bold uppercase tracking-wider text-foreground">
-              Fee Arrears (Unpaid)
+            <p className="mt-0.5 text-xs font-semibold text-foreground/90">
+              {isOverview ? `Across ${departments.length} departments` : `In ${selectedDept}`}
             </p>
-            <span className="rounded-full bg-rose-50 p-2 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400">
-              <AlertCircle className="size-4" />
-            </span>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-extrabold text-rose-600 dark:text-rose-400 num">
-            {currency(totalArrears)}
-          </p>
-          <p className="mt-0.5 text-xs font-semibold text-foreground/90">
-            {overdueCount} students with overdue balances
-          </p>
-        </div>
-
-        {/* Card 4: Collection Efficiency */}
-        <div className="rounded-xl border border-border bg-card p-4 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-bold uppercase tracking-wider text-foreground">
-              Collection Efficiency
-            </p>
-            <span className="rounded-full bg-blue-50 p-2 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
-              <Coins className="size-4" />
-            </span>
+          <div className="rounded-xl border border-border bg-card p-4 shadow-2xs">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold uppercase tracking-wider text-foreground">Fees Collected</p>
+              <span className="rounded-full bg-emerald-50 p-2 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
+                <CheckCircle2 className="size-4" />
+              </span>
+            </div>
+            <p className="mt-2 text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 num">{currency(totalCollected)}</p>
+            <p className="mt-0.5 text-xs font-semibold text-foreground/90">{clearedCount} fully cleared · {partialCount} partial</p>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-extrabold text-foreground num">
-            {collectionRate}%
-          </p>
-          <p className="mt-0.5 text-xs font-semibold text-foreground/90">
-            Target: {currency(totalExpected)}
-          </p>
+          <div className="rounded-xl border border-border bg-card p-4 shadow-2xs">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold uppercase tracking-wider text-foreground">Fee Arrears (Unpaid)</p>
+              <span className="rounded-full bg-rose-50 p-2 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400">
+                <AlertCircle className="size-4" />
+              </span>
+            </div>
+            <p className="mt-2 text-xl sm:text-2xl font-extrabold text-rose-600 dark:text-rose-400 num">{currency(totalArrears)}</p>
+            <p className="mt-0.5 text-xs font-semibold text-foreground/90">{overdueCount} students with overdue balances</p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-4 shadow-2xs">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold uppercase tracking-wider text-foreground">Collection Efficiency</p>
+              <span className="rounded-full bg-blue-50 p-2 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
+                <Coins className="size-4" />
+              </span>
+            </div>
+            <p className="mt-2 text-xl sm:text-2xl font-extrabold text-foreground num">{collectionRate}%</p>
+            <p className="mt-0.5 text-xs font-semibold text-foreground/90">Target: {currency(totalExpected)}</p>
+          </div>
         </div>
       </div>
-
       {/* ══════════════════════════════════════════════
           VIEW 1: DEPARTMENT OVERVIEW
           (When "All Departments" is active)
@@ -2470,37 +2506,38 @@ function StudentsPage() {
         ══════════════════════════════════════════════ */
         <div className="space-y-4">
           {/* Department Breadcrumb & Subheader */}
-          <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl border border-border bg-card">
-            <div className="flex items-center gap-3">
+          <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
+            {/* Row 1: dept name left + back button right (desktop only) */}
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-base font-bold text-foreground">{selectedDept}</h2>
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-accent/10 text-accent shrink-0">
+                    {activeDeptObj?.code || "DEPT"}
+                  </span>
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {departmentStudents.length} enrolled · {clearedCount} paid · {overdueCount} in arrears
+                </p>
+              </div>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setSelectedDept("all")}
-                className="h-8 px-2.5 text-xs gap-1 hover:border-accent"
+                className="h-8 px-2.5 text-xs gap-1 hover:border-accent shrink-0 hidden sm:flex"
               >
                 <ChevronLeft className="size-3.5" />
                 <span>All Departments</span>
               </Button>
-              <div className="h-4 w-px bg-border hidden sm:block" />
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-base font-bold text-foreground">{selectedDept}</h2>
-                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-accent/10 text-accent">
-                    {activeDeptObj?.code || "DEPT"}
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {departmentStudents.length} students enrolled · {clearedCount} paid in full · {overdueCount} in arrears
-                </p>
-              </div>
             </div>
 
+            {/* Row 2: Template + Import buttons */}
             <div className="flex items-center gap-2">
               <Button
                 size="sm"
                 variant="outline"
                 onClick={() => downloadCsvTemplate(selectedDept)}
-                className="h-8 text-xs gap-1.5"
+                className="h-8 text-xs gap-1.5 flex-1 sm:flex-none"
               >
                 <FileDown className="size-3.5 text-accent" />
                 <span>Template</span>
@@ -2508,7 +2545,7 @@ function StudentsPage() {
               <Button
                 size="sm"
                 onClick={() => setIsUploadCsvOpen(true)}
-                className="h-8 text-xs bg-[#22c55e] text-white hover:bg-[#16a34a] gap-1.5"
+                className="h-8 text-xs bg-[#22c55e] text-white hover:bg-[#16a34a] gap-1.5 flex-1 sm:flex-none"
               >
                 <Upload className="size-3.5" />
                 <span>Import to {selectedDept.split(" ")[0]}</span>
@@ -2516,16 +2553,16 @@ function StudentsPage() {
             </div>
           </div>
 
-          {/* ── TOOLBAR: WHO HAS PAID / UNPAID, COHORT YEARS & SEARCH ── */}
+          {/* ── TOOLBAR ── */}
           <div className="space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              {/* Search bar */}
-              <div className="relative flex-1 min-w-[240px]">
+            {/* Search + view toggle */}
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
                 <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder={`Search ${selectedDept} by name, index number, phone, years…`}
+                  placeholder={`Search ${selectedDept.split(" ")[0]}…`}
                   className="h-9 w-full rounded-xl border border-border bg-card pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-accent"
                 />
                 {search && (
@@ -2537,25 +2574,17 @@ function StudentsPage() {
                   </button>
                 )}
               </div>
-
-              {/* View Toggle */}
-              <div className="flex items-center gap-1 rounded-xl border border-border bg-card p-1">
+              <div className="flex items-center gap-1 rounded-xl border border-border bg-card p-1 shrink-0">
                 <button
                   onClick={() => setViewMode("grid")}
-                  className={cn(
-                    "p-1.5 rounded-lg transition-colors",
-                    viewMode === "grid" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"
-                  )}
+                  className={cn("p-1.5 rounded-lg transition-colors", viewMode === "grid" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground")}
                   title="Card Grid View"
                 >
                   <LayoutGrid className="size-4" />
                 </button>
                 <button
                   onClick={() => setViewMode("table")}
-                  className={cn(
-                    "p-1.5 rounded-lg transition-colors",
-                    viewMode === "table" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"
-                  )}
+                  className={cn("p-1.5 rounded-lg transition-colors", viewMode === "table" ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground")}
                   title="Table View"
                 >
                   <TableIcon className="size-4" />
@@ -2563,132 +2592,116 @@ function StudentsPage() {
               </div>
             </div>
 
-            {/* Row 1: Status Filter Pills (Paid vs Unpaid Under This Department) */}
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-                <button
-                  onClick={() => setStatusFilter("all")}
-                  className={cn(
-                    "rounded-full px-3 py-1 text-xs font-semibold transition-all border",
-                    statusFilter === "all"
-                      ? "bg-foreground text-background border-transparent"
-                      : "bg-card text-muted-foreground border-border hover:bg-secondary"
-                  )}
-                >
-                  All in {selectedDept.split(" ")[0]} ({departmentStudents.length})
-                </button>
-
-                <button
-                  onClick={() => setStatusFilter("Paid Full")}
-                  className={cn(
-                    "rounded-full px-3 py-1 text-xs font-semibold transition-all border flex items-center gap-1",
-                    statusFilter === "Paid Full"
-                      ? "bg-emerald-600 text-white border-emerald-600"
-                      : "bg-card text-emerald-600 dark:text-emerald-400 border-border hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
-                  )}
-                >
-                  <CheckCircle2 className="size-3" />
-                  Paid Full ({departmentStudents.filter((s) => s.status === "Paid Full").length})
-                </button>
-
-                <button
-                  onClick={() => setStatusFilter("Partial Payment")}
-                  className={cn(
-                    "rounded-full px-3 py-1 text-xs font-semibold transition-all border flex items-center gap-1",
-                    statusFilter === "Partial Payment"
-                      ? "bg-amber-600 text-white border-amber-600"
-                      : "bg-card text-amber-600 dark:text-amber-400 border-border hover:bg-amber-50 dark:hover:bg-amber-950/40"
-                  )}
-                >
-                  <Clock className="size-3" />
-                  Partial ({departmentStudents.filter((s) => s.status === "Partial Payment").length})
-                </button>
-
-                <button
-                  onClick={() => setStatusFilter("Overdue")}
-                  className={cn(
-                    "rounded-full px-3 py-1 text-xs font-semibold transition-all border flex items-center gap-1",
-                    statusFilter === "Overdue"
-                      ? "bg-rose-600 text-white border-rose-600"
-                      : "bg-card text-rose-600 dark:text-rose-400 border-border hover:bg-rose-50 dark:hover:bg-rose-950/40"
-                  )}
-                >
-                  <AlertCircle className="size-3" />
-                  Overdue / Unpaid ({departmentStudents.filter((s) => s.status === "Overdue").length})
-                </button>
+            {/* Status filter + Sub-Courses: dropdowns on mobile, chips on desktop */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Payment Status dropdown */}
+              <div>
+                <AppSelect
+                  value={statusFilter}
+                  onChange={(v) => setStatusFilter(v as typeof statusFilter)}
+                  options={[
+                    { value: "all", label: `All Students (${departmentStudents.length})` },
+                    { value: "Paid Full", label: `✓ Paid Full (${departmentStudents.filter((s) => s.status === "Paid Full").length})` },
+                    { value: "Partial Payment", label: `◑ Partial (${departmentStudents.filter((s) => s.status === "Partial Payment").length})` },
+                    { value: "Overdue", label: `⚠ Overdue (${departmentStudents.filter((s) => s.status === "Overdue").length})` },
+                  ]}
+                  triggerClassName="sm:hidden"
+                />
               </div>
 
-              {/* Row 2: Sub-Course Specializations Filter Pills */}
+              {/* Sub-Courses dropdown */}
               {activeSubCourses.length > 0 && (
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar pt-1 border-t border-border/40">
-                  <span className="text-xs font-bold text-foreground/80 shrink-0 mr-1 flex items-center gap-1">
-                    <BookOpen className="size-3.5 text-violet-600 dark:text-violet-400" /> Sub-Courses:
-                  </span>
-                  <button
-                    onClick={() => setSubCourseFilter("all")}
-                    className={cn(
-                      "rounded-full px-3 py-1 text-xs font-semibold transition-all border shrink-0",
-                      subCourseFilter === "all"
-                        ? "bg-violet-600 text-white border-violet-600 shadow-2xs"
-                        : "bg-card text-muted-foreground border-border hover:bg-secondary"
-                    )}
-                  >
-                    All Sub-Courses ({departmentStudents.length})
-                  </button>
-
-                  {activeSubCourses.map((sc) => {
-                    const isSelected = subCourseFilter === sc;
-                    const count = departmentStudents.filter(
-                      (s) => getStudentSubCourse(s, departments) === sc
-                    ).length;
-                    return (
-                      <button
-                        key={sc}
-                        onClick={() => setSubCourseFilter(sc)}
-                        className={cn(
-                          "rounded-full px-3 py-1 text-xs font-semibold transition-all border shrink-0 flex items-center gap-1.5",
-                          isSelected
-                            ? "bg-violet-600 text-white border-violet-600 shadow-2xs"
-                            : "bg-card text-muted-foreground border-border hover:bg-secondary"
-                        )}
-                      >
-                        <span>{sc}</span>
-                        <span
-                          className={cn(
-                            "text-[10px] font-bold rounded-full px-1.5 py-0.2",
-                            isSelected ? "bg-white/20 text-white" : "bg-secondary text-foreground"
-                          )}
-                        >
-                          {count}
-                        </span>
-                      </button>
-                    );
-                  })}
+                <div>
+                  <AppSelect
+                    value={subCourseFilter}
+                    onChange={setSubCourseFilter}
+                    options={[
+                      { value: "all", label: `All Sub-Courses (${departmentStudents.length})` },
+                      ...activeSubCourses.map((sc) => {
+                        const count = departmentStudents.filter((s) => getStudentSubCourse(s, departments) === sc).length;
+                        return { value: sc, label: `${sc} (${count})` };
+                      }),
+                    ]}
+                    triggerClassName="sm:hidden"
+                  />
                 </div>
               )}
+            </div>
 
-              {/* Sort controls */}
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <span className="font-semibold">Sort By:</span>
-                {[
-                  { key: "balanceDue" as SortKey, label: "Balance" },
-                  { key: "name" as SortKey, label: "Name" },
-                  { key: "paidAmount" as SortKey, label: "Paid" },
-                  { key: "academicYearRange" as SortKey, label: "Cohort / Years" },
-                ].map(({ key, label }) => (
-                  <button
-                    key={key}
-                    onClick={() => toggleSort(key)}
-                    className={cn(
-                      "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold transition-all",
-                      sortKey === key ? "bg-accent/15 text-accent font-bold" : "bg-secondary text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    {label}
-                    <ArrowUpDown className="size-2.5" />
-                  </button>
-                ))}
+            {/* Desktop: scrollable chips (hidden on mobile) */}
+            <div className="hidden sm:flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+              <button onClick={() => setStatusFilter("all")}
+                className={cn("shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition-all border",
+                  statusFilter === "all" ? "bg-foreground text-background border-transparent" : "bg-card text-muted-foreground border-border hover:bg-secondary"
+                )}>
+                All ({departmentStudents.length})
+              </button>
+              <button onClick={() => setStatusFilter("Paid Full")}
+                className={cn("shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition-all border flex items-center gap-1",
+                  statusFilter === "Paid Full" ? "bg-emerald-600 text-white border-emerald-600" : "bg-card text-emerald-600 dark:text-emerald-400 border-border hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+                )}>
+                <CheckCircle2 className="size-3" />
+                Paid Full ({departmentStudents.filter((s) => s.status === "Paid Full").length})
+              </button>
+              <button onClick={() => setStatusFilter("Partial Payment")}
+                className={cn("shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition-all border flex items-center gap-1",
+                  statusFilter === "Partial Payment" ? "bg-amber-600 text-white border-amber-600" : "bg-card text-amber-600 dark:text-amber-400 border-border hover:bg-amber-50 dark:hover:bg-amber-950/40"
+                )}>
+                <Clock className="size-3" />
+                Partial ({departmentStudents.filter((s) => s.status === "Partial Payment").length})
+              </button>
+              <button onClick={() => setStatusFilter("Overdue")}
+                className={cn("shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition-all border flex items-center gap-1",
+                  statusFilter === "Overdue" ? "bg-rose-600 text-white border-rose-600" : "bg-card text-rose-600 dark:text-rose-400 border-border hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                )}>
+                <AlertCircle className="size-3" />
+                Overdue ({departmentStudents.filter((s) => s.status === "Overdue").length})
+              </button>
+            </div>
+
+            {/* Sub-Courses chips (desktop only) */}
+            {activeSubCourses.length > 0 && (
+              <div className="hidden sm:flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar border-t border-border/40 pt-2">
+                <span className="text-[10px] font-bold text-foreground/80 shrink-0 flex items-center gap-1">
+                  <BookOpen className="size-3 text-violet-600 dark:text-violet-400" /> Sub:
+                </span>
+                <button onClick={() => setSubCourseFilter("all")}
+                  className={cn("shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold transition-all border",
+                    subCourseFilter === "all" ? "bg-violet-600 text-white border-violet-600" : "bg-card text-muted-foreground border-border hover:bg-secondary"
+                  )}>
+                  All ({departmentStudents.length})
+                </button>
+                {activeSubCourses.map((sc) => {
+                  const isSelected = subCourseFilter === sc;
+                  const count = departmentStudents.filter((s) => getStudentSubCourse(s, departments) === sc).length;
+                  return (
+                    <button key={sc} onClick={() => setSubCourseFilter(sc)}
+                      className={cn("shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold transition-all border flex items-center gap-1",
+                        isSelected ? "bg-violet-600 text-white border-violet-600" : "bg-card text-muted-foreground border-border hover:bg-secondary"
+                      )}>
+                      {sc} <span className={cn("text-[10px] font-bold rounded-full px-1", isSelected ? "text-white/80" : "text-foreground")}>{count}</span>
+                    </button>
+                  );
+                })}
               </div>
+            )}
+
+            {/* Sort controls */}
+            <div className="flex items-center gap-1.5 flex-wrap text-xs text-muted-foreground">
+              <span className="font-semibold shrink-0">Sort:</span>
+              {([
+                { key: "balanceDue" as SortKey, label: "Balance" },
+                { key: "name" as SortKey, label: "Name" },
+                { key: "paidAmount" as SortKey, label: "Paid" },
+                { key: "academicYearRange" as SortKey, label: "Cohort" },
+              ]).map(({ key, label }) => (
+                <button key={key} onClick={() => toggleSort(key)}
+                  className={cn("inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold transition-all",
+                    sortKey === key ? "bg-accent/15 text-accent font-bold" : "bg-secondary text-muted-foreground hover:text-foreground"
+                  )}>
+                  {label}<ArrowUpDown className="size-2.5" />
+                </button>
+              ))}
             </div>
           </div>
 

@@ -180,11 +180,11 @@ function AddItemModal({ onClose, onAdd }: {
               <input type="number" min="0" step="0.1" value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder="0" className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none placeholder:text-muted-foreground focus:border-[#22c55e]" />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Low Stock At *</label>
+              <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Min Stock *</label>
               <input type="number" min="0" step="0.1" value={threshold} onChange={(e) => setThreshold(e.target.value)} placeholder="0" className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none placeholder:text-muted-foreground focus:border-[#22c55e]" />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Unit Cost (GHS) *</label>
+              <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Cost (GHS) *</label>
               <input type="number" min="0" step="0.01" value={unitCost} onChange={(e) => setUnitCost(e.target.value)} placeholder="0" className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none placeholder:text-muted-foreground focus:border-[#22c55e]" />
             </div>
           </div>
@@ -206,6 +206,72 @@ function AddItemModal({ onClose, onAdd }: {
   );
 }
 
+// ─── Delete Confirm Dialog ────────────────────────────────────────────────────
+
+function EateryDeleteConfirmDialog({
+  item,
+  onConfirm,
+  onClose,
+}: {
+  item: InventoryItem;
+  onConfirm: () => void;
+  onClose: () => void;
+}) {
+  const [typed, setTyped] = useState("");
+  const matches = typed.trim().toLowerCase() === item.name.trim().toLowerCase();
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-sm rounded-2xl border border-border bg-card p-5 shadow-2xl space-y-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start gap-3">
+          <div className="grid size-9 shrink-0 place-items-center rounded-full bg-destructive/10">
+            <Trash2 className="size-4 text-destructive" />
+          </div>
+          <div>
+            <h3 className="font-bold text-base">Delete item?</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              This will permanently remove <span className="font-semibold text-foreground">{item.name}</span> from inventory. This cannot be undone.
+            </p>
+          </div>
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold text-muted-foreground">
+            Type <span className="font-bold text-foreground">{item.name}</span> to confirm
+          </label>
+          <input
+            autoFocus
+            value={typed}
+            onChange={(e) => setTyped(e.target.value)}
+            placeholder={item.name}
+            className="w-full h-9 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-destructive"
+          />
+        </div>
+        <div className="flex gap-2 justify-end">
+          <button
+            onClick={onClose}
+            className="h-9 px-4 rounded-lg border border-border text-sm font-medium hover:bg-secondary transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            disabled={!matches}
+            onClick={() => { onConfirm(); onClose(); }}
+            className="h-9 px-4 rounded-lg bg-destructive text-destructive-foreground text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-destructive/90 transition-colors"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 function EateryInventory() {
@@ -214,6 +280,7 @@ function EateryInventory() {
   const [catFilter, setCatFilter]     = useState<DrinkCategory | "All">("All");
   const [stockFilter, setStockFilter] = useState<"all" | "healthy" | "low" | "out">("all");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<InventoryItem | null>(null);
 
   const stockStatus = (item: InventoryItem): "out" | "low" | "ok" => {
     if (item.quantity === 0) return "out";
@@ -244,6 +311,14 @@ function EateryInventory() {
   const handleDelete = (id: string) => setItems((prev) => prev.filter((i) => i.id !== id));
 
   return (
+    <>
+      {pendingDelete && (
+        <EateryDeleteConfirmDialog
+          item={pendingDelete}
+          onConfirm={() => handleDelete(pendingDelete.id)}
+          onClose={() => setPendingDelete(null)}
+        />
+      )}
     <AppShell
       title="Drinks Inventory"
       subtitle={`${items.length} drink items · ${currency(totalValue)} total stock value`}
@@ -264,47 +339,128 @@ function EateryInventory() {
       )}
 
       {/* KPI cards */}
-      <div className="mb-5 grid grid-cols-2 gap-2.5 lg:grid-cols-4">
-        <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-xs">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Total Items</p>
-            <span className="rounded-full bg-slate-100 p-1.5 sm:p-2 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-              <Boxes className="size-3.5 sm:size-4" />
-            </span>
+      <div className="mb-5">
+
+        {/* ── MOBILE: green hero card + 2×2 grid (hidden on lg+) ── */}
+        <div className="lg:hidden space-y-2.5">
+          {/* Total Items — full-width green hero card with decorative circle */}
+          <div className="relative rounded-2xl bg-[#22c55e] p-5 sm:p-6 shadow-lg text-white overflow-hidden">
+            {/* single large decorative circle — matches restaurant dashboard */}
+            <div
+              className="pointer-events-none absolute rounded-full bg-white/10"
+              style={{ width: "260px", height: "260px", bottom: "-120px", right: "-60px" }}
+            />
+            <div className="relative z-10">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-white/80">Total Items</p>
+              <p className="mt-2 text-4xl sm:text-5xl font-extrabold">{items.length}</p>
+              <div className="mt-3">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-white/80">
+                  {currency(totalValue)} total stock value
+                </p>
+                <p className="mt-0.5 text-xs text-white/75">across all drink categories</p>
+              </div>
+            </div>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-bold">{items.length}</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">in catalog</p>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-xs">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Stock Value</p>
-            <span className="rounded-full bg-emerald-50 p-1.5 sm:p-2 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
-              <Boxes className="size-3.5 sm:size-4" />
-            </span>
+
+          {/* 2×2 grid of secondary cards */}
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+              <div className="flex items-start justify-between">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Stock Value</p>
+                <span className="rounded-lg bg-emerald-50 p-1.5 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
+                  <Boxes className="size-3.5" />
+                </span>
+              </div>
+              <p className="mt-3 text-base font-bold">{currency(totalValue)}</p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">total on hand</p>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+              <div className="flex items-start justify-between">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Categories</p>
+                <span className="rounded-lg bg-blue-50 p-1.5 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
+                  <Boxes className="size-3.5" />
+                </span>
+              </div>
+              <p className="mt-3 text-base font-bold">{CATEGORIES.length}</p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">drink categories</p>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+              <div className="flex items-start justify-between">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Low Stock</p>
+                <span className="rounded-lg bg-amber-50 p-1.5 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
+                  <AlertTriangle className="size-3.5" />
+                </span>
+              </div>
+              <p className="mt-3 text-base font-bold">{lowStockItems.length}</p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">need restocking</p>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+              <div className="flex items-start justify-between">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Out of Stock</p>
+                <span className="rounded-lg bg-rose-50 p-1.5 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400">
+                  <AlertTriangle className="size-3.5" />
+                </span>
+              </div>
+              <p className="mt-3 text-base font-bold">{outOfStock.length}</p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">zero units</p>
+            </div>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400">{currency(totalValue)}</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">total on hand</p>
         </div>
-        <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-xs">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Low Stock</p>
-            <span className="rounded-full bg-amber-50 p-1.5 sm:p-2 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
-              <AlertTriangle className="size-3.5 sm:size-4" />
-            </span>
+
+        {/* ── DESKTOP: 5 white cards in a row (hidden below lg) ── */}
+        <div className="hidden lg:grid lg:grid-cols-5 gap-3">
+          <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
+            <div className="flex items-start justify-between">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Total Items</p>
+              <span className="rounded-lg bg-slate-100 p-2 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                <Boxes className="size-4" />
+              </span>
+            </div>
+            <p className="mt-4 text-2xl font-bold">{items.length}</p>
+            <p className="mt-1 text-xs text-muted-foreground">in catalog</p>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-bold text-amber-600 dark:text-amber-400">{lowStockItems.length}</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">need restocking</p>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-xs">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Out of Stock</p>
-            <span className="rounded-full bg-rose-50 p-1.5 sm:p-2 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400">
-              <AlertTriangle className="size-3.5 sm:size-4" />
-            </span>
+          <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
+            <div className="flex items-start justify-between">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Stock Value</p>
+              <span className="rounded-lg bg-emerald-50 p-2 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
+                <Boxes className="size-4" />
+              </span>
+            </div>
+            <p className="mt-4 text-2xl font-bold">{currency(totalValue)}</p>
+            <p className="mt-1 text-xs text-muted-foreground">total on hand</p>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-bold text-rose-600 dark:text-rose-400">{outOfStock.length}</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">zero units</p>
+          <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
+            <div className="flex items-start justify-between">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Categories</p>
+              <span className="rounded-lg bg-blue-50 p-2 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
+                <Boxes className="size-4" />
+              </span>
+            </div>
+            <p className="mt-4 text-2xl font-bold">{CATEGORIES.length}</p>
+            <p className="mt-1 text-xs text-muted-foreground">drink categories</p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
+            <div className="flex items-start justify-between">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Low Stock</p>
+              <span className="rounded-lg bg-amber-50 p-2 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
+                <AlertTriangle className="size-4" />
+              </span>
+            </div>
+            <p className="mt-4 text-2xl font-bold text-amber-600 dark:text-amber-400">{lowStockItems.length}</p>
+            <p className="mt-1 text-xs text-muted-foreground">need restocking</p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
+            <div className="flex items-start justify-between">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Out of Stock</p>
+              <span className="rounded-lg bg-rose-50 p-2 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400">
+                <AlertTriangle className="size-4" />
+              </span>
+            </div>
+            <p className="mt-4 text-2xl font-bold text-rose-600 dark:text-rose-400">{outOfStock.length}</p>
+            <p className="mt-1 text-xs text-muted-foreground">zero units</p>
+          </div>
         </div>
+
       </div>
 
       {/* Toolbar */}
@@ -369,10 +525,10 @@ function EateryInventory() {
             </button>
           </div>
         ) : (
-          filtered.map((item) => {
+          filtered.map((item, idx) => {
             const status = stockStatus(item);
             return (
-              <div key={item.id} className="p-3.5 space-y-2 hover:bg-secondary/30 transition-colors">
+              <div key={item.id} className={cn("p-3.5 space-y-2 hover:bg-secondary/30 transition-colors", idx % 2 !== 0 && "bg-muted/70")}>
                 <div className="flex items-center justify-between gap-2">
                   <p className="font-semibold text-sm leading-tight">{item.name}</p>
                   <span className={cn("rounded-full px-2.5 py-0.5 text-[11px] font-semibold", CATEGORY_COLORS[item.category])}>
@@ -401,8 +557,9 @@ function EateryInventory() {
       </div>
 
       {/* Desktop table */}
-      <div className="hidden sm:block overflow-x-auto rounded-xl border border-border bg-card">
-        <table className="w-full text-sm">
+      <div className="hidden sm:block rounded-xl border border-border bg-card overflow-hidden">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[900px] text-sm">
           <thead>
             <tr className="border-b border-border bg-secondary/40 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <th className="px-5 py-3">Item</th>
@@ -462,7 +619,7 @@ function EateryInventory() {
                   </td>
                   <td className="px-5 py-3 text-right">
                     <button
-                      onClick={() => handleDelete(item.id)}
+                      onClick={() => setPendingDelete(item)}
                       className="grid size-7 place-items-center rounded-md hover:bg-secondary text-muted-foreground hover:text-destructive transition-colors"
                       aria-label="Remove item"
                     >
@@ -474,7 +631,9 @@ function EateryInventory() {
             })}
           </tbody>
         </table>
+        </div>
       </div>
     </AppShell>
+    </>
   );
 }

@@ -162,11 +162,81 @@ function EaterySales() {
       <div className="space-y-6">
 
         {/* KPI cards */}
-        <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-          <Stat label="Today's Revenue"   value={currency(todayRevenue)}    delta={14.2} sub="vs yesterday"          icon={Banknote}   accent="green" />
-          <Stat label="Weekly Revenue"    value={currency(weeklyRevenue)}   delta={8.5}  sub="last 7 days"           icon={TrendingUp} accent="blue" />
-          <Stat label="Weekly Covers"     value={weeklyCovers.toLocaleString()} delta={6.1} sub="guests served"      icon={Users}      accent="amber" />
-          <Stat label="Avg Check Value"   value={currency(avgCheck)}        delta={3.1}  sub="per guest"             icon={Receipt}    accent="purple" />
+        <section>
+          {/* ── MOBILE: green hero + 3 cards below (hidden on lg+) ── */}
+          <div className="lg:hidden space-y-2.5">
+            {/* Today's Revenue — green hero card */}
+            <div className="relative rounded-2xl bg-[#22c55e] p-5 shadow-lg text-white overflow-hidden">
+              <div
+                className="pointer-events-none absolute rounded-full bg-white/10"
+                style={{ width: "260px", height: "260px", bottom: "-120px", right: "-60px" }}
+              />
+              <div className="relative z-10">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-white/80">Today's Revenue</p>
+                <p className="mt-2 text-4xl font-extrabold">{currency(todayRevenue)}</p>
+                <div className="mt-3 flex items-center gap-1.5">
+                  <span className="inline-flex items-center gap-0.5 rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-bold text-white">
+                    <ArrowUpRight className="size-3" /> 14.2%
+                  </span>
+                  <p className="text-[11px] text-white/75">vs yesterday</p>
+                </div>
+              </div>
+            </div>
+
+            {/* 3 stacked cards */}
+            <div className="flex flex-col gap-2">
+              <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+                <div className="flex items-start justify-between">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground leading-tight">Weekly Revenue</p>
+                  <span className="rounded-lg bg-blue-50 p-1.5 text-blue-500 dark:bg-blue-950/40">
+                    <TrendingUp className="size-3" />
+                  </span>
+                </div>
+                <p className="mt-2 text-sm font-bold">{currency(weeklyRevenue)}</p>
+                <div className="mt-1 flex items-center gap-1">
+                  <span className="inline-flex items-center gap-0.5 rounded-full bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700 dark:bg-blue-950/40 dark:text-blue-400">
+                    <ArrowUpRight className="size-3" /> 8.5%
+                  </span>
+                </div>
+              </div>
+              <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+                <div className="flex items-start justify-between">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground leading-tight">Weekly Covers</p>
+                  <span className="rounded-lg bg-amber-50 p-1.5 text-amber-500 dark:bg-amber-950/40">
+                    <Users className="size-3" />
+                  </span>
+                </div>
+                <p className="mt-2 text-sm font-bold">{weeklyCovers.toLocaleString()}</p>
+                <div className="mt-1 flex items-center gap-1">
+                  <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-400">
+                    <ArrowUpRight className="size-3" /> 6.1%
+                  </span>
+                </div>
+              </div>
+              <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+                <div className="flex items-start justify-between">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground leading-tight">Avg Check</p>
+                  <span className="rounded-lg bg-purple-50 p-1.5 text-purple-500 dark:bg-purple-950/40">
+                    <Receipt className="size-3" />
+                  </span>
+                </div>
+                <p className="mt-2 text-sm font-bold">{currency(avgCheck)}</p>
+                <div className="mt-1 flex items-center gap-1">
+                  <span className="inline-flex items-center gap-0.5 rounded-full bg-purple-50 px-1.5 py-0.5 text-[10px] font-semibold text-purple-700 dark:bg-purple-950/40 dark:text-purple-400">
+                    <ArrowUpRight className="size-3" /> 3.1%
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── DESKTOP: original 4-card grid (hidden below lg) ── */}
+          <div className="hidden lg:grid lg:grid-cols-4 gap-3">
+            <Stat label="Today's Revenue"   value={currency(todayRevenue)}    delta={14.2} sub="vs yesterday"          icon={Banknote}   accent="green" />
+            <Stat label="Weekly Revenue"    value={currency(weeklyRevenue)}   delta={8.5}  sub="last 7 days"           icon={TrendingUp} accent="blue" />
+            <Stat label="Weekly Covers"     value={weeklyCovers.toLocaleString()} delta={6.1} sub="guests served"      icon={Users}      accent="amber" />
+            <Stat label="Avg Check Value"   value={currency(avgCheck)}        delta={3.1}  sub="per guest"             icon={Receipt}    accent="purple" />
+          </div>
         </section>
 
         {/* Sales trend */}
@@ -202,20 +272,20 @@ function EaterySales() {
 
           {/* Top selling dishes */}
           <section className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
-            <div className="border-b border-border px-5 py-4">
-              <h2 className="text-sm font-semibold">Top Selling Dishes</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">By orders today</p>
+            <div className="border-b border-border px-4 py-3">
+              <h2 className="text-xs font-semibold">Top Selling Dishes</h2>
+              <p className="text-[11px] text-muted-foreground mt-0.5">By orders today</p>
             </div>
             <ul className="divide-y divide-border">
               {topDishes.map((dish, i) => (
-                <li key={dish.id} className="flex items-center gap-3 px-5 py-3">
-                  <span className="text-xs font-bold text-muted-foreground w-4">{i + 1}</span>
+                <li key={dish.id} className="flex items-center gap-2 px-4 py-2.5">
+                  <span className="text-[10px] font-bold text-muted-foreground w-3 shrink-0">{i + 1}</span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate">{dish.name}</p>
-                    <p className="text-xs text-muted-foreground">{dish.category}</p>
+                    <p className="text-[11px] font-medium truncate">{dish.name}</p>
+                    <p className="text-[10px] text-muted-foreground">{dish.category}</p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="num text-sm font-bold text-[#22c55e]">{currency(dish.price * dish.dailySalesCount)}</p>
+                    <p className="num text-[11px] font-bold text-[#22c55e]">{currency(dish.price * dish.dailySalesCount)}</p>
                     <p className="text-[10px] text-muted-foreground">{dish.dailySalesCount} sold</p>
                   </div>
                 </li>
@@ -225,10 +295,10 @@ function EaterySales() {
 
           {/* Transaction log */}
           <section className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
               <div>
-                <h2 className="text-sm font-semibold">Today's Transactions</h2>
-                <p className="text-xs text-muted-foreground mt-0.5">{filtered.length} sales · {currency(filteredTotal)} total</p>
+                <h2 className="text-xs font-semibold">Today's Transactions</h2>
+                <p className="text-[11px] text-muted-foreground mt-0.5">{filtered.length} sales · {currency(filteredTotal)} total</p>
               </div>
               <div className="flex items-center gap-2">
                 <div className="relative">
@@ -240,10 +310,10 @@ function EaterySales() {
             </div>
 
             {/* Method filter pills */}
-            <div className="flex items-center gap-1.5 px-5 py-2.5 border-b border-border overflow-x-auto no-scrollbar">
+            <div className="flex items-center gap-1.5 px-4 py-2 border-b border-border overflow-x-auto no-scrollbar">
               {["All", "Mobile Money", "Cash", "Card"].map((m) => (
                 <button key={m} onClick={() => setMethodFilter(m)}
-                  className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition-all ${methodFilter === m ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900" : "bg-secondary text-muted-foreground hover:bg-border"}`}>
+                  className={`shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-semibold transition-all ${methodFilter === m ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900" : "bg-secondary text-muted-foreground hover:bg-border"}`}>
                   {m}
                 </button>
               ))}
@@ -252,19 +322,19 @@ function EaterySales() {
             {/* Mobile cards */}
             <ul className="divide-y divide-border sm:hidden max-h-80 overflow-y-auto">
               {filtered.map((t) => (
-                <li key={t.id} className="px-4 py-3 space-y-1">
+                <li key={t.id} className="px-4 py-2.5 space-y-1">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-mono text-xs text-muted-foreground">{t.id}</span>
+                    <span className="font-mono text-[10px] text-muted-foreground">{t.id}</span>
                     <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold", methodColors[t.method] ?? "bg-secondary text-muted-foreground")}>{t.method}</span>
                   </div>
-                  <p className="text-sm font-medium leading-tight">{t.dish}</p>
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <p className="text-[11px] font-medium leading-tight">{t.dish}</p>
+                  <div className="flex items-center justify-between text-[10px] text-muted-foreground">
                     <span>{t.qty}× · {t.time}</span>
                     <span className="num font-bold text-[#22c55e]">{currency(t.total)}</span>
                   </div>
                 </li>
               ))}
-              {filtered.length === 0 && <li className="py-8 text-center text-sm text-muted-foreground">No transactions found.</li>}
+              {filtered.length === 0 && <li className="py-8 text-center text-xs text-muted-foreground">No transactions found.</li>}
             </ul>
 
             {/* Desktop table */}

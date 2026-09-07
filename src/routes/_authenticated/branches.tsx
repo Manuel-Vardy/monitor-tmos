@@ -199,7 +199,7 @@ function DeleteBranchDialog({
         <Button
           variant="outline"
           size="sm"
-          className="flex-1 text-xs sm:text-sm text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+          className="w-full sm:flex-1 text-xs sm:text-sm text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
         >
           <Trash2 className="size-3.5" />
           Delete
@@ -353,20 +353,20 @@ function Branches() {
                 </div>
 
                 {/* Stats */}
-                <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-3 text-sm">
-                  <div className="min-w-0">
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-y-3 gap-x-3 text-sm">
+                  <div className="min-w-0 flex items-center justify-between sm:block">
                     <p className="text-xs text-muted-foreground">Revenue</p>
-                    <p className="num font-semibold text-sm break-all">
+                    <p className="num font-semibold text-sm">
                       {b.revenue ? currency(b.revenue) : "—"}
                     </p>
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex items-center justify-between sm:block">
                     <p className="text-xs text-muted-foreground">Stock value</p>
-                    <p className="num font-semibold text-sm break-all">
+                    <p className="num font-semibold text-sm">
                       {b.stockValue ? currency(b.stockValue) : "—"}
                     </p>
                   </div>
-                  <div className="col-span-2 sm:col-span-1 flex sm:block items-center gap-3">
+                  <div className="flex items-center justify-between sm:block">
                     <p className="text-xs text-muted-foreground">Week on week</p>
                     {b.revenue === 0 ? (
                       <p className="text-xs text-muted-foreground">N/A</p>
@@ -380,7 +380,7 @@ function Branches() {
                 </div>
 
                 {/* Staff & settlement */}
-                <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-border pt-3 text-xs text-muted-foreground">
+                <div className="mt-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-y-1.5 gap-x-4 border-t border-border pt-3 text-xs text-muted-foreground">
                   <span className="inline-flex items-center gap-1.5">
                     <Users className="size-3.5 shrink-0" /> {b.staff} staff assigned
                   </span>
@@ -391,11 +391,11 @@ function Branches() {
                 </div>
 
                 {/* Actions */}
-                <div className="mt-3 flex gap-2">
-                  <Button variant="outline" size="sm" className="flex-1 text-xs sm:text-sm">
+                <div className="mt-3 flex flex-col sm:flex-row gap-2">
+                  <Button size="sm" className="w-full sm:flex-1 text-xs sm:text-sm bg-[#22c55e] text-white hover:bg-[#16a34a]">
                     Manage staff
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1 text-xs sm:text-sm">
+                  <Button size="sm" className="w-full sm:flex-1 text-xs sm:text-sm bg-[#22c55e] text-white hover:bg-[#16a34a]">
                     Branch dashboard
                   </Button>
                   <DeleteBranchDialog branch={b} onDelete={() => deleteBranch(b.id)} />

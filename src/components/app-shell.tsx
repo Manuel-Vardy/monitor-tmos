@@ -41,18 +41,18 @@ import {
 export function Wordmark({ className }: { className?: string }) {
   return (
     <img
-      src="/Trite-WB.png"
+      src="/trite-logo-white.png"
       alt="Trite logo"
       className={cn("h-7 w-auto object-contain", className)}
     />
   );
 }
 
-/** Compact green logo used in the mobile top bar */
+/** Compact logo used in the mobile top bar */
 function MobileLogo({ className }: { className?: string }) {
   return (
     <img
-      src="/tritee-logo.png"
+      src="/trite-logo-black.png"
       alt="Trite"
       className={cn("h-7 w-auto object-contain", className)}
     />
@@ -251,7 +251,6 @@ export function AppShell({
               )}
             </div>
             <div className="flex items-center gap-2">
-              {institutionType === "school" && <AcademicYearSelector />}
               <button className="relative grid size-9 place-items-center rounded-md border border-border bg-card transition-colors hover:bg-secondary">
                 <Bell className="size-4" />
                 <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-accent" />
@@ -282,7 +281,6 @@ export function AppShell({
                 )}
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                {institutionType === "school" && <AcademicYearSelector />}
                 {actions && (
                   <div className="flex flex-wrap items-center gap-2">{actions}</div>
                 )}
@@ -358,20 +356,31 @@ export function AppShell({
                           const active = pathname === item.to;
                           return (
                             <li key={item.to}>
-                              <Link
-                                to={item.to}
-                                onClick={() => setMenuOpen(false)}
-                                className={cn(
-                                  "flex items-center gap-3 rounded-md px-3 py-2 text-[13px] transition-colors",
-                                  active
-                                    ? "bg-accent/15 font-medium text-accent"
-                                    : "hover:bg-secondary text-foreground/90",
-                                )}
-                              >
-                                <item.icon className="size-4 shrink-0 opacity-80" />
-                                <span className="flex-1">{item.label}</span>
-                                {active && <span className="size-1.5 rounded-full bg-accent" />}
-                              </Link>
+                              {item.locked ? (
+                                <span
+                                  className="flex items-center gap-3 rounded-md px-3 py-2 text-[13px] opacity-40 cursor-not-allowed select-none text-foreground/90"
+                                  title="Coming soon"
+                                >
+                                  <item.icon className="size-4 shrink-0 opacity-80" />
+                                  <span className="flex-1">{item.label}</span>
+                                  <Lock className="size-3 shrink-0" />
+                                </span>
+                              ) : (
+                                <Link
+                                  to={item.to}
+                                  onClick={() => setMenuOpen(false)}
+                                  className={cn(
+                                    "flex items-center gap-3 rounded-md px-3 py-2 text-[13px] transition-colors",
+                                    active
+                                      ? "bg-accent/15 font-medium text-accent"
+                                      : "hover:bg-secondary text-foreground/90",
+                                  )}
+                                >
+                                  <item.icon className="size-4 shrink-0 opacity-80" />
+                                  <span className="flex-1">{item.label}</span>
+                                  {active && <span className="size-1.5 rounded-full bg-accent" />}
+                                </Link>
+                              )}
                             </li>
                           );
                         })}

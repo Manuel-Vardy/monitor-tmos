@@ -17,6 +17,7 @@ import {
   FlaskConical,
   Bell,
   HeartPulse,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -223,8 +224,8 @@ function AddProductDialog({
           <span className="sm:hidden">Add</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-lg max-h-[90dvh] flex flex-col p-0 gap-0">
+        <DialogHeader className="px-5 pt-5 pb-3 border-b border-border shrink-0">
           <DialogTitle>{isPharmacy ? "Add medication" : "Add product"}</DialogTitle>
           <DialogDescription>
             {isPharmacy
@@ -233,7 +234,8 @@ function AddProductDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
+        <form onSubmit={submit} className="flex-1 overflow-y-auto px-5 py-4">
+          <div className="grid gap-4 sm:grid-cols-2">
           {isPharmacy ? (
             <>
               <div className="space-y-1.5 sm:col-span-2">
@@ -452,7 +454,7 @@ function AddProductDialog({
             )}
           </div>
 
-          <DialogFooter className="sm:col-span-2">
+          <DialogFooter className="sm:col-span-2 pt-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
@@ -467,6 +469,7 @@ function AddProductDialog({
               {isPharmacy ? "Add medication" : "Add product"}
             </Button>
           </DialogFooter>
+        </div>
         </form>
       </DialogContent>
     </Dialog>
@@ -955,9 +958,74 @@ function CsvDropdown({ items, isPharmacy }: { items: Product[]; isPharmacy: bool
   );
 }
 
+function DeleteConfirmDialog({
+  item,
+  onConfirm,
+  onClose,
+}: {
+  item: Product;
+  onConfirm: () => void;
+  onClose: () => void;
+}) {
+  const [typed, setTyped] = useState("");
+  const matches = typed.trim().toLowerCase() === item.name.trim().toLowerCase();
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-sm rounded-2xl border border-border bg-card p-5 shadow-2xl space-y-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start gap-3">
+          <div className="grid size-9 shrink-0 place-items-center rounded-full bg-destructive/10">
+            <Trash2 className="size-4 text-destructive" />
+          </div>
+          <div>
+            <h3 className="font-bold text-base">Delete product?</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              This will permanently remove <span className="font-semibold text-foreground">{item.name}</span> from inventory. This cannot be undone.
+            </p>
+          </div>
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold text-muted-foreground">
+            Type <span className="font-bold text-foreground">{item.name}</span> to confirm
+          </label>
+          <input
+            autoFocus
+            value={typed}
+            onChange={(e) => setTyped(e.target.value)}
+            placeholder={item.name}
+            className="w-full h-9 rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-destructive"
+          />
+        </div>
+        <div className="flex gap-2 justify-end">
+          <button
+            onClick={onClose}
+            className="h-9 px-4 rounded-lg border border-border text-sm font-medium hover:bg-secondary transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            disabled={!matches}
+            onClick={() => { onConfirm(); onClose(); }}
+            className="h-9 px-4 rounded-lg bg-destructive text-destructive-foreground text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-destructive/90 transition-colors"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Inventory() {
   const [q, setQ] = useState("");
   const [items, setItems] = useState<Product[]>(seedProducts);
+  const [pendingDelete, setPendingDelete] = useState<Product | null>(null);
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [stockFilter, setStockFilter] = useState<"all" | "healthy" | "low" | "out" | "expiring">("all");
   const { branches } = useBranches();
@@ -1041,6 +1109,17 @@ function Inventory() {
     : `${items.length} SKUs across 4 branches · stock value ${currency(stockValue)}`;
 
   return (
+    <>
+      {pendingDelete && (
+        <DeleteConfirmDialog
+          item={pendingDelete}
+          onConfirm={() => {
+            setItems((prev) => prev.filter((i) => i.sku !== pendingDelete.sku));
+            toast.success(`${pendingDelete.name} deleted`);
+          }}
+          onClose={() => setPendingDelete(null)}
+        />
+      )}
     <AppShell
       title={pageTitle}
       subtitle={pageSubtitle}
@@ -1060,7 +1139,7 @@ function Inventory() {
       }
     >
       <div className="grid gap-4 xl:grid-cols-[1fr_320px]">
-        <section className="rounded-lg border border-border bg-card">
+        <section className="rounded-lg border border-border bg-card overflow-hidden">
           <div className="flex flex-col gap-2.5 p-3 border-b border-border sm:flex-row sm:items-center">
             <div className="relative min-w-0 flex-1">
               <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -1111,11 +1190,11 @@ function Inventory() {
           {/* Mobile Card List View */}
           <div className="divide-y divide-border sm:hidden">
             {isPharmacy
-              ? (rows as unknown as PharmacyMedication[]).map((m) => {
+              ? (rows as unknown as PharmacyMedication[]).map((m, idx) => {
                   const pct = Math.min(100, (m.stockLevel / Math.max(1, m.reorderLevel * 3)) * 100);
                   const low = m.stockLevel <= m.reorderLevel;
                   return (
-                    <div key={m.id} className="p-3.5 space-y-2 transition-colors hover:bg-secondary/40">
+                    <div key={m.id} className={cn("p-3.5 space-y-2 transition-colors hover:bg-secondary/40", idx % 2 !== 0 && "bg-muted/70")}>
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
                           <p className="font-semibold text-sm leading-snug text-foreground">
@@ -1184,11 +1263,11 @@ function Inventory() {
                     </div>
                   );
                 })
-              : (rows as unknown as Product[]).map((p) => {
+              : (rows as unknown as Product[]).map((p, idx) => {
                   const pct = Math.min(100, (p.stock / Math.max(1, p.threshold * 3)) * 100);
                   const low = p.stock <= p.threshold;
                   return (
-                    <div key={p.sku} className="p-3.5 space-y-2 transition-colors hover:bg-secondary/40">
+                    <div key={p.sku} className={cn("p-3.5 space-y-2 transition-colors hover:bg-secondary/40", idx % 2 !== 0 && "bg-muted/70")}>
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
                           <p className="font-semibold text-sm leading-snug text-foreground">{p.name}</p>
@@ -1236,14 +1315,24 @@ function Inventory() {
                           </StatusBadge>
                         </div>
                       )}
+                      <div className="flex justify-end pt-1">
+                        <button
+                          onClick={() => setPendingDelete(p)}
+                          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors"
+                        >
+                          <Trash2 className="size-3.5" />
+                          Delete
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
           </div>
 
           {/* Desktop Table View */}
-          <div className="hidden sm:block overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="hidden sm:block">
+            <div className="overflow-x-auto">
+            <table className="w-full min-w-[900px] text-sm">
               <thead>
                 <tr className="border-b border-border text-left text-xs tracking-wide text-muted-foreground uppercase">
                   {isPharmacy ? (
@@ -1267,6 +1356,7 @@ function Inventory() {
                       <th className="px-4 py-2.5 text-right font-medium">On hand</th>
                       <th className="px-4 py-2.5 font-medium">Expiry</th>
                       <th className="px-4 py-2.5 font-medium">Level</th>
+                      <th className="px-4 py-2.5 font-medium"></th>
                     </>
                   )}
                 </tr>
@@ -1378,11 +1468,21 @@ function Inventory() {
                               </StatusBadge>
                             </div>
                           </td>
+                          <td className="px-4 py-3 text-right">
+                            <button
+                              onClick={() => setPendingDelete(p)}
+                              className="grid size-7 place-items-center rounded-md hover:bg-secondary text-muted-foreground hover:text-destructive transition-colors"
+                              aria-label="Delete item"
+                            >
+                              <Trash2 className="size-3.5" />
+                            </button>
+                          </td>
                         </tr>
                       );
                     })}
               </tbody>
             </table>
+            </div>
           </div>
 
           {rows.length === 0 && (
@@ -1551,5 +1651,6 @@ function Inventory() {
         </aside>
       </div>
     </AppShell>
+    </>
   );
 }

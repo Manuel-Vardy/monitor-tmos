@@ -157,13 +157,9 @@ export function ChurchDashboard() {
         <div className="lg:hidden space-y-3">
           <div className="flex items-center justify-between px-0.5">
             <div>
-              <p className="text-xs text-muted-foreground">Good morning 🌤</p>
               <h2 className="text-xl font-bold leading-tight">Church Collections</h2>
             </div>
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 shadow-xs">
-                <span className="size-1.5 rounded-full bg-emerald-500" /> Live
-              </span>
               <button className="relative grid size-9 place-items-center rounded-full bg-card shadow-xs border border-border">
                 <Bell className="size-4" />
                 <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-red-500" />
@@ -280,7 +276,8 @@ export function ChurchDashboard() {
                 <div>
                   <h2 className="text-sm font-semibold">Church Collections & Revenue Trend</h2>
                   <p className="text-xs text-muted-foreground">
-                    Tithes, Sunday offerings, welfare dues, and project funding
+                    <span className="hidden sm:inline">Tithes, Sunday offerings, welfare dues, and project funding</span>
+                    <span className="sm:hidden">Tithes, offerings & welfare</span>
                   </p>
                 </div>
               </div>
@@ -339,7 +336,7 @@ export function ChurchDashboard() {
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
-              <p className="mt-1 px-2 text-xs text-muted-foreground">
+              <p className="hidden sm:block mt-1 px-2 text-xs text-muted-foreground">
                 Total monthly collections climbed to{" "}
                 {currency(CHURCH_COLLECTIONS_TREND[CHURCH_COLLECTIONS_TREND.length - 1]!.collected)}{" "}
                 in August, driven by building fund pledges and steady tithing.
@@ -366,8 +363,8 @@ export function ChurchDashboard() {
                 <li key={tx.id} className="flex items-center justify-between gap-3 px-5 py-3">
                   <div className="min-w-0">
                     <p className="truncate font-semibold text-sm">{tx.memberName}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {tx.paymentType} {tx.isProject ? "· 🏗️ Project" : ""}
+                    <p className="truncate text-xs text-muted-foreground">
+                      {tx.paymentType}{tx.isProject ? " · 🏗️ Project" : ""}
                     </p>
                   </div>
                   <div className="text-right shrink-0">

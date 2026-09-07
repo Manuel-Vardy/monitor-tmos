@@ -26,6 +26,7 @@ import { currency } from "@/lib/mos-data";
 import { WHOLESALE_PURCHASE_ORDERS, type WholesalePurchaseOrder } from "@/lib/wholesale-data";
 import { PHARMACY_PURCHASE_ORDERS, type PharmacyPurchaseOrder } from "@/lib/pharmacy-data";
 import { useInstitution } from "@/hooks/use-institution";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/purchasing")({
   head: () => ({
@@ -787,9 +788,9 @@ function Purchasing() {
         </div>
 
         {/* Mobile Card List View */}
-        <div className="divide-y divide-border rounded-xl border border-border bg-card sm:hidden">
+        <div className="sm:hidden space-y-3">
           {filtered.length === 0 ? (
-            <div className="py-10 text-center text-sm text-muted-foreground">
+            <div className="py-10 text-center text-sm text-muted-foreground rounded-xl border border-border bg-card">
               No purchase orders found matching your search.
             </div>
           ) : (
@@ -800,7 +801,7 @@ function Purchasing() {
               return (
                 <div
                   key={po.id}
-                  className="p-3.5 space-y-2.5 transition-colors hover:bg-secondary/40"
+                  className="rounded-xl border border-border bg-card p-4 space-y-3 shadow-xs"
                 >
                   {/* Row 1: PO Number & Status Badge */}
                   <div className="flex items-center justify-between gap-2">
@@ -846,13 +847,13 @@ function Purchasing() {
 
                   {/* Row 3: Pharmacy items preview */}
                   {isPharmacy && pharmacyPO.items && pharmacyPO.items.length > 0 && (
-                    <div className="space-y-1 rounded-lg bg-secondary/40 p-2">
-                      {pharmacyPO.items.slice(0, 2).map((item, idx) => (
-                        <div key={idx} className="flex items-center justify-between text-[11px]">
+                    <div className="space-y-1 rounded-lg bg-secondary/60 px-3 py-2">
+                      {pharmacyPO.items.slice(0, 2).map((item, i) => (
+                        <div key={i} className="flex items-center justify-between text-[11px]">
                           <span className="truncate font-medium text-foreground">
                             {item.brandName}
                           </span>
-                          <span className="num text-muted-foreground">×{item.quantity}</span>
+                          <span className="num text-muted-foreground ml-2 shrink-0">×{item.quantity}</span>
                         </div>
                       ))}
                       {pharmacyPO.items.length > 2 && (
@@ -863,8 +864,8 @@ function Purchasing() {
                     </div>
                   )}
 
-                  {/* Row 4: Meta (Branch, units, expected date, payment terms) & Action */}
-                  <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/50 text-xs text-muted-foreground">
+                  {/* Row 4: Meta & Action */}
+                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/50 text-xs text-muted-foreground">
                     <div className="truncate">
                       <span>{po.branch}</span>
                       <span className="mx-1.5 opacity-40">·</span>
@@ -890,7 +891,6 @@ function Purchasing() {
             })
           )}
         </div>
-
         {/* Desktop Table View */}
         <div className="hidden sm:block overflow-x-auto rounded-xl border border-border bg-card">
           <table className="w-full text-sm">

@@ -31,6 +31,8 @@ import { KpiCard } from "@/components/kpi-card";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DateRangePicker } from "@/components/date-range-picker";
+import { AppSelect } from "@/components/app-select";
+import { AcademicYearSelector } from "@/components/academic-year-selector";
 import { currency } from "@/lib/mos-data";
 import { SCHOOL_STUDENTS, FEE_TRANSACTIONS, SCHOOL_SUMMARY } from "@/lib/school-data";
 import { useAcademicYear } from "@/contexts/academic-year-context";
@@ -232,6 +234,7 @@ export function SchoolDashboard() {
       subtitle="Fee collection, payment processing, reconciliation & financial operations — powered by Trite"
       actions={
         <div className="hidden lg:flex flex-wrap items-center gap-2">
+          <AcademicYearSelector />
           <Link to="/students">
             <Button size="sm" variant="outline">
               <Users className="size-4" /> Manage Students
@@ -248,59 +251,42 @@ export function SchoolDashboard() {
       <div className="space-y-6">
         {/* Mobile: hero + 4 KPI cards */}
         <div className="lg:hidden space-y-3">
+          {/* Row 1: greeting + title */}
           <div className="flex items-center justify-between px-0.5">
             <div>
               <p className="text-xs text-muted-foreground">Good morning 🌤</p>
-              <h2 className="text-xl font-bold leading-tight">Fees & Payments</h2>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 shadow-xs">
-                <span className="size-1.5 rounded-full bg-emerald-500" /> Live · Trite Settling
-              </span>
-              <button className="relative grid size-9 place-items-center rounded-full bg-card shadow-xs border border-border">
-                <Bell className="size-4" />
-                <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-red-500" />
-              </button>
+              <h2 className="text-base font-bold leading-tight">Fees & Payments</h2>
             </div>
           </div>
+          {/* Row 2: year filter + bell */}
+          <div className="flex items-center justify-between px-0.5">
+            <AcademicYearSelector />
+            <button className="relative grid size-9 place-items-center rounded-full bg-card shadow-xs border border-border shrink-0">
+              <Bell className="size-4" />
+              <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-red-500" />
+            </button>
+          </div>
 
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#22c55e] to-[#16a34a] p-5 text-white shadow-lg">
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#22c55e] to-[#16a34a] p-6 text-white shadow-lg">
             <div
               className="pointer-events-none absolute rounded-full bg-white/10"
               style={{ width: "260px", height: "260px", bottom: "-120px", right: "-60px" }}
             />
             <div className="relative z-10">
-              <div className="flex items-start justify-between">
+              <p className="text-[10px] font-bold tracking-widest uppercase text-white/80">
+                Total Collected · {rangeLabel}
+              </p>
+              <p className="num mt-1.5 text-2xl font-extrabold leading-none tracking-tight">
+                {currency(trendTotals.totalCollected)}
+              </p>
+              <div className="mt-4 grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-[11px] font-bold tracking-widest uppercase text-white/80">
-                    Total Collected · {rangeLabel}
-                  </p>
-                  <p className="num mt-2 text-3xl font-extrabold leading-none tracking-tight">
-                    {currency(trendTotals.totalCollected)}
-                  </p>
-                </div>
-                <CircleDollarSign className="size-7 opacity-80" />
-              </div>
-              <div className="mt-4 grid grid-cols-3 gap-3">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/70">
-                    Avg Daily
-                  </p>
-                  <p className="text-lg font-bold leading-none mt-1 num">
-                    {currency(trendTotals.avgDaily)}
-                  </p>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-white/70">Avg Daily</p>
+                  <p className="text-sm font-bold leading-none mt-0.5 num">{currency(trendTotals.avgDaily)}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/70">
-                    Receipts
-                  </p>
-                  <p className="text-lg font-bold leading-none mt-1 num">{trendTotals.totalTx}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/70">
-                    Collection
-                  </p>
-                  <p className="text-lg font-bold leading-none mt-1">{collectionRate}%</p>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-white/70">Collection Rate</p>
+                  <p className="text-sm font-bold leading-none mt-0.5">{collectionRate}%</p>
                 </div>
               </div>
             </div>
@@ -308,24 +294,24 @@ export function SchoolDashboard() {
 
           <div className="grid grid-cols-2 gap-2.5">
             <div className="rounded-xl border border-border bg-card p-3 shadow-2xs">
-              <p className="text-xs font-bold uppercase tracking-wider text-foreground">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                 Total Arrears
               </p>
-              <p className="mt-1 font-extrabold text-lg text-rose-600 dark:text-rose-400 num">
+              <p className="mt-1 font-extrabold text-base text-foreground num">
                 {currency(totalOutstanding)}
               </p>
-              <p className="text-[11px] font-semibold text-foreground/90 mt-0.5">
+              <p className="text-[11px] text-muted-foreground mt-0.5">
                 {overdueStudents} overdue
               </p>
             </div>
             <div className="rounded-xl border border-border bg-card p-3 shadow-2xs">
-              <p className="text-xs font-bold uppercase tracking-wider text-foreground">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                 Cleared Students
               </p>
-              <p className="mt-1 font-extrabold text-lg text-emerald-600 dark:text-emerald-400">
+              <p className="mt-1 font-extrabold text-base text-foreground">
                 {fullyPaidStudents}/{SCHOOL_STUDENTS.length}
               </p>
-              <p className="text-[11px] font-semibold text-foreground/90 mt-0.5">Fully paid fees</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Fully paid fees</p>
             </div>
           </div>
         </div>
@@ -355,19 +341,19 @@ export function SchoolDashboard() {
 
         {/* Payment Collection Trend + Method Split */}
         <div className="grid gap-6 lg:grid-cols-3">
-          <Card className="p-5 lg:col-span-2 shadow-none overflow-hidden">
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <Card className="p-4 lg:col-span-2 shadow-none overflow-hidden">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
               <div>
-                <h2 className="text-base font-semibold">Fee Collection Trend</h2>
-                <p className="text-xs text-muted-foreground">
+                <h2 className="text-sm font-semibold">Fee Collection Trend</h2>
+                <p className="text-[11px] text-muted-foreground">
                   {rangeLabel} · {trendData.length} data points · Avg daily{" "}
-                  {currency(trendTotals.avgDaily)} · Settled via Trite
+                  {currency(trendTotals.avgDaily)}
                 </p>
               </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <div className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 dark:bg-emerald-950/40">
-                  <TrendingUp className="size-3.5 text-emerald-600 dark:text-emerald-400" />
-                  <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <div className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 dark:bg-emerald-950/40">
+                  <TrendingUp className="size-3 text-emerald-600 dark:text-emerald-400" />
+                  <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">
                     +22% WoW
                   </span>
                 </div>
@@ -424,14 +410,14 @@ export function SchoolDashboard() {
           </Card>
 
           {/* Payment Method Split */}
-          <Card className="p-5 shadow-none overflow-hidden">
-            <div className="flex items-center justify-between border-b border-border pb-3">
-              <div className="flex items-center gap-2">
-                <Banknote className="size-4 text-[#22c55e]" />
-                <h2 className="text-sm font-semibold">Collected by Payment Method</h2>
+          <Card className="p-4 shadow-none overflow-hidden">
+            <div className="flex items-center justify-between border-b border-border pb-2.5">
+              <div className="flex items-center gap-1.5">
+                <Banknote className="size-3.5 text-[#22c55e]" />
+                <h2 className="text-xs font-semibold">Collected by Payment Method</h2>
               </div>
             </div>
-            <ul className="mt-3 divide-y divide-border">
+            <ul className="mt-2.5 divide-y divide-border">
               {collectedByMethod.map((row) => {
                 const Icon = METHOD_ICONS[row.method] ?? Banknote;
                 const color = METHOD_COLORS[row.method];
@@ -441,24 +427,24 @@ export function SchoolDashboard() {
                 return (
                   <li
                     key={row.method}
-                    className="flex items-center justify-between gap-3 py-3 first:pt-2"
+                    className="flex items-center justify-between gap-2 py-2.5 first:pt-1.5"
                   >
-                    <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex items-center gap-2 min-w-0">
                       <span
-                        className="grid size-9 shrink-0 place-items-center rounded-xl"
+                        className="grid size-7 shrink-0 place-items-center rounded-lg"
                         style={{ backgroundColor: `${color}1A`, color }}
                       >
-                        <Icon className="size-4" />
+                        <Icon className="size-3.5" />
                       </span>
                       <div className="min-w-0">
-                        <p className="font-medium text-sm truncate">{row.method}</p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="font-medium text-xs truncate">{row.method}</p>
+                        <p className="text-[10px] text-muted-foreground">
                           {row.count} receipt{row.count !== 1 ? "s" : ""} · {pct}%
                         </p>
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="num font-bold text-sm" style={{ color }}>
+                      <p className="num font-bold text-xs" style={{ color }}>
                         {currency(row.amount)}
                       </p>
                     </div>
@@ -482,27 +468,27 @@ export function SchoolDashboard() {
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                <select
+                <AppSelect
                   value={selectedDepartment}
-                  onChange={(e) => setSelectedDepartment(e.target.value)}
-                  className="rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-2xs cursor-pointer"
-                >
-                  <option value="all">All Departments ({departmentTransactions.length})</option>
-                  <option value="IT Department">IT Department</option>
-                  <option value="HR Department">HR Department</option>
-                  <option value="Business Administration">Business Administration</option>
-                  <option value="Accounting & Finance">Accounting & Finance</option>
-                  <option value="Art Department">Art Department</option>
-                  <option value="Social Studies Department">Social Studies Department</option>
-                </select>
+                  onChange={setSelectedDepartment}
+                  options={[
+                    { value: "all", label: `All Departments (${departmentTransactions.length})` },
+                    { value: "IT Department", label: "IT Department" },
+                    { value: "HR Department", label: "HR Department" },
+                    { value: "Business Administration", label: "Business Administration" },
+                    { value: "Accounting & Finance", label: "Accounting & Finance" },
+                    { value: "Art Department", label: "Art Department" },
+                    { value: "Social Studies Department", label: "Social Studies Department" },
+                  ]}
+                />
                 <DateRangePicker value={departmentDateRange} onChange={setDepartmentDateRange} />
               </div>
             </div>
 
             {/* Department Summary Ribbon */}
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 bg-muted/10 px-5 py-2.5 text-xs">
-              <span className="text-muted-foreground flex items-center gap-2">
-                <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 bg-muted/10 px-4 py-2 text-[11px] sm:text-xs sm:px-5 sm:py-2.5">
+              <span className="text-muted-foreground flex items-center gap-1.5">
+                <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 {selectedDepartment === "all" ? "All Faculty Departments" : selectedDepartment}:
                 <strong className="text-foreground ml-1">
                   {departmentDailyCollections.length}{" "}
@@ -511,13 +497,13 @@ export function SchoolDashboard() {
                     : "daily collections"}
                 </strong>
               </span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400 num text-sm">
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 num text-[11px] sm:text-sm">
                 Total Inflow: {currency(filteredDeptTotalInflow)}
               </span>
             </div>
 
             <div className="overflow-x-auto">
-              <div className="grid min-w-[620px] grid-cols-[minmax(180px,1fr)_130px_120px_100px_140px] items-center gap-x-4 border-b border-border bg-muted/20 px-5 py-2.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              <div className="grid min-w-[620px] grid-cols-[minmax(180px,1fr)_130px_120px_100px_140px] items-center gap-x-4 border-b border-border bg-muted/20 px-4 py-2 sm:px-5 sm:py-2.5 text-[9px] sm:text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                 <span>Department</span>
                 <span>Date</span>
                 <span>Receipts</span>
@@ -555,15 +541,15 @@ export function SchoolDashboard() {
                     return (
                       <li
                         key={tx.id}
-                        className="grid grid-cols-[minmax(180px,1fr)_130px_120px_100px_140px] items-center gap-x-4 px-5 py-3 text-sm hover:bg-muted/30 transition-colors"
+                        className="grid grid-cols-[minmax(180px,1fr)_130px_120px_100px_140px] items-center gap-x-4 px-4 py-2.5 sm:px-5 sm:py-3 text-xs sm:text-sm hover:bg-muted/30 transition-colors"
                       >
                         <div className="contents">
                           <div className="contents">
                             <div className="contents">
-                              <p className="font-semibold text-sm whitespace-nowrap text-foreground">
+                              <p className="font-semibold text-xs sm:text-sm whitespace-nowrap text-foreground">
                                 {tx.studentName}
                               </p>
-                              <span className="text-xs text-muted-foreground whitespace-nowrap">
+                              <span className="text-[10px] sm:text-xs text-muted-foreground whitespace-nowrap">
                                 {collection.date}
                               </span>
                             </div>
@@ -576,13 +562,13 @@ export function SchoolDashboard() {
 
                         <div className="contents">
                           <div className="contents">
-                            <p className="text-[11px] text-muted-foreground">{tx.date}</p>
-                            <span className="inline-block text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 rounded px-1.5 py-0.2 mt-0.5">
+                            <p className="text-[10px] sm:text-[11px] text-muted-foreground">{tx.date}</p>
+                            <span className="inline-block text-[9px] sm:text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 rounded px-1.5 py-0.2 mt-0.5">
                               Settled ✓
                             </span>
                           </div>
                           <div className="contents">
-                            <p className="text-right font-bold text-base text-emerald-600 dark:text-emerald-400 num whitespace-nowrap">
+                            <p className="text-right font-bold text-xs sm:text-base text-emerald-600 dark:text-emerald-400 num whitespace-nowrap">
                               +{currency(tx.amountPaid)}
                             </p>
                           </div>

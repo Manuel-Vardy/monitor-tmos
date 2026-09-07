@@ -43,6 +43,7 @@ import {
   type Student,
 } from "@/lib/school-data";
 import { cn } from "@/lib/utils";
+import { AppSelect } from "@/components/app-select";
 
 export const Route = createFileRoute("/_authenticated/receipts")({
   head: () => ({
@@ -433,7 +434,7 @@ function ReceiptsPage() {
   return (
     <AppShell
       title="Payment Receipts & Fee Records"
-      subtitle={`${transactions.length} receipts issued this term · ${currency(SCHOOL_SUMMARY.totalFeesCollected)} total fees collected across ${TERTIARY_DEPTS.length} departments`}
+      subtitle={<span className="hidden sm:inline">{`${transactions.length} receipts issued this term · ${currency(SCHOOL_SUMMARY.totalFeesCollected)} total fees collected across ${TERTIARY_DEPTS.length} departments`}</span>}
       actions={
         <div className="flex flex-wrap items-center gap-2">
           <Button size="sm" variant="outline" className="h-8 px-2.5 text-xs gap-1.5">
@@ -445,67 +446,102 @@ function ReceiptsPage() {
       {/* ══════════════════════════════════════════════
           1. STAT SUMMARY CARDS
       ══════════════════════════════════════════════ */}
-      <div className="mb-5 grid grid-cols-2 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Card 1: Total Receipts */}
-        <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-bold uppercase tracking-wider text-foreground">
-              Total Receipts
-            </p>
-            <span className="rounded-full bg-slate-100 p-1.5 sm:p-2 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-              <Receipt className="size-3.5 sm:size-4" />
-            </span>
+      <div className="mb-5">
+        {/* ── MOBILE: green hero + 3 stacked cards ── */}
+        <div className="lg:hidden space-y-2.5">
+          <div className="relative rounded-2xl bg-[#22c55e] p-5 shadow-lg text-white overflow-hidden">
+            <div className="pointer-events-none absolute rounded-full bg-white/10"
+              style={{ width: "260px", height: "260px", bottom: "-120px", right: "-60px" }} />
+            <div className="relative z-10">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-white/80">Total Receipts</p>
+              <p className="mt-2 text-4xl font-extrabold">{transactions.length}</p>
+              <p className="mt-1 text-[11px] text-white/75">Issued in Term 3, 2026</p>
+            </div>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-extrabold text-foreground">{transactions.length}</p>
-          <p className="mt-0.5 text-xs font-semibold text-foreground/90">Issued in Term 3, 2026</p>
+          <div className="flex flex-col gap-2">
+            <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+              <div className="flex items-start justify-between">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Mobile Money</p>
+                <span className="rounded-lg bg-amber-50 p-1.5 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
+                  <Smartphone className="size-3.5" />
+                </span>
+              </div>
+              <p className="mt-2 text-base font-extrabold text-foreground">
+                {transactions.filter((t) => t.paymentMethod.includes("Mobile Money")).length} Receipts
+              </p>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">MoMo mobile settlements</p>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+              <div className="flex items-start justify-between">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Bank Transfers</p>
+                <span className="rounded-lg bg-blue-50 p-1.5 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
+                  <Building2 className="size-3.5" />
+                </span>
+              </div>
+              <p className="mt-2 text-base font-extrabold text-foreground">
+                {transactions.filter((t) => t.paymentMethod === "Bank Transfer").length} Receipts
+              </p>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">Direct deposits & wires</p>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+              <div className="flex items-start justify-between">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Fees Collected (Shown)</p>
+                <span className="rounded-lg bg-emerald-50 p-1.5 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
+                  <Banknote className="size-3.5" />
+                </span>
+              </div>
+              <p className="mt-2 text-base font-extrabold text-foreground">{currency(totalShown)}</p>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">{filtered.length} receipts displayed</p>
+            </div>
+          </div>
         </div>
 
-        {/* Card 2: Mobile Money */}
-        <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-bold uppercase tracking-wider text-foreground">
-              Mobile Money
-            </p>
-            <span className="rounded-full bg-amber-50 p-1.5 sm:p-2 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
-              <Smartphone className="size-3.5 sm:size-4" />
-            </span>
+        {/* ── DESKTOP: original 4-card grid ── */}
+        <div className="hidden lg:grid grid-cols-4 gap-2.5">
+          <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold uppercase tracking-wider text-foreground">Total Receipts</p>
+              <span className="rounded-full bg-slate-100 p-1.5 sm:p-2 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                <Receipt className="size-3.5 sm:size-4" />
+              </span>
+            </div>
+            <p className="mt-2 text-xl sm:text-2xl font-extrabold text-foreground">{transactions.length}</p>
+            <p className="mt-0.5 text-xs font-semibold text-foreground/90">Issued in Term 3, 2026</p>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-extrabold text-amber-600 dark:text-amber-400">
-            {transactions.filter((t) => t.paymentMethod.includes("Mobile Money")).length} Receipts
-          </p>
-          <p className="mt-0.5 text-xs font-semibold text-foreground/90">MoMo mobile settlements</p>
-        </div>
-
-        {/* Card 3: Bank Transfers */}
-        <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-bold uppercase tracking-wider text-foreground">
-              Bank Transfers
+          <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold uppercase tracking-wider text-foreground">Mobile Money</p>
+              <span className="rounded-full bg-amber-50 p-1.5 sm:p-2 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
+                <Smartphone className="size-3.5 sm:size-4" />
+              </span>
+            </div>
+            <p className="mt-2 text-xl sm:text-2xl font-extrabold text-amber-600 dark:text-amber-400">
+              {transactions.filter((t) => t.paymentMethod.includes("Mobile Money")).length} Receipts
             </p>
-            <span className="rounded-full bg-blue-50 p-1.5 sm:p-2 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
-              <Building2 className="size-3.5 sm:size-4" />
-            </span>
+            <p className="mt-0.5 text-xs font-semibold text-foreground/90">MoMo mobile settlements</p>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-extrabold text-blue-600 dark:text-blue-400">
-            {transactions.filter((t) => t.paymentMethod === "Bank Transfer").length} Receipts
-          </p>
-          <p className="mt-0.5 text-xs font-semibold text-foreground/90">Direct deposits & wires</p>
-        </div>
-
-        {/* Card 4: Filtered Shown Amount */}
-        <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-bold uppercase tracking-wider text-foreground">
-              Fees Collected (Shown)
+          <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold uppercase tracking-wider text-foreground">Bank Transfers</p>
+              <span className="rounded-full bg-blue-50 p-1.5 sm:p-2 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
+                <Building2 className="size-3.5 sm:size-4" />
+              </span>
+            </div>
+            <p className="mt-2 text-xl sm:text-2xl font-extrabold text-blue-600 dark:text-blue-400">
+              {transactions.filter((t) => t.paymentMethod === "Bank Transfer").length} Receipts
             </p>
-            <span className="rounded-full bg-emerald-50 p-1.5 sm:p-2 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
-              <Banknote className="size-3.5 sm:size-4" />
-            </span>
+            <p className="mt-0.5 text-xs font-semibold text-foreground/90">Direct deposits & wires</p>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">
-            {currency(totalShown)}
-          </p>
-          <p className="mt-0.5 text-xs font-semibold text-foreground/90">{filtered.length} receipts displayed</p>
+          <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold uppercase tracking-wider text-foreground">Fees Collected (Shown)</p>
+              <span className="rounded-full bg-emerald-50 p-1.5 sm:p-2 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
+                <Banknote className="size-3.5 sm:size-4" />
+              </span>
+            </div>
+            <p className="mt-2 text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">{currency(totalShown)}</p>
+            <p className="mt-0.5 text-xs font-semibold text-foreground/90">{filtered.length} receipts displayed</p>
+          </div>
         </div>
       </div>
 
@@ -519,84 +555,96 @@ function ReceiptsPage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search receipt #, student name, index number, department, or fee type…"
+            placeholder="Search receipt #, student name…"
             className="h-9 w-full rounded-md border border-border bg-card pl-9 pr-3 text-xs outline-none placeholder:text-muted-foreground focus:border-ring"
           />
         </div>
 
+        {/* Mobile: dropdowns on top row, date picker below */}
+        <div className="flex flex-col gap-2 sm:hidden">
+          {/* Row 1: two dropdowns side by side */}
+          <div className="flex items-center gap-2">
+            {/* Department dropdown */}
+            <div className="flex-1">
+              <AppSelect
+                value={deptFilter}
+                onChange={setDeptFilter}
+                options={[
+                  { value: "all", label: `All Departments (${transactions.length})` },
+                  { value: "IT Department", label: "IT Department" },
+                  { value: "HR Department", label: "HR Department" },
+                  { value: "Social Studies Department", label: "Social Studies" },
+                  { value: "Art Department", label: "Art Department" },
+                  { value: "Business Administration", label: "Business Admin" },
+                  { value: "Accounting & Finance", label: "Accounting & Finance" },
+                ]}
+              />
+            </div>
+            {/* Method dropdown */}
+            <div className="flex-1">
+              <AppSelect
+                value={methodFilter}
+                onChange={(v) => setMethodFilter(v as typeof methodFilter)}
+                options={[
+                  { value: "all", label: "All Methods" },
+                  ...Object.keys(METHOD_CONFIG).map((m) => ({ value: m, label: m.replace(" (MTN)", "") })),
+                ]}
+              />
+            </div>
+          </div>
+          {/* Row 2: date range picker full width */}
+          <div className="w-full">
+            <DateRangePicker value={dateRange} onChange={setDateRange} />
+          </div>
+        </div>
+
+        {/* Desktop: scrollable chip rows */}
         {/* Department filter pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-          <button
-            onClick={() => setDeptFilter("all")}
-            className={cn(
-              "rounded-full px-3 py-1 text-xs font-semibold transition-all border shrink-0",
-              deptFilter === "all"
-                ? "bg-foreground text-background border-transparent"
-                : "bg-card text-muted-foreground border-border hover:bg-secondary"
-            )}
-          >
+        <div className="hidden sm:flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+          <button onClick={() => setDeptFilter("all")}
+            className={cn("rounded-full px-3 py-1 text-xs font-semibold transition-all border shrink-0",
+              deptFilter === "all" ? "bg-foreground text-background border-transparent" : "bg-card text-muted-foreground border-border hover:bg-secondary"
+            )}>
             All Departments ({transactions.length})
           </button>
-
-          {(
-            [
-              { dept: "IT Department", activeBg: "bg-violet-600", activeBorder: "border-violet-600", activeText: "text-violet-100", idleText: "text-violet-600 dark:text-violet-400" },
-              { dept: "HR Department", activeBg: "bg-sky-600", activeBorder: "border-sky-600", activeText: "text-sky-100", idleText: "text-sky-600 dark:text-sky-400" },
-              { dept: "Social Studies Department", activeBg: "bg-amber-600", activeBorder: "border-amber-600", activeText: "text-amber-100", idleText: "text-amber-600 dark:text-amber-400" },
-              { dept: "Art Department", activeBg: "bg-pink-600", activeBorder: "border-pink-600", activeText: "text-pink-100", idleText: "text-pink-600 dark:text-pink-400" },
-              { dept: "Business Administration", activeBg: "bg-orange-600", activeBorder: "border-orange-600", activeText: "text-orange-100", idleText: "text-orange-600 dark:text-orange-400" },
-              { dept: "Accounting & Finance", activeBg: "bg-teal-600", activeBorder: "border-teal-600", activeText: "text-teal-100", idleText: "text-teal-600 dark:text-teal-400" },
-            ] as const
-          ).map(({ dept, activeBg, activeBorder, activeText, idleText }) => {
+          {([
+            { dept: "IT Department", activeBg: "bg-violet-600", activeBorder: "border-violet-600", activeText: "text-violet-100", idleText: "text-violet-600 dark:text-violet-400" },
+            { dept: "HR Department", activeBg: "bg-sky-600", activeBorder: "border-sky-600", activeText: "text-sky-100", idleText: "text-sky-600 dark:text-sky-400" },
+            { dept: "Social Studies Department", activeBg: "bg-amber-600", activeBorder: "border-amber-600", activeText: "text-amber-100", idleText: "text-amber-600 dark:text-amber-400" },
+            { dept: "Art Department", activeBg: "bg-pink-600", activeBorder: "border-pink-600", activeText: "text-pink-100", idleText: "text-pink-600 dark:text-pink-400" },
+            { dept: "Business Administration", activeBg: "bg-orange-600", activeBorder: "border-orange-600", activeText: "text-orange-100", idleText: "text-orange-600 dark:text-orange-400" },
+            { dept: "Accounting & Finance", activeBg: "bg-teal-600", activeBorder: "border-teal-600", activeText: "text-teal-100", idleText: "text-teal-600 dark:text-teal-400" },
+          ] as const).map(({ dept, activeBg, activeBorder, activeText, idleText }) => {
             const isSelected = deptFilter === dept;
             const collected = deptStats[dept] || 0;
             return (
-              <button
-                key={dept}
-                onClick={() => setDeptFilter(dept)}
-                className={cn(
-                  "rounded-full px-3 py-1 text-xs font-semibold transition-all border shrink-0 flex items-center gap-1.5",
-                  isSelected
-                    ? `${activeBg} text-white ${activeBorder}`
-                    : "bg-card text-muted-foreground border-border hover:bg-secondary"
-                )}
-              >
+              <button key={dept} onClick={() => setDeptFilter(dept)}
+                className={cn("rounded-full px-3 py-1 text-xs font-semibold transition-all border shrink-0 flex items-center gap-1.5",
+                  isSelected ? `${activeBg} text-white ${activeBorder}` : "bg-card text-muted-foreground border-border hover:bg-secondary"
+                )}>
                 <span>{dept.split(" ")[0]}</span>
-                <span className={cn("text-[11px] font-bold", isSelected ? activeText : idleText)}>
-                  {currency(collected)}
-                </span>
+                <span className={cn("text-[11px] font-bold", isSelected ? activeText : idleText)}>{currency(collected)}</span>
               </button>
             );
           })}
         </div>
 
-        {/* Method filter pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-          <button
-            onClick={() => setMethodFilter("all")}
-            className={cn(
-              "rounded-full px-3 py-1 text-xs font-semibold transition-all border shrink-0",
-              methodFilter === "all"
-                ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 border-transparent"
-                : "bg-secondary text-muted-foreground hover:bg-border border-border"
-            )}
-          >
+        {/* Method filter pills (desktop) */}
+        <div className="hidden sm:flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+          <button onClick={() => setMethodFilter("all")}
+            className={cn("rounded-full px-3 py-1 text-xs font-semibold transition-all border shrink-0",
+              methodFilter === "all" ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 border-transparent" : "bg-secondary text-muted-foreground hover:bg-border border-border"
+            )}>
             All Methods
           </button>
           {(Object.keys(METHOD_CONFIG) as PaymentMethod[]).map((method) => {
             const cfg = METHOD_CONFIG[method];
             const isSelected = methodFilter === method;
             return (
-              <button
-                key={method}
-                onClick={() => setMethodFilter(method)}
-                className={cn(
-                  "rounded-full px-3 py-1 text-xs font-semibold transition-all border shrink-0",
-                  isSelected
-                    ? `${cfg.activePill} border-transparent`
-                    : "bg-secondary text-muted-foreground hover:bg-border border-border"
-                )}
-              >
+              <button key={method} onClick={() => setMethodFilter(method)}
+                className={cn("rounded-full px-3 py-1 text-xs font-semibold transition-all border shrink-0",
+                  isSelected ? `${cfg.activePill} border-transparent` : "bg-secondary text-muted-foreground hover:bg-border border-border"
+                )}>
                 {method.replace(" (MTN)", "")}
               </button>
             );
@@ -612,7 +660,7 @@ function ReceiptsPage() {
       ══════════════════════════════════════════════ */}
       <div className="rounded-xl border border-border bg-card overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
+          <table className="w-full text-sm text-left min-w-[700px]">
             <thead className="bg-secondary/40 text-xs font-bold text-muted-foreground uppercase border-b border-border">
               <tr>
                 <th className="px-4 py-3">#</th>

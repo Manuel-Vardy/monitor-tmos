@@ -49,7 +49,7 @@ export function KpiCard({
       <p className="text-[11px] sm:text-xs font-bold text-foreground pr-8 sm:pr-12 leading-tight uppercase tracking-wider">{label}</p>
 
       {/* Value */}
-      <p className="text-base sm:text-3xl font-extrabold tracking-tight text-foreground leading-tight">{value}</p>
+      <p className="text-sm sm:text-3xl font-extrabold tracking-tight text-foreground leading-tight truncate">{value}</p>
 
       {/* Delta indicator */}
       {hasDelta && (

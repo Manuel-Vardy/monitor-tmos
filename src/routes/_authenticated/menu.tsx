@@ -271,24 +271,62 @@ function MenuAndRecipes() {
 
       <div className="grid gap-6 xl:grid-cols-[1fr_420px]">
         {/* ── Left: Menu catalogue ── */}
-        <div className="space-y-4">
-          {/* Stat cards */}
-          <div className="grid grid-cols-3 gap-2.5">
-            <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-xs">
+        <div className="space-y-4 rounded-lg border border-border bg-card p-4">
+          {/* Stat cards — mobile: green hero + 2 below; desktop: 3-col grid */}
+
+          {/* Mobile layout */}
+          <div className="sm:hidden space-y-2">
+            {/* Green hero — Total Dishes */}
+            <div className="relative overflow-hidden rounded-2xl bg-[#22c55e] p-4 text-white shadow-xs">
+              <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+                <div className="absolute rounded-full bg-white/10" style={{ width: "180px", height: "180px", bottom: "-80px", right: "-40px" }} />
+              </div>
+              <div className="relative z-10 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/80">Total Dishes</p>
+                  <p className="mt-1 text-3xl font-extrabold tracking-tight text-white">{totalMenuItems}</p>
+                </div>
+                <div className="rounded-lg border border-white/40 bg-white/10 p-2 backdrop-blur-xs">
+                  <UtensilsCrossed className="size-5 text-white" />
+                </div>
+              </div>
+            </div>
+            {/* Top Seller + In Cart */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Top Seller</p>
+                  <span className="rounded-full bg-amber-50 p-1 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400"><FileText className="size-3" /></span>
+                </div>
+                <p className="mt-1.5 text-xs font-bold truncate">Sobolo Drink</p>
+              </div>
+              <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">In Cart</p>
+                  <span className="rounded-full bg-emerald-50 p-1 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400"><TrendingUp className="size-3" /></span>
+                </div>
+                <p className="mt-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">{lines.length} items</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop layout — 3 equal cards */}
+          <div className="hidden sm:grid grid-cols-3 gap-2.5">
+            <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Total Dishes</p>
                 <span className="rounded-full bg-slate-100 p-1.5 text-slate-700 dark:bg-slate-800 dark:text-slate-300"><UtensilsCrossed className="size-3.5" /></span>
               </div>
               <p className="mt-2 text-xl font-bold">{totalMenuItems}</p>
             </div>
-            <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-xs">
+            <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Top Seller</p>
                 <span className="rounded-full bg-amber-50 p-1.5 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400"><FileText className="size-3.5" /></span>
               </div>
               <p className="mt-2 text-base font-bold truncate">Sobolo Drink</p>
             </div>
-            <div className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-xs">
+            <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">In Cart</p>
                 <span className="rounded-full bg-emerald-50 p-1.5 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400"><TrendingUp className="size-3.5" /></span>
@@ -303,14 +341,15 @@ function MenuAndRecipes() {
               <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
               <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search dish name…" className="h-9 w-full rounded-md border border-border bg-card pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:border-ring" />
             </div>
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-              {(["All Categories","Mains","Starters","Grill","Seafood","Drinks"] as Category[]).map((cat) => (
+            <div className="flex flex-wrap gap-2">
+              {(["All Categories","Mains","Starters","Grill","Seafood","Drinks"] as Category[]).map((cat, i) => (
                 <button key={cat} onClick={() => setCategoryFilter(cat)}
-                  className={`shrink-0 rounded-full px-3.5 py-1 text-xs font-semibold transition-all ${
+                  className={cn(
+                    "rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors shadow-xs",
                     categoryFilter === cat
-                      ? CATEGORY_CHIP_COLORS[cat] ?? "bg-zinc-900 text-white"
-                      : "bg-secondary text-muted-foreground hover:bg-border"
-                  }`}>
+                      ? (CATEGORY_CHIP_COLORS[cat] ?? "bg-zinc-900 text-white border-transparent")
+                      : "border-border hover:bg-secondary text-foreground",
+                  )}>
                   {cat}
                 </button>
               ))}
@@ -323,23 +362,23 @@ function MenuAndRecipes() {
               <p className="col-span-full py-10 text-center text-sm text-muted-foreground">No dishes found.</p>
             )}
             {filteredItems.map((dish) => (
-              <div key={dish.id} className="group relative flex flex-col justify-between rounded-xl border border-border bg-card p-3 transition-all hover:border-[#22c55e] hover:shadow-sm">
+              <div key={dish.id} className="group relative flex min-h-28 flex-col justify-between rounded-lg border border-border bg-background p-3 transition-all hover:border-accent hover:shadow-sm active:scale-[0.98]">
                 <div>
-                  <p className="text-sm font-semibold leading-tight">{dish.name}</p>
-                  <span className="mt-1 inline-block rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground">{dish.category}</span>
+                  <p className="text-[11px] sm:text-sm font-medium leading-tight line-clamp-2">{dish.name}</p>
+                  <span className="mt-1 inline-block rounded-full bg-secondary px-1.5 py-0.5 text-[9px] sm:text-[10px] font-medium text-muted-foreground">{dish.category}</span>
                 </div>
-                <div className="mt-3 flex items-center justify-between">
-                  <p className="num text-base font-bold">{currency(dish.price)}</p>
-                  <div className="flex items-center gap-1">
+                <div className="mt-2 flex items-center justify-between gap-1">
+                  <p className="num text-xs sm:text-base font-bold">{currency(dish.price)}</p>
+                  <div className="flex items-center gap-0.5 sm:gap-1">
                     {cart[dish.id] ? (
                       <>
-                        <button onClick={() => decCart(dish.id)} className="grid size-7 place-items-center rounded-md border border-border text-sm hover:bg-secondary">−</button>
-                        <span className="num w-6 text-center text-sm font-semibold">{cart[dish.id]}</span>
-                        <button onClick={() => addToCart(dish.id)} className="grid size-7 place-items-center rounded-md border border-border text-sm hover:bg-secondary">+</button>
+                        <button onClick={() => decCart(dish.id)} className="grid size-6 sm:size-7 place-items-center rounded-md border border-border text-xs sm:text-sm hover:bg-secondary">−</button>
+                        <span className="num w-5 sm:w-6 text-center text-xs sm:text-sm font-semibold">{cart[dish.id]}</span>
+                        <button onClick={() => addToCart(dish.id)} className="grid size-6 sm:size-7 place-items-center rounded-md border border-border text-xs sm:text-sm hover:bg-secondary">+</button>
                       </>
                     ) : (
-                      <button onClick={() => addToCart(dish.id)} className="grid size-7 place-items-center rounded-md bg-[#22c55e] text-white hover:bg-[#16a34a]">
-                        <Plus className="size-3.5" />
+                      <button onClick={() => addToCart(dish.id)} className="grid size-6 sm:size-7 place-items-center rounded-md bg-[#22c55e] text-white hover:bg-[#16a34a]">
+                        <Plus className="size-3 sm:size-3.5" />
                       </button>
                     )}
                   </div>
@@ -367,32 +406,32 @@ function MenuAndRecipes() {
           </div>
 
           {/* Cart items */}
-          <div className="max-h-56 divide-y divide-border overflow-y-auto">
+          <div className="max-h-64 flex-1 divide-y divide-border overflow-y-auto">
             {lines.length === 0 && (
               <p className="p-8 text-center text-sm text-muted-foreground">Tap a dish to start the order.</p>
             )}
             {lines.map((l) => (
-              <div key={l.id} className="flex items-center gap-3 p-3">
+              <div key={l.id} className="flex items-center gap-1.5 sm:gap-3 p-2 sm:p-3">
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{l.name}</p>
-                  <p className="num text-xs text-muted-foreground">{currency(l.price)} each</p>
+                  <p className="truncate text-[11px] sm:text-sm font-medium">{l.name}</p>
+                  <p className="num text-[10px] sm:text-xs text-muted-foreground">{currency(l.price)} each</p>
                 </div>
-                <div className="flex items-center gap-1">
-                  <button onClick={() => decCart(l.id)} className="size-7 rounded-md border border-border text-sm hover:bg-secondary">−</button>
-                  <span className="num w-6 text-center text-sm font-medium">{l.qty}</span>
-                  <button onClick={() => addToCart(l.id)} className="size-7 rounded-md border border-border text-sm hover:bg-secondary">+</button>
+                <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+                  <button onClick={() => decCart(l.id)} className="size-6 sm:size-8 rounded-md border border-border text-xs sm:text-sm hover:bg-secondary">−</button>
+                  <span className="num w-5 sm:w-7 text-center text-xs sm:text-sm font-medium">{l.qty}</span>
+                  <button onClick={() => addToCart(l.id)} className="size-6 sm:size-8 rounded-md border border-border text-xs sm:text-sm hover:bg-secondary">+</button>
                 </div>
-                <span className="num w-20 text-right text-sm font-semibold">{currency(l.price * l.qty)}</span>
+                <span className="num w-14 sm:w-20 text-right text-[11px] sm:text-sm font-semibold shrink-0">{currency(l.price * l.qty)}</span>
               </div>
             ))}
           </div>
 
           {/* Totals */}
-          <div className="space-y-1.5 border-t border-border p-4 text-sm">
+          <div className="space-y-1.5 border-t border-border p-3 sm:p-4 text-xs sm:text-sm">
             <div className="flex justify-between text-muted-foreground"><span>Subtotal</span><span className="num">{currency(subtotal)}</span></div>
             <div className="flex justify-between text-muted-foreground"><span>VAT 15%</span><span className="num">{currency(vat)}</span></div>
             <div className="flex justify-between text-muted-foreground"><span>NHIL + GETFund 6%</span><span className="num">{currency(levies)}</span></div>
-            <div className="flex justify-between border-t border-border pt-2 text-base font-bold"><span>Total</span><span className="num">{currency(total)}</span></div>
+            <div className="flex justify-between border-t border-border pt-2 text-sm sm:text-lg font-bold"><span>Total</span><span className="num">{currency(total)}</span></div>
           </div>
 
           {/* Payment methods */}
@@ -402,22 +441,22 @@ function MenuAndRecipes() {
               {methods.map((m) => (
                 <button key={m.id} onClick={() => !m.disabled && setMethod(m.id)} disabled={m.disabled}
                   className={cn(
-                    "relative flex flex-col items-start gap-1 rounded-lg border p-2 text-left transition-all shadow-2xs",
+                    "relative flex flex-col items-start gap-1 rounded-lg border p-2.5 text-left transition-all shadow-2xs",
                     m.disabled
                       ? "cursor-not-allowed border-border/40 bg-muted/40 opacity-70"
                       : method === m.id
                         ? "border-emerald-700 bg-emerald-700 text-white shadow-xs"
-                        : "border-emerald-200 bg-emerald-50 text-emerald-900 hover:bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200",
+                        : "border-emerald-200 bg-emerald-50 text-emerald-900 hover:bg-emerald-100 hover:border-emerald-300 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200 dark:hover:bg-emerald-950/70",
                   )}
                 >
                   {m.disabled && (
-                    <span className="absolute top-1 right-1 flex items-center gap-0.5 rounded-full bg-muted px-1 py-0.5 text-[9px] font-semibold text-muted-foreground">
+                    <span className="absolute top-1.5 right-1.5 flex items-center gap-0.5 rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-semibold text-muted-foreground">
                       <Lock className="size-2.5" /> Soon
                     </span>
                   )}
-                  <m.icon className={cn("size-3.5", m.disabled ? "text-muted-foreground" : method === m.id ? "text-white" : "text-emerald-600 dark:text-emerald-400")} />
-                  <span className="text-[10px] leading-tight font-semibold">{m.label}</span>
-                  <span className={cn("text-[9px] leading-tight", m.disabled ? "text-muted-foreground" : method === m.id ? "text-emerald-100" : "text-emerald-700 dark:text-emerald-400")}>{m.hint}</span>
+                  <m.icon className={cn("size-4", m.disabled ? "text-muted-foreground" : method === m.id ? "text-white" : "text-emerald-600 dark:text-emerald-400")} />
+                  <span className="text-xs leading-tight font-semibold">{m.label}</span>
+                  <span className={cn("text-[10px] leading-tight", m.disabled ? "text-muted-foreground" : method === m.id ? "text-emerald-100" : "text-emerald-700 dark:text-emerald-400")}>{m.hint}</span>
                 </button>
               ))}
             </div>
@@ -426,35 +465,35 @@ function MenuAndRecipes() {
           {/* Charge / status */}
           <div className="border-t border-border p-4">
             {phase === "idle" && (
-              <Button onClick={charge} disabled={lines.length === 0} className="h-12 w-full bg-[#22c55e] text-sm font-semibold text-white hover:bg-[#16a34a]">
+              <Button onClick={charge} disabled={lines.length === 0} className="h-14 w-full bg-accent text-base font-semibold text-accent-foreground hover:bg-accent/85">
                 Charge {currency(total)}
               </Button>
             )}
             {phase === "pending" && (
-              <div className="flex items-center gap-3 rounded-lg border border-border bg-secondary p-3">
-                <Loader2 className="size-4 animate-spin" />
+              <div className="flex items-center gap-3 rounded-lg border border-border bg-secondary p-4">
+                <Loader2 className="size-5 animate-spin" />
                 <div>
-                  <p className="text-xs font-medium">Awaiting confirmation…</p>
-                  <p className="text-[10px] text-muted-foreground">Prompt sent · TRX-88215</p>
+                  <p className="text-sm font-medium">Awaiting customer confirmation…</p>
+                  <p className="text-xs text-muted-foreground">Prompt sent via Trite · TRX-88215</p>
                 </div>
               </div>
             )}
             {phase === "done" && (
               <div className="space-y-3">
-                <div className="flex items-center gap-3 rounded-lg border border-[#22c55e] bg-emerald-50/50 dark:bg-emerald-950/20 p-3">
-                  <Check className="size-4 text-[#22c55e]" />
+                <div className="flex items-center gap-3 rounded-lg border border-accent bg-accent/20 p-4">
+                  <Check className="size-5" />
                   <div className="flex-1">
-                    <p className="text-xs font-semibold">Payment confirmed</p>
-                    <p className="text-[10px] text-muted-foreground">{currency(total)} · GCB ****4410</p>
+                    <p className="text-sm font-semibold">Payment confirmed</p>
+                    <p className="text-xs text-muted-foreground">{currency(total)} · settling to GCB ****4410</p>
                   </div>
                   <StatusBadge tone="good">confirmed</StatusBadge>
                 </div>
-                <div className="grid grid-cols-4 gap-1.5">
-                  {["SMS","Email","WhatsApp","Print"].map((r) => (
-                    <Button key={r} variant="outline" size="sm" className="text-[10px] px-1">{r}</Button>
+                <div className="grid grid-cols-4 gap-2">
+                  {["SMS", "Email", "WhatsApp", "Print"].map((r) => (
+                    <Button key={r} variant="outline" size="sm">{r}</Button>
                   ))}
                 </div>
-                <Button variant="secondary" className="w-full text-xs" onClick={clearCart}>New order</Button>
+                <Button variant="secondary" className="w-full" onClick={clearCart}>New order</Button>
               </div>
             )}
           </div>

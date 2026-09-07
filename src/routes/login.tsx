@@ -84,9 +84,9 @@ function SignInPage() {
       <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
 
         {/* ── Left: hero panel ── */}
-        <div className="flex flex-col items-center justify-center gap-6 overflow-hidden bg-[#eefce3] px-8 py-10 text-zinc-900 sm:px-12 lg:px-14 lg:py-16 xl:px-20">
+        <div className="flex flex-col items-center justify-center gap-6 overflow-hidden bg-[#eefce3] px-8 py-10 pt-16 text-zinc-900 sm:px-12 sm:pt-10 lg:px-14 lg:py-16 xl:px-20">
           <div className="mx-auto w-full max-w-[480px] space-y-4 text-center">
-            <img src="/tritee-logo.png" alt="Trite logo" className="mx-auto h-8 w-auto object-contain" />
+            <img src="/trite-logo-black.png" alt="Trite logo" className="mx-auto h-8 w-auto object-contain" />
             <h1 className="font-display text-2xl font-extrabold tracking-tight text-zinc-900 sm:text-3xl lg:text-[36px] lg:leading-[1.15]">
               The operating system African businesses run on.
             </h1>
@@ -104,7 +104,7 @@ function SignInPage() {
         <div className="relative flex items-center justify-center px-6 py-12 sm:px-10 lg:px-14 xl:px-20">
           <a
             href="/"
-            className="fixed top-4 right-4 z-50 flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-800 transition-colors lg:absolute lg:top-6 lg:right-6 lg:z-auto"
+            className="fixed top-4 left-4 z-50 flex items-center gap-1 rounded-full bg-[#22c55e] px-3 py-1.5 text-sm font-semibold text-white shadow-md hover:bg-[#16a34a] transition-colors lg:absolute lg:top-6 lg:left-6 lg:z-auto"
           >
             <span className="text-base leading-none">‹</span>
             Back to Dashboard

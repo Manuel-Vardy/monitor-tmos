@@ -494,20 +494,6 @@ function SalesPage() {
                     {pharmacyTotals.count} sales · {PATIENT_RECORDS.length} registered patients
                   </p>
                 </div>
-                <div className="mt-4 flex gap-3">
-                  <a
-                    href="/dispensary"
-                    className="flex-1 rounded-xl bg-[#166534] py-2.5 text-center text-sm font-semibold text-white transition hover:bg-[#14532d]"
-                  >
-                    Dispensary
-                  </a>
-                  <a
-                    href="/inventory"
-                    className="flex-1 rounded-xl bg-white/20 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-white/30"
-                  >
-                    Inventory
-                  </a>
-                </div>
               </div>
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -700,6 +686,13 @@ function SalesPage() {
                 </p>
               </div>
               <div className="flex flex-wrap gap-1.5">
+                <Chip
+                  active={status === null}
+                  onClick={() => setStatus(null)}
+                  activeClass="bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-200"
+                >
+                  All
+                </Chip>
                 {pharmacyStatusOptions.map(({ key, label, activeClass }) => (
                   <Chip
                     key={key}
@@ -714,10 +707,13 @@ function SalesPage() {
             </div>
             <div className="overflow-x-auto">
               <ul className="divide-y divide-border sm:hidden">
-                {pharmacyRows.map((p) => (
+                {pharmacyRows.map((p, idx) => (
                   <li
                     key={p.id}
-                    className="px-4 py-3 space-y-1 cursor-pointer transition-colors hover:bg-secondary/50"
+                    className={cn(
+                      "px-4 py-3 space-y-1 cursor-pointer transition-colors hover:bg-secondary/50",
+                      idx % 2 !== 0 && "bg-muted/70",
+                    )}
                     onClick={() => setSelectedSale(p)}
                   >
                     <div className="flex items-center justify-between gap-2">
@@ -841,21 +837,6 @@ function SalesPage() {
                   {Math.round((totals.settled / Math.max(1, totals.sales)) * 100)}% of gross ·{" "}
                   {totals.txns.toLocaleString()} transactions
                 </p>
-              </div>
-
-              <div className="mt-4 flex gap-3">
-                <a
-                  href="/sales"
-                  className="flex-1 rounded-xl bg-[#166534] py-2.5 text-center text-sm font-semibold text-white transition hover:bg-[#14532d]"
-                >
-                  Sales
-                </a>
-                <a
-                  href="/inventory"
-                  className="flex-1 rounded-xl bg-white/20 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-white/30"
-                >
-                  Inventory
-                </a>
               </div>
             </div>
           </div>
@@ -1046,12 +1027,12 @@ function SalesPage() {
               </p>
             </div>
             <div className="flex flex-wrap gap-1.5">
-              {["settled", "confirmed", "pending", "failed"].map((s) => (
+              {["all", "settled", "confirmed", "pending", "failed"].map((s) => (
                 <Chip
                   key={s}
-                  active={status === s}
-                  onClick={() => setStatus(status === s ? null : s)}
-                  {...(statusColors[s] ? { activeClass: statusColors[s] } : {})}
+                  active={s === "all" ? status === null : status === s}
+                  onClick={() => setStatus(s === "all" ? null : status === s ? null : s)}
+                  {...(s !== "all" && statusColors[s] ? { activeClass: statusColors[s] } : {})}
                 >
                   {s}
                 </Chip>
@@ -1061,10 +1042,13 @@ function SalesPage() {
           <div className="overflow-x-auto">
             {/* ── Mobile: card list ── */}
             <ul className="divide-y divide-border sm:hidden">
-              {saleRows.map((a) => (
+              {saleRows.map((a, idx) => (
                 <li
                   key={a.id}
-                  className="px-4 py-3 space-y-1 cursor-pointer transition-colors hover:bg-secondary/50"
+                  className={cn(
+                    "px-4 py-3 space-y-1 cursor-pointer transition-colors hover:bg-secondary/50",
+                    idx % 2 !== 0 && "bg-muted/70",
+                  )}
                   onClick={() => setSelectedTxn(a)}
                 >
                   <div className="flex items-center justify-between gap-2">
@@ -1091,15 +1075,7 @@ function SalesPage() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setBranchId(a.branchId);
-                      }}
-                      className="underline-offset-2 hover:underline"
-                    >
-                      {a.where}
-                    </button>
+                    <span className="text-muted-foreground">{a.where}</span>
                     <span>
                       {a.method} · {a.when}
                     </span>
@@ -1138,15 +1114,7 @@ function SalesPage() {
                     <td className="px-4 py-3 font-medium">{a.what}</td>
                     <td className="px-4 py-3 text-muted-foreground">{a.who}</td>
                     <td className="px-4 py-3">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setBranchId(a.branchId);
-                        }}
-                        className="text-muted-foreground underline-offset-2 hover:underline"
-                      >
-                        {a.where}
-                      </button>
+                      <span className="text-muted-foreground">{a.where}</span>
                     </td>
                     <td className="px-4 py-3">{a.method}</td>
                     <td

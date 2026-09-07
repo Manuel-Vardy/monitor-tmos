@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import type { DateRange } from "react-day-picker";
 import {
   ArrowUpRight,
@@ -137,7 +138,7 @@ function Stat({
           <Icon className={cn("size-3.5 sm:size-4 shrink-0", colors.icon)} />
         </div>
       </div>
-      <p className="num mt-2 text-base sm:text-2xl font-bold leading-tight">{value}</p>
+      <p className="num mt-2 text-xs sm:text-2xl font-bold leading-tight truncate">{value}</p>
       <div className="mt-1.5 flex items-center gap-1 text-[10px] sm:text-xs">
         {delta !== undefined && (
           <span
@@ -412,18 +413,18 @@ export function RetailDashboard() {
               </div>
 
               <div className="mt-4 flex gap-3">
-                <a
-                  href="/sales"
+                <Link
+                  to="/sales"
                   className="flex-1 rounded-xl bg-[#166534] py-2.5 text-center text-sm font-semibold text-white transition hover:bg-[#14532d]"
                 >
                   Sales
-                </a>
-                <a
-                  href="/inventory"
+                </Link>
+                <Link
+                  to="/inventory"
                   className="flex-1 rounded-xl bg-white/20 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-white/30"
                 >
                   Inventory
-                </a>
+                </Link>
               </div>
             </div>
           </div>
@@ -758,10 +759,13 @@ export function RetailDashboard() {
           <div className="overflow-x-auto">
             {/* ── Mobile: card list ── */}
             <ul className="divide-y divide-border sm:hidden">
-              {rows.map((a) => (
+              {rows.map((a, idx) => (
                 <li
                   key={a.id}
-                  className="px-4 py-3 space-y-1 cursor-pointer hover:bg-secondary/50 transition-colors"
+                  className={cn(
+                    "px-4 py-3 space-y-1 cursor-pointer hover:bg-secondary/50 transition-colors",
+                    idx % 2 !== 0 && "bg-muted/70",
+                  )}
                   onClick={() => setSelectedRow(a)}
                 >
                   <div className="flex items-center justify-between gap-2">

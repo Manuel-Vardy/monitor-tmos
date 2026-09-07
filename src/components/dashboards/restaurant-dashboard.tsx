@@ -94,7 +94,7 @@ function Stat({
           <Icon className={cn("size-4 shrink-0", c.icon)} />
         </div>
       </div>
-      <p className="num mt-2 text-xl sm:text-2xl font-bold leading-tight">{value}</p>
+      <p className="num mt-2 text-xs sm:text-2xl font-bold leading-tight truncate">{value}</p>
       <div className="mt-1.5 flex items-center gap-1 text-[10px] sm:text-xs">
         {delta !== undefined && (
           <span className={cn("num inline-flex items-center gap-0.5 font-semibold rounded-full px-1.5 py-0.5", c.bg, c.num)}>
@@ -332,14 +332,14 @@ export function RestaurantDashboard() {
 
           {/* Mobile: card list */}
           <ul className="divide-y divide-border sm:hidden">
-            {MENU_ITEMS.map((item) => (
-              <li key={item.id} className="flex items-center gap-3 px-4 py-3">
+            {MENU_ITEMS.map((item, idx) => (
+              <li key={item.id} className={cn("flex items-center gap-3 px-4 py-3", idx % 2 !== 0 && "bg-muted/70")}>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium leading-tight truncate">{item.name}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{item.dailySalesCount} sold today</p>
+                  <p className="text-xs font-medium leading-tight truncate">{item.name}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{item.dailySalesCount} sold today</p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="num text-sm font-bold text-[#22c55e]">
+                  <p className="num text-xs font-bold text-[#22c55e]">
                     {currency(item.price * item.dailySalesCount)}
                   </p>
                   <p className="text-[10px] text-muted-foreground">{currency(item.price)} each</p>

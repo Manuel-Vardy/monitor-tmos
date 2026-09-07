@@ -159,34 +159,22 @@ function Pos() {
               </p>
             )}
             {lines.map((l) => (
-              <div key={l.sku} className="flex items-center gap-3 p-3">
+              <div key={l.sku} className="flex items-center gap-1.5 sm:gap-3 p-2 sm:p-3">
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{l.name}</p>
-                  <p className="num text-xs text-muted-foreground">{currency(l.price)} each</p>
+                  <p className="truncate text-[11px] sm:text-sm font-medium">{l.name}</p>
+                  <p className="num text-[10px] sm:text-xs text-muted-foreground">{currency(l.price)} each</p>
                 </div>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => dec(l.sku)}
-                    className="size-8 rounded-md border border-border text-sm hover:bg-secondary"
-                  >
-                    −
-                  </button>
-                  <span className="num w-7 text-center text-sm font-medium">{l.qty}</span>
-                  <button
-                    onClick={() => add(l.sku)}
-                    className="size-8 rounded-md border border-border text-sm hover:bg-secondary"
-                  >
-                    +
-                  </button>
+                <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+                  <button onClick={() => dec(l.sku)} className="size-6 sm:size-8 rounded-md border border-border text-xs sm:text-sm hover:bg-secondary">−</button>
+                  <span className="num w-5 sm:w-7 text-center text-xs sm:text-sm font-medium">{l.qty}</span>
+                  <button onClick={() => add(l.sku)} className="size-6 sm:size-8 rounded-md border border-border text-xs sm:text-sm hover:bg-secondary">+</button>
                 </div>
-                <span className="num w-20 text-right text-sm font-semibold">
-                  {currency(l.price * l.qty)}
-                </span>
+                <span className="num w-14 sm:w-20 text-right text-[11px] sm:text-sm font-semibold shrink-0">{currency(l.price * l.qty)}</span>
               </div>
             ))}
           </div>
 
-          <div className="space-y-1.5 border-t border-border p-4 text-sm">
+          <div className="space-y-1.5 border-t border-border p-3 sm:p-4 text-xs sm:text-sm">
             <div className="flex justify-between text-muted-foreground">
               <span>Subtotal</span>
               <span className="num">{currency(subtotal)}</span>
@@ -199,7 +187,7 @@ function Pos() {
               <span>NHIL + GETFund 6%</span>
               <span className="num">{currency(levies)}</span>
             </div>
-            <div className="flex justify-between border-t border-border pt-2 text-lg font-bold">
+            <div className="flex justify-between border-t border-border pt-2 text-sm sm:text-lg font-bold">
               <span>Total</span>
               <span className="num">{currency(total)}</span>
             </div>

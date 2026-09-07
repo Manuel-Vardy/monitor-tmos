@@ -173,7 +173,7 @@ function EateryReports() {
   return (
     <AppShell
       title="Eatery Reports"
-      subtitle="Food revenue · menu performance · kitchen efficiency · wastage"
+      subtitle=""
       actions={
         <Button size="sm" className="h-8 px-2.5 sm:h-9 sm:px-3 text-xs sm:text-sm bg-[#22c55e] text-white hover:bg-[#16a34a]">
           <Download className="size-3.5 sm:size-4" />
@@ -191,13 +191,13 @@ function EateryReports() {
               key={t.key}
               onClick={() => setActiveTab(t.key)}
               className={cn(
-                "flex shrink-0 items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors",
+                "flex shrink-0 items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 -mb-px transition-colors",
                 activeTab === t.key
                   ? "border-[#22c55e] text-[#22c55e]"
                   : "border-transparent text-muted-foreground hover:text-foreground",
               )}
             >
-              <t.icon className="size-4 shrink-0" />
+              <t.icon className="size-3.5 shrink-0" />
               {t.label}
             </button>
           ))}
@@ -207,11 +207,77 @@ function EateryReports() {
         {activeTab === "today" && (
           <div className="space-y-6">
             {/* KPI cards */}
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <KpiCard label="Today's Revenue"    value={currency(dailySales[5]!.revenue)} delta={14.2} sub="vs last Friday"        icon={Banknote}       color="text-emerald-600 dark:text-emerald-400" bg="bg-emerald-50 dark:bg-emerald-950/60" />
-              <KpiCard label="Covers Served"      value={`${dailySales[5]!.covers}`}       delta={8.5}  sub="guests today"           icon={Users}          color="text-blue-600 dark:text-blue-400"    bg="bg-blue-50 dark:bg-blue-950/60" />
-              <KpiCard label="Avg Check Value"    value={currency(avgCheck)}                delta={3.1}  sub="per guest"              icon={Receipt}        color="text-amber-600 dark:text-amber-400"  bg="bg-amber-50 dark:bg-amber-950/60" />
-              <KpiCard label="Wastage Cost"       value={currency(totalWastageCost)}        sub="spoilage & prep loss"                icon={Trash2}         color="text-rose-600 dark:text-rose-400"    bg="bg-rose-50 dark:bg-rose-950/60" />
+            <div>
+              {/* ── MOBILE: green hero + 3 stacked cards (hidden on lg+) ── */}
+              <div className="lg:hidden space-y-2.5">
+                <div className="relative rounded-2xl bg-[#22c55e] p-5 shadow-lg text-white overflow-hidden">
+                  <div
+                    className="pointer-events-none absolute rounded-full bg-white/10"
+                    style={{ width: "260px", height: "260px", bottom: "-120px", right: "-60px" }}
+                  />
+                  <div className="relative z-10">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-white/80">Today's Revenue</p>
+                    <p className="mt-2 text-4xl font-extrabold">{currency(dailySales[5]!.revenue)}</p>
+                    <div className="mt-3 flex items-center gap-1.5">
+                      <span className="inline-flex items-center gap-0.5 rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-bold text-white">
+                        <ArrowUpRight className="size-3" /> 14.2%
+                      </span>
+                      <p className="text-[11px] text-white/75">vs last Friday</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+                    <div className="flex items-start justify-between">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Covers Served</p>
+                      <span className="rounded-lg bg-blue-50 p-1.5 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
+                        <Users className="size-3.5" />
+                      </span>
+                    </div>
+                    <p className="mt-2 text-base font-bold text-blue-600 dark:text-blue-400">{dailySales[5]!.covers}</p>
+                    <div className="mt-1 flex items-center gap-1">
+                      <span className="inline-flex items-center gap-0.5 rounded-full bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700 dark:bg-blue-950/40 dark:text-blue-400">
+                        <ArrowUpRight className="size-3" /> 8.5%
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">guests today</span>
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+                    <div className="flex items-start justify-between">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Avg Check Value</p>
+                      <span className="rounded-lg bg-amber-50 p-1.5 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
+                        <Receipt className="size-3.5" />
+                      </span>
+                    </div>
+                    <p className="mt-2 text-base font-bold text-amber-600 dark:text-amber-400">{currency(avgCheck)}</p>
+                    <div className="mt-1 flex items-center gap-1">
+                      <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-400">
+                        <ArrowUpRight className="size-3" /> 3.1%
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">per guest</span>
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+                    <div className="flex items-start justify-between">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Wastage Cost</p>
+                      <span className="rounded-lg bg-rose-50 p-1.5 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400">
+                        <Trash2 className="size-3.5" />
+                      </span>
+                    </div>
+                    <p className="mt-2 text-base font-bold text-rose-600 dark:text-rose-400">{currency(totalWastageCost)}</p>
+                    <p className="mt-1 text-[10px] text-muted-foreground">spoilage & prep loss</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── DESKTOP: original 4-card grid (hidden below lg) ── */}
+              <div className="hidden lg:grid lg:grid-cols-4 gap-3">
+                <KpiCard label="Today's Revenue"    value={currency(dailySales[5]!.revenue)} delta={14.2} sub="vs last Friday"        icon={Banknote}       color="text-emerald-600 dark:text-emerald-400" bg="bg-emerald-50 dark:bg-emerald-950/60" />
+                <KpiCard label="Covers Served"      value={`${dailySales[5]!.covers}`}       delta={8.5}  sub="guests today"           icon={Users}          color="text-blue-600 dark:text-blue-400"    bg="bg-blue-50 dark:bg-blue-950/60" />
+                <KpiCard label="Avg Check Value"    value={currency(avgCheck)}                delta={3.1}  sub="per guest"              icon={Receipt}        color="text-amber-600 dark:text-amber-400"  bg="bg-amber-50 dark:bg-amber-950/60" />
+                <KpiCard label="Wastage Cost"       value={currency(totalWastageCost)}        sub="spoilage & prep loss"                icon={Trash2}         color="text-rose-600 dark:text-rose-400"    bg="bg-rose-50 dark:bg-rose-950/60" />
+              </div>
             </div>
 
             {/* Daily sales & covers area chart */}
@@ -243,21 +309,21 @@ function EateryReports() {
 
             {/* Payment method breakdown */}
             <div className="rounded-xl border border-border bg-card shadow-xs">
-              <div className="border-b border-border px-5 py-4">
-                <h2 className="text-sm font-semibold">Payment Method Breakdown</h2>
-                <p className="mt-0.5 text-xs text-muted-foreground">Today's food revenue split by payment method</p>
+              <div className="border-b border-border px-4 py-3">
+                <h2 className="text-xs font-semibold">Payment Method Breakdown</h2>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">Today's food revenue split by payment method</p>
               </div>
               <ul className="divide-y divide-border">
                 {paymentMix.map((m) => (
-                  <li key={m.method} className="flex items-center gap-4 px-5 py-3.5">
-                    <span className="w-44 truncate text-sm font-medium">{m.method}</span>
+                  <li key={m.method} className="flex items-center gap-3 px-4 py-2.5">
+                    <span className="w-36 truncate text-[11px] font-medium">{m.method}</span>
                     <div className="flex-1">
-                      <div className="h-2 overflow-hidden rounded-full bg-secondary">
+                      <div className="h-1.5 overflow-hidden rounded-full bg-secondary">
                         <div className="h-full rounded-full bg-[#22c55e]" style={{ width: `${m.value}%` }} />
                       </div>
                     </div>
-                    <span className="w-10 text-right text-xs font-semibold text-muted-foreground">{m.value}%</span>
-                    <span className="w-28 text-right text-sm font-bold">{currency(m.amount)}</span>
+                    <span className="w-8 text-right text-[10px] font-semibold text-muted-foreground">{m.value}%</span>
+                    <span className="w-24 text-right text-[11px] font-bold">{currency(m.amount)}</span>
                   </li>
                 ))}
               </ul>
@@ -271,11 +337,72 @@ function EateryReports() {
         {activeTab === "menu" && (
           <div className="space-y-6">
             {/* KPI cards */}
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <KpiCard label="Total Menu Revenue"  value={currency(totalMenuRevenue)}        delta={11.3} sub="all dishes today"          icon={Banknote}       color="text-emerald-600 dark:text-emerald-400" bg="bg-emerald-50 dark:bg-emerald-950/60" />
-              <KpiCard label="Total Dishes Sold"   value={`${menuReport.reduce((s, i) => s + i.dailySalesCount, 0)}`} delta={7.4} sub="across all items" icon={UtensilsCrossed} color="text-blue-600 dark:text-blue-400" bg="bg-blue-50 dark:bg-blue-950/60" />
-              <KpiCard label="Best Margin Item"    value={`${Math.max(...menuReport.map(i => i.margin))}%`} sub="gross profit margin" icon={TrendingUp} color="text-amber-600 dark:text-amber-400" bg="bg-amber-50 dark:bg-amber-950/60" />
-              <KpiCard label="Menu Items Active"   value={`${MENU_ITEMS.filter(i => i.available).length} / ${MENU_ITEMS.length}`} sub="available on menu" icon={ChefHat} color="text-purple-600 dark:text-purple-400" bg="bg-purple-50 dark:bg-purple-950/60" />
+            <div>
+              {/* ── MOBILE: green hero + 3 stacked cards (hidden on lg+) ── */}
+              <div className="lg:hidden space-y-2.5">
+                <div className="relative rounded-2xl bg-[#22c55e] p-5 shadow-lg text-white overflow-hidden">
+                  <div
+                    className="pointer-events-none absolute rounded-full bg-white/10"
+                    style={{ width: "260px", height: "260px", bottom: "-120px", right: "-60px" }}
+                  />
+                  <div className="relative z-10">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-white/80">Total Menu Revenue</p>
+                    <p className="mt-2 text-4xl font-extrabold">{currency(totalMenuRevenue)}</p>
+                    <div className="mt-3 flex items-center gap-1.5">
+                      <span className="inline-flex items-center gap-0.5 rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-bold text-white">
+                        <ArrowUpRight className="size-3" /> 11.3%
+                      </span>
+                      <p className="text-[11px] text-white/75">all dishes today</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+                    <div className="flex items-start justify-between">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Total Dishes Sold</p>
+                      <span className="rounded-lg bg-blue-50 p-1.5 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
+                        <UtensilsCrossed className="size-3.5" />
+                      </span>
+                    </div>
+                    <p className="mt-2 text-base font-bold text-blue-600 dark:text-blue-400">{menuReport.reduce((s, i) => s + i.dailySalesCount, 0)}</p>
+                    <div className="mt-1 flex items-center gap-1">
+                      <span className="inline-flex items-center gap-0.5 rounded-full bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700 dark:bg-blue-950/40 dark:text-blue-400">
+                        <ArrowUpRight className="size-3" /> 7.4%
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">across all items</span>
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+                    <div className="flex items-start justify-between">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Best Margin Item</p>
+                      <span className="rounded-lg bg-amber-50 p-1.5 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
+                        <TrendingUp className="size-3.5" />
+                      </span>
+                    </div>
+                    <p className="mt-2 text-base font-bold text-amber-600 dark:text-amber-400">{Math.max(...menuReport.map(i => i.margin))}%</p>
+                    <p className="mt-1 text-[10px] text-muted-foreground">gross profit margin</p>
+                  </div>
+                  <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+                    <div className="flex items-start justify-between">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Menu Items Active</p>
+                      <span className="rounded-lg bg-purple-50 p-1.5 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400">
+                        <ChefHat className="size-3.5" />
+                      </span>
+                    </div>
+                    <p className="mt-2 text-base font-bold text-purple-600 dark:text-purple-400">{MENU_ITEMS.filter(i => i.available).length} / {MENU_ITEMS.length}</p>
+                    <p className="mt-1 text-[10px] text-muted-foreground">available on menu</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── DESKTOP: original 4-card grid (hidden below lg) ── */}
+              <div className="hidden lg:grid lg:grid-cols-4 gap-3">
+                <KpiCard label="Total Menu Revenue"  value={currency(totalMenuRevenue)}        delta={11.3} sub="all dishes today"          icon={Banknote}       color="text-emerald-600 dark:text-emerald-400" bg="bg-emerald-50 dark:bg-emerald-950/60" />
+                <KpiCard label="Total Dishes Sold"   value={`${menuReport.reduce((s, i) => s + i.dailySalesCount, 0)}`} delta={7.4} sub="across all items" icon={UtensilsCrossed} color="text-blue-600 dark:text-blue-400" bg="bg-blue-50 dark:bg-blue-950/60" />
+                <KpiCard label="Best Margin Item"    value={`${Math.max(...menuReport.map(i => i.margin))}%`} sub="gross profit margin" icon={TrendingUp} color="text-amber-600 dark:text-amber-400" bg="bg-amber-50 dark:bg-amber-950/60" />
+                <KpiCard label="Menu Items Active"   value={`${MENU_ITEMS.filter(i => i.available).length} / ${MENU_ITEMS.length}`} sub="available on menu" icon={ChefHat} color="text-purple-600 dark:text-purple-400" bg="bg-purple-50 dark:bg-purple-950/60" />
+              </div>
             </div>
 
             {/* Category revenue bar + pie */}
@@ -343,7 +470,7 @@ function EateryReports() {
               {/* Mobile cards */}
               <ul className="divide-y divide-border sm:hidden">
                 {menuReport.map((item, i) => (
-                  <li key={item.id} className="px-4 py-3 space-y-2">
+                  <li key={item.id} className={cn("px-4 py-3 space-y-2", i % 2 !== 0 && "bg-muted/50")}>
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-xs font-bold text-muted-foreground">#{i + 1}</span>
                     </div>
@@ -421,59 +548,63 @@ function EateryReports() {
               return (
                 <>
                   {/* KPI cards */}
-                  <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                    {[
-                      {
-                        label: "Total Branches",
-                        value: branchOptions.length.toString(),
-                        sub: "active locations",
-                        icon: GitCompare,
-                        color: "text-emerald-600 dark:text-emerald-400",
-                        bg: "bg-emerald-50 dark:bg-emerald-950/60",
-                      },
-                      {
-                        label: "Combined Revenue",
-                        value: currency(totalRev),
-                        sub: "all branches",
-                        icon: Banknote,
-                        color: "text-blue-600 dark:text-blue-400",
-                        bg: "bg-blue-50 dark:bg-blue-950/60",
-                      },
-                      {
-                        label: "Combined Stock",
-                        value: currency(totalStock),
-                        sub: "total inventory value",
-                        icon: Boxes,
-                        color: "text-violet-600 dark:text-violet-400",
-                        bg: "bg-violet-50 dark:bg-violet-950/60",
-                      },
-                      {
-                        label: "Total Staff",
-                        value: totalStaff.toString(),
-                        sub: "across all locations",
-                        icon: Users,
-                        color: "text-amber-600 dark:text-amber-400",
-                        bg: "bg-amber-50 dark:bg-amber-950/60",
-                      },
-                    ].map((c) => (
-                      <div
-                        key={c.label}
-                        className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-xs"
-                      >
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                            {c.label}
-                          </p>
-                          <span className={cn("rounded-full p-1.5 sm:p-2", c.bg, c.color)}>
-                            <c.icon className="size-3.5 sm:size-4" />
-                          </span>
+                  <div>
+                    {/* ── MOBILE: green hero + 3 stacked cards ── */}
+                    <div className="lg:hidden space-y-2.5">
+                      <div className="relative rounded-2xl bg-[#22c55e] p-5 shadow-lg text-white overflow-hidden">
+                        <div className="pointer-events-none absolute rounded-full bg-white/10" style={{ width: "260px", height: "260px", bottom: "-120px", right: "-60px" }} />
+                        <div className="relative z-10">
+                          <p className="text-[11px] font-bold uppercase tracking-widest text-white/80">Total Branches</p>
+                          <p className="mt-2 text-4xl font-extrabold">{branchOptions.length}</p>
+                          <p className="mt-2 text-[11px] text-white/75">active locations</p>
                         </div>
-                        <p className={cn("mt-2 text-xl sm:text-2xl font-bold", c.color)}>{c.value}</p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">{c.sub}</p>
                       </div>
-                    ))}
+                      <div className="flex flex-col gap-2">
+                        <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+                          <div className="flex items-start justify-between">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Combined Revenue</p>
+                            <span className="rounded-lg bg-blue-50 p-1.5 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400"><Banknote className="size-3.5" /></span>
+                          </div>
+                          <p className="mt-2 text-base font-bold text-blue-600 dark:text-blue-400">{currency(totalRev)}</p>
+                          <p className="mt-1 text-[10px] text-muted-foreground">all branches</p>
+                        </div>
+                        <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+                          <div className="flex items-start justify-between">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Combined Stock</p>
+                            <span className="rounded-lg bg-violet-50 p-1.5 text-violet-600 dark:bg-violet-950/60 dark:text-violet-400"><Boxes className="size-3.5" /></span>
+                          </div>
+                          <p className="mt-2 text-base font-bold text-violet-600 dark:text-violet-400">{currency(totalStock)}</p>
+                          <p className="mt-1 text-[10px] text-muted-foreground">total inventory value</p>
+                        </div>
+                        <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+                          <div className="flex items-start justify-between">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Total Staff</p>
+                            <span className="rounded-lg bg-amber-50 p-1.5 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400"><Users className="size-3.5" /></span>
+                          </div>
+                          <p className="mt-2 text-base font-bold text-amber-600 dark:text-amber-400">{totalStaff}</p>
+                          <p className="mt-1 text-[10px] text-muted-foreground">across all locations</p>
+                        </div>
+                      </div>
+                    </div>
+                    {/* ── DESKTOP: original mapped cards ── */}
+                    <div className="hidden lg:grid lg:grid-cols-4 gap-3">
+                      {[
+                        { label: "Total Branches",    value: branchOptions.length.toString(), sub: "active locations",    icon: GitCompare, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950/60" },
+                        { label: "Combined Revenue",  value: currency(totalRev),              sub: "all branches",         icon: Banknote,   color: "text-blue-600 dark:text-blue-400",    bg: "bg-blue-50 dark:bg-blue-950/60" },
+                        { label: "Combined Stock",    value: currency(totalStock),            sub: "total inventory value",icon: Boxes,      color: "text-violet-600 dark:text-violet-400",bg: "bg-violet-50 dark:bg-violet-950/60" },
+                        { label: "Total Staff",       value: totalStaff.toString(),           sub: "across all locations", icon: Users,      color: "text-amber-600 dark:text-amber-400",  bg: "bg-amber-50 dark:bg-amber-950/60" },
+                      ].map((c) => (
+                        <div key={c.label} className="rounded-xl border border-border bg-card p-3 sm:p-4 shadow-xs">
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{c.label}</p>
+                            <span className={cn("rounded-full p-1.5 sm:p-2", c.bg, c.color)}><c.icon className="size-3.5 sm:size-4" /></span>
+                          </div>
+                          <p className={cn("mt-2 text-xl sm:text-2xl font-bold", c.color)}>{c.value}</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">{c.sub}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-
                   {/* Side-by-side branch comparison chart */}
                   <div className="rounded-xl border border-border bg-card p-4 sm:p-5 shadow-xs">
                     <div className="mb-4">
@@ -662,27 +793,27 @@ function EateryReports() {
                       </p>
                     </div>
                     <ul className="divide-y divide-border">
-                      {branchOptions.map((b) => {
+                      {branchOptions.map((b, idx) => {
                         const covers = Math.round(b.revenue / 50);
                         const avgCheck = 50;
                         return (
-                          <li key={b.id} className="flex items-center gap-4 px-5 py-3.5">
-                            <div className="min-w-0 flex-1">
-                              <p className="text-sm font-semibold truncate">{b.name}</p>
-                              <p className="text-xs text-muted-foreground">{b.city}</p>
+                          <li key={b.id} className={cn("px-4 py-3 space-y-2", idx % 2 !== 0 && "bg-muted/50")}>
+                            <div>
+                              <p className="text-sm font-semibold">{b.name}</p>
+                              <p className="text-[11px] text-muted-foreground">{b.city}</p>
                             </div>
-                            <div className="flex items-center gap-6 text-xs">
-                              <div className="text-right">
+                            <div className="grid grid-cols-3 gap-2 text-xs">
+                              <div>
                                 <p className="text-muted-foreground">Covers</p>
                                 <p className="num font-bold text-foreground">{covers.toLocaleString()}</p>
                               </div>
-                              <div className="text-right">
+                              <div>
                                 <p className="text-muted-foreground">Avg Check</p>
                                 <p className="num font-bold text-foreground">{currency(avgCheck)}</p>
                               </div>
-                              <div className="text-right">
+                              <div>
                                 <p className="text-muted-foreground">Revenue</p>
-                                <p className="num font-bold text-accent">{currency(b.revenue)}</p>
+                                <p className="num font-bold text-[#22c55e]">{currency(b.revenue)}</p>
                               </div>
                             </div>
                           </li>
@@ -704,11 +835,57 @@ function EateryReports() {
             </div>
 
             {/* KPIs */}
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <KpiCard label="Total Revenue"    value={currency(monthlySales.reduce((s, d) => s + d.revenue, 0))} delta={18.4} sub="Aug YTD"      icon={Banknote}       color="text-emerald-600 dark:text-emerald-400" bg="bg-emerald-50 dark:bg-emerald-950/60" />
-              <KpiCard label="Total Covers"     value={monthlySales.reduce((s, d) => s + d.covers, 0).toLocaleString()} delta={12.1} sub="guests served" icon={Users} color="text-blue-600 dark:text-blue-400" bg="bg-blue-50 dark:bg-blue-950/60" />
-              <KpiCard label="Peak Month"       value="July" sub={currency(67400) + " revenue"} icon={TrendingUp}  color="text-amber-600 dark:text-amber-400"  bg="bg-amber-50 dark:bg-amber-950/60" />
-              <KpiCard label="Avg Monthly Rev"  value={currency(Math.round(monthlySales.slice(0, 6).reduce((s, d) => s + d.revenue, 0) / 6))} sub="6-month average" icon={Flame} color="text-purple-600 dark:text-purple-400" bg="bg-purple-50 dark:bg-purple-950/60" />
+            <div>
+              {/* ── MOBILE: green hero + 3 stacked cards ── */}
+              <div className="lg:hidden space-y-2.5">
+                <div className="relative rounded-2xl bg-[#22c55e] p-5 shadow-lg text-white overflow-hidden">
+                  <div className="pointer-events-none absolute rounded-full bg-white/10" style={{ width: "260px", height: "260px", bottom: "-120px", right: "-60px" }} />
+                  <div className="relative z-10">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-white/80">Total Revenue</p>
+                    <p className="mt-2 text-4xl font-extrabold">{currency(monthlySales.reduce((s, d) => s + d.revenue, 0))}</p>
+                    <div className="mt-3 flex items-center gap-1.5">
+                      <span className="inline-flex items-center gap-0.5 rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-bold text-white"><ArrowUpRight className="size-3" /> 18.4%</span>
+                      <p className="text-[11px] text-white/75">Aug YTD</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+                    <div className="flex items-start justify-between">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Total Covers</p>
+                      <span className="rounded-lg bg-blue-50 p-1.5 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400"><Users className="size-3.5" /></span>
+                    </div>
+                    <p className="mt-2 text-base font-bold text-blue-600 dark:text-blue-400">{monthlySales.reduce((s, d) => s + d.covers, 0).toLocaleString()}</p>
+                    <div className="mt-1 flex items-center gap-1">
+                      <span className="inline-flex items-center gap-0.5 rounded-full bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700 dark:bg-blue-950/40 dark:text-blue-400"><ArrowUpRight className="size-3" /> 12.1%</span>
+                      <span className="text-[10px] text-muted-foreground">guests served</span>
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+                    <div className="flex items-start justify-between">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Peak Month</p>
+                      <span className="rounded-lg bg-amber-50 p-1.5 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400"><TrendingUp className="size-3.5" /></span>
+                    </div>
+                    <p className="mt-2 text-base font-bold text-amber-600 dark:text-amber-400">July</p>
+                    <p className="mt-1 text-[10px] text-muted-foreground">{currency(67400)} revenue</p>
+                  </div>
+                  <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+                    <div className="flex items-start justify-between">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Avg Monthly Rev</p>
+                      <span className="rounded-lg bg-purple-50 p-1.5 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400"><Flame className="size-3.5" /></span>
+                    </div>
+                    <p className="mt-2 text-base font-bold text-purple-600 dark:text-purple-400">{currency(Math.round(monthlySales.slice(0, 6).reduce((s, d) => s + d.revenue, 0) / 6))}</p>
+                    <p className="mt-1 text-[10px] text-muted-foreground">6-month average</p>
+                  </div>
+                </div>
+              </div>
+              {/* ── DESKTOP: original 4-card grid ── */}
+              <div className="hidden lg:grid lg:grid-cols-4 gap-3">
+                <KpiCard label="Total Revenue"    value={currency(monthlySales.reduce((s, d) => s + d.revenue, 0))} delta={18.4} sub="Aug YTD"      icon={Banknote}       color="text-emerald-600 dark:text-emerald-400" bg="bg-emerald-50 dark:bg-emerald-950/60" />
+                <KpiCard label="Total Covers"     value={monthlySales.reduce((s, d) => s + d.covers, 0).toLocaleString()} delta={12.1} sub="guests served" icon={Users} color="text-blue-600 dark:text-blue-400" bg="bg-blue-50 dark:bg-blue-950/60" />
+                <KpiCard label="Peak Month"       value="July" sub={currency(67400) + " revenue"} icon={TrendingUp}  color="text-amber-600 dark:text-amber-400"  bg="bg-amber-50 dark:bg-amber-950/60" />
+                <KpiCard label="Avg Monthly Rev"  value={currency(Math.round(monthlySales.slice(0, 6).reduce((s, d) => s + d.revenue, 0) / 6))} sub="6-month average" icon={Flame} color="text-purple-600 dark:text-purple-400" bg="bg-purple-50 dark:bg-purple-950/60" />
+              </div>
             </div>
 
             {/* Monthly trend */}

@@ -670,16 +670,27 @@ export function PharmacyDashboard() {
             </div>
           </div>
 
-          {/* Status filter chips (Dispensed / Cancelled) */}
-          <div className="px-5 md:px-6 pt-3 flex items-center gap-1.5 flex-wrap justify-end">
+          {/* Status filter chips */}
+          <div className="px-5 md:px-6 pt-3 flex items-center gap-1.5 flex-wrap">
             {(
               [
+                { key: "all", label: "All" },
                 { key: "dispensed", label: "Dispensed" },
+                { key: "pending", label: "Pending" },
+                { key: "partially_filled", label: "Partially Filled" },
                 { key: "cancelled", label: "Cancelled" },
               ] as const
             ).map((chip) => {
               const active = salesStatusFilter === chip.key;
-              const count = PRESCRIPTIONS.filter((p) => p.status === chip.key).length;
+              const count = chip.key === "all"
+                ? PRESCRIPTIONS.length
+                : PRESCRIPTIONS.filter((p) => p.status === chip.key).length;
+              const activeClass =
+                chip.key === "all" ? "border-zinc-800 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-200"
+                : chip.key === "dispensed" ? "border-emerald-300 dark:border-emerald-800 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400"
+                : chip.key === "pending" ? "border-amber-300 dark:border-amber-800 bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400"
+                : chip.key === "partially_filled" ? "border-blue-300 dark:border-blue-800 bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400"
+                : "border-rose-300 dark:border-rose-800 bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400";
               return (
                 <button
                   key={chip.key}
@@ -688,9 +699,7 @@ export function PharmacyDashboard() {
                   className={cn(
                     "inline-flex items-center rounded-full border px-3.5 py-1.5 text-xs font-semibold capitalize transition-all",
                     active
-                      ? chip.key === "dispensed"
-                        ? "border-emerald-300 dark:border-emerald-800 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400"
-                        : "border-rose-300 dark:border-rose-800 bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400"
+                      ? activeClass
                       : "border-border bg-background text-muted-foreground hover:bg-secondary/60 hover:text-foreground",
                   )}
                 >

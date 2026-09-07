@@ -48,7 +48,7 @@ export default function AuthSectionTwo({
           {/* Top Text Section — centered */}
           <div className="mx-auto w-full max-w-[480px] space-y-4 text-center">
             <img
-              src="/tritee-logo.png"
+              src="/trite-logo-black.png"
               alt="Trite logo"
               className="mx-auto h-8 w-auto object-contain"
             />
@@ -81,7 +81,7 @@ export default function AuthSectionTwo({
           {/* Back to Dashboard button */}
           <a
             href="/"
-            className="absolute top-6 right-6 flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-800 transition-colors"
+            className="fixed top-4 left-4 z-50 flex items-center gap-1 rounded-full bg-[#22c55e] px-3 py-1.5 text-sm font-semibold text-white shadow-md hover:bg-[#16a34a] transition-colors lg:absolute lg:top-6 lg:left-6 lg:z-auto"
           >
             <span className="text-base leading-none">‹</span>
             Back to Trite Dashboard

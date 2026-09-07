@@ -25,6 +25,7 @@ import {
   Printer,
   Edit,
   Trash2,
+  ChevronDown,
 } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
@@ -41,6 +42,8 @@ import {
   type ChurchPaymentRecord,
 } from "@/lib/ngo-data";
 import { cn } from "@/lib/utils";
+import { AppSelect } from "@/components/app-select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/members")({
   head: () => ({
@@ -166,23 +169,23 @@ function AddPaymentTypeModal({
               <label className="block text-[11px] font-semibold text-muted-foreground uppercase mb-1">
                 Category
               </label>
-              <select
+              <AppSelect
                 value={category}
-                onChange={(e) => {
-                  const cat = e.target.value as ChurchPaymentType["category"];
+                onChange={(val) => {
+                  const cat = val as ChurchPaymentType["category"];
                   setCategory(cat);
                   if (cat === "Project") setIsProject(true);
                 }}
-                className="w-full h-9 px-3 rounded-lg border border-border bg-background text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-              >
-                <option value="Tithe">Tithe</option>
-                <option value="Offering">Sunday Offering</option>
-                <option value="Welfare">Welfare</option>
-                <option value="Project">Church Project</option>
-                <option value="Dues">Membership Dues</option>
-                <option value="Special">Special Thanksgiving</option>
-                <option value="Other">Other (specify)</option>
-              </select>
+                options={[
+                  { value: "Tithe", label: "Tithe" },
+                  { value: "Offering", label: "Sunday Offering" },
+                  { value: "Welfare", label: "Welfare" },
+                  { value: "Project", label: "Church Project" },
+                  { value: "Dues", label: "Membership Dues" },
+                  { value: "Special", label: "Special Thanksgiving" },
+                  { value: "Other", label: "Other (specify)" },
+                ]}
+              />
               {category === "Other" && (
                 <input
                   value={customCategory}
@@ -211,18 +214,18 @@ function AddPaymentTypeModal({
             <label className="block text-[11px] font-semibold text-muted-foreground uppercase mb-1">
               Payment Frequency
             </label>
-            <select
+            <AppSelect
               value={frequency}
-              onChange={(e) => setFrequency(e.target.value as any)}
-              className="w-full h-9 px-3 rounded-lg border border-border bg-background text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-            >
-              <option value="Weekly">Weekly (Every Sunday)</option>
-              <option value="Monthly">Monthly</option>
-              <option value="Quarterly">Quarterly</option>
-              <option value="Annual">Annual / Once a Year</option>
-              <option value="One-Time">One-Time Contribution</option>
-              <option value="None">None</option>
-            </select>
+              onChange={(val) => setFrequency(val as any)}
+              options={[
+                { value: "Weekly", label: "Weekly (Every Sunday)" },
+                { value: "Monthly", label: "Monthly" },
+                { value: "Quarterly", label: "Quarterly" },
+                { value: "Annual", label: "Annual / Once a Year" },
+                { value: "One-Time", label: "One-Time Contribution" },
+                { value: "None", label: "None" },
+              ]}
+            />
           </div>
 
           {/* ── PROJECT CHECKBOX ── */}
@@ -487,15 +490,15 @@ Sis Grace Koomson,+233 54 222 0404,Welfare,500`;
                   <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">
                     Select Church Project
                   </label>
-                  <select
+                  <AppSelect
                     value={projectName}
-                    onChange={(e) => setProjectName(e.target.value)}
-                    className="w-full h-8 px-2 rounded-md border border-border bg-background text-xs text-foreground focus:outline-none"
-                  >
-                    <option value="Cathedral Building Project">Cathedral Building Project</option>
-                    <option value="Evangelism Bus Acquisition">Evangelism Bus Acquisition</option>
-                    <option value="Community Welfare Fund">Community Welfare Fund</option>
-                  </select>
+                    onChange={setProjectName}
+                    options={[
+                      { value: "Cathedral Building Project", label: "Cathedral Building Project" },
+                      { value: "Evangelism Bus Acquisition", label: "Evangelism Bus Acquisition" },
+                      { value: "Community Welfare Fund", label: "Community Welfare Fund" },
+                    ]}
+                  />
                 </div>
               )}
             </div>
@@ -789,17 +792,18 @@ function RecordPaymentModal({
               <label className="block text-[11px] font-bold text-muted-foreground uppercase mb-1">
                 Payment Type / Purpose *
               </label>
-              <select
-                value={selectedPaymentTypeName}
-                onChange={(e) => setSelectedPaymentTypeName(e.target.value)}
-                className="w-full h-9 px-3 rounded-lg border border-border bg-background text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-              >
-                {paymentTypes.map((pt) => (
-                  <option key={pt.id} value={pt.name}>
-                    {pt.name} {pt.isProject ? " (Project 🏗️)" : ""}
-                  </option>
-                ))}
-              </select>
+              <Select value={selectedPaymentTypeName} onValueChange={setSelectedPaymentTypeName}>
+                <SelectTrigger className="h-9 w-full text-sm font-medium">
+                  <SelectValue placeholder="Select payment type..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {paymentTypes.map((pt) => (
+                    <SelectItem key={pt.id} value={pt.name}>
+                      {pt.name} {pt.isProject ? " (Project 🏗️)" : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
@@ -838,15 +842,15 @@ function RecordPaymentModal({
               <label className="block text-[11px] font-bold text-muted-foreground uppercase mb-1">
                 Payment Channel
               </label>
-              <select
+              <AppSelect
                 value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value as any)}
-                className="w-full h-9 px-3 rounded-lg border border-border bg-background text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-              >
-                <option value="Mobile Money">Mobile Money (MoMo)</option>
-                <option value="Bank Transfer">Bank Transfer / Direct Deposit</option>
-                <option value="Cash Deposit">Cash / Physical Offering</option>
-              </select>
+                onChange={(val) => setPaymentMethod(val as any)}
+                options={[
+                  { value: "Mobile Money", label: "Mobile Money (MoMo)" },
+                  { value: "Bank Transfer", label: "Bank Transfer / Direct Deposit" },
+                  { value: "Cash Deposit", label: "Cash / Physical Offering" },
+                ]}
+              />
             </div>
 
             <div>
@@ -1013,25 +1017,102 @@ function DuesAndPaymentPage() {
       {/* ══════════════════════════════════════════════
           1. STAT SUMMARY CARDS
       ══════════════════════════════════════════════ */}
-      <div className="mb-5 grid grid-cols-2 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+
+      {/* ── MOBILE: green hero + 3 stacked cards ── */}
+      <div className="mb-5 lg:hidden space-y-2.5">
+        {/* Hero: Church Collections */}
+        <div className="relative rounded-2xl bg-[#22c55e] p-5 shadow-lg text-white overflow-hidden">
+          <div className="pointer-events-none absolute rounded-full bg-white/10"
+            style={{ width: "220px", height: "220px", bottom: "-100px", right: "-50px" }} />
+          <div className="relative z-10 flex items-start justify-between">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-white/80">
+                {cardLabels["Church Collections"]}
+              </p>
+              <p className="mt-1.5 text-3xl font-extrabold">{currency(totalCollected)}</p>
+            </div>
+            <button
+              onClick={() => { setEditingCard("Church Collections"); setDraftLabel(cardLabels["Church Collections"]); }}
+              className="grid size-7 place-items-center rounded-lg bg-white/20 text-white hover:bg-white/30 transition-colors"
+              aria-label="Edit label"
+            >
+              <Edit className="size-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* 3 smaller cards stacked */}
+        <div className="flex flex-col gap-2">
+          {/* Tithe */}
+          <div className="relative rounded-xl border border-border bg-card p-3 shadow-xs flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="rounded-lg bg-secondary p-2 text-foreground shrink-0">
+                <Coins className="size-3.5" />
+              </span>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{cardLabels["Tithe"]}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <p className="text-base font-extrabold text-foreground">{currency(totalTithes)}</p>
+              <button onClick={() => { setEditingCard("Tithe"); setDraftLabel(cardLabels["Tithe"]); }}
+                className="grid size-6 place-items-center rounded-lg bg-muted/50 text-muted-foreground hover:bg-muted transition-colors" aria-label="Edit label">
+                <Edit className="size-3" />
+              </button>
+            </div>
+          </div>
+
+          {/* Sunday Offering */}
+          <div className="relative rounded-xl border border-border bg-card p-3 shadow-xs flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="rounded-lg bg-secondary p-2 text-foreground shrink-0">
+                <Receipt className="size-3.5" />
+              </span>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{cardLabels["Sunday Offering"]}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <p className="text-base font-extrabold text-foreground">{currency(totalSundayOfferings)}</p>
+              <button onClick={() => { setEditingCard("Sunday Offering"); setDraftLabel(cardLabels["Sunday Offering"]); }}
+                className="grid size-6 place-items-center rounded-lg bg-muted/50 text-muted-foreground hover:bg-muted transition-colors" aria-label="Edit label">
+                <Edit className="size-3" />
+              </button>
+            </div>
+          </div>
+
+          {/* Welfare */}
+          <div className="relative rounded-xl border border-border bg-card p-3 shadow-xs flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="rounded-lg bg-secondary p-2 text-foreground shrink-0">
+                <Wallet className="size-3.5" />
+              </span>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{cardLabels["Welfare"]}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <p className="text-base font-extrabold text-foreground">{currency(totalWelfare)}</p>
+              <button onClick={() => { setEditingCard("Welfare"); setDraftLabel(cardLabels["Welfare"]); }}
+                className="grid size-6 place-items-center rounded-lg bg-muted/50 text-muted-foreground hover:bg-muted transition-colors" aria-label="Edit label">
+                <Edit className="size-3" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── DESKTOP: original 4-col grid ── */}
+      <div className="mb-5 hidden lg:grid grid-cols-4 gap-2.5">
         {/* Card 1: Church Collections */}
         <div className="relative rounded-xl border border-border bg-card p-3 sm:p-4 shadow-2xs">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               {cardLabels["Church Collections"]}
             </p>
-            <span className="rounded-full bg-emerald-50 p-1.5 sm:p-2 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
+            <span className="rounded-full bg-secondary p-1.5 sm:p-2 text-foreground">
               <CheckCircle2 className="size-3.5 sm:size-4" />
             </span>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+          <p className="mt-2 text-xl sm:text-2xl font-bold text-foreground">
             {currency(totalCollected)}
           </p>
           <button
-            onClick={() => {
-              setEditingCard("Church Collections");
-              setDraftLabel(cardLabels["Church Collections"]);
-            }}
+            onClick={() => { setEditingCard("Church Collections"); setDraftLabel(cardLabels["Church Collections"]); }}
             className="absolute bottom-3 right-3 grid size-6 place-items-center rounded-lg bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
             aria-label="Edit label"
           >
@@ -1045,18 +1126,15 @@ function DuesAndPaymentPage() {
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               {cardLabels["Tithe"]}
             </p>
-            <span className="rounded-full bg-violet-50 p-1.5 sm:p-2 text-violet-600 dark:bg-violet-950/60 dark:text-violet-400">
+            <span className="rounded-full bg-secondary p-1.5 sm:p-2 text-foreground">
               <Coins className="size-3.5 sm:size-4" />
             </span>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-bold text-violet-600 dark:text-violet-400">
+          <p className="mt-2 text-xl sm:text-2xl font-bold text-foreground">
             {currency(totalTithes)}
           </p>
           <button
-            onClick={() => {
-              setEditingCard("Tithe");
-              setDraftLabel(cardLabels["Tithe"]);
-            }}
+            onClick={() => { setEditingCard("Tithe"); setDraftLabel(cardLabels["Tithe"]); }}
             className="absolute bottom-3 right-3 grid size-6 place-items-center rounded-lg bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
             aria-label="Edit label"
           >
@@ -1070,18 +1148,15 @@ function DuesAndPaymentPage() {
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               {cardLabels["Sunday Offering"]}
             </p>
-            <span className="rounded-full bg-amber-50 p-1.5 sm:p-2 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
+            <span className="rounded-full bg-secondary p-1.5 sm:p-2 text-foreground">
               <Receipt className="size-3.5 sm:size-4" />
             </span>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-bold text-amber-600 dark:text-amber-400">
+          <p className="mt-2 text-xl sm:text-2xl font-bold text-foreground">
             {currency(totalSundayOfferings)}
           </p>
           <button
-            onClick={() => {
-              setEditingCard("Sunday Offering");
-              setDraftLabel(cardLabels["Sunday Offering"]);
-            }}
+            onClick={() => { setEditingCard("Sunday Offering"); setDraftLabel(cardLabels["Sunday Offering"]); }}
             className="absolute bottom-3 right-3 grid size-6 place-items-center rounded-lg bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
             aria-label="Edit label"
           >
@@ -1095,18 +1170,15 @@ function DuesAndPaymentPage() {
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               {cardLabels["Welfare"]}
             </p>
-            <span className="rounded-full bg-teal-50 p-1.5 sm:p-2 text-teal-600 dark:bg-teal-950/60 dark:text-teal-400">
+            <span className="rounded-full bg-secondary p-1.5 sm:p-2 text-foreground">
               <Wallet className="size-3.5 sm:size-4" />
             </span>
           </div>
-          <p className="mt-2 text-xl sm:text-2xl font-bold text-teal-600 dark:text-teal-400">
+          <p className="mt-2 text-xl sm:text-2xl font-bold text-foreground">
             {currency(totalWelfare)}
           </p>
           <button
-            onClick={() => {
-              setEditingCard("Welfare");
-              setDraftLabel(cardLabels["Welfare"]);
-            }}
+            onClick={() => { setEditingCard("Welfare"); setDraftLabel(cardLabels["Welfare"]); }}
             className="absolute bottom-3 right-3 grid size-6 place-items-center rounded-lg bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
             aria-label="Edit label"
           >
@@ -1184,14 +1256,15 @@ function DuesAndPaymentPage() {
       <div className="mb-4 rounded-xl border border-border bg-card p-3.5 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Coins className="size-4 text-emerald-600 dark:text-emerald-400" />
+            <Coins className="size-4 text-foreground" />
             <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
-              Active Church Payment Types ({paymentTypes.length})
+              <span className="sm:hidden">Payment Types ({paymentTypes.length})</span>
+              <span className="hidden sm:inline">Active Church Payment Types ({paymentTypes.length})</span>
             </h3>
           </div>
           <button
             onClick={() => setIsAddPaymentTypeOpen(true)}
-            className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
+            className="inline-flex items-center gap-1 rounded-lg bg-[#22c55e] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[#16a34a] transition-colors shrink-0"
           >
             <Plus className="size-3" /> New Payment Type
           </button>
@@ -1321,8 +1394,23 @@ function DuesAndPaymentPage() {
           />
         </div>
 
-        {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+        {/* Mobile: dropdown selector */}
+        <div className="sm:hidden">
+          <AppSelect
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={[
+              { value: "all", label: `All Payments (${transactions.length})` },
+              { value: "Tithe", label: `Tithe (${transactions.filter((t) => t.category === "Tithe").length})` },
+              { value: "Offering", label: `Sunday Offering (${transactions.filter((t) => t.category === "Offering").length})` },
+              { value: "Welfare", label: `Welfare (${transactions.filter((t) => t.category === "Welfare").length})` },
+              { value: "Project", label: `Projects (${transactions.filter((t) => t.category === "Project").length})` },
+            ]}
+          />
+        </div>
+
+        {/* Desktop: scrollable pill filters */}
+        <div className="hidden sm:flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
           <button
             onClick={() => setStatusFilter("all")}
             className={cn(
@@ -1395,11 +1483,11 @@ function DuesAndPaymentPage() {
         <div className="flex items-center justify-between border-b border-border bg-muted/20 px-4 py-3">
           <div>
             <h2 className="text-sm font-bold text-foreground">Incoming Payments</h2>
-            <p className="text-xs text-muted-foreground">
+            <p className="hidden sm:block text-xs text-muted-foreground">
               Confirmed collections grouped by payment type
             </p>
           </div>
-          <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+          <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400 shrink-0 whitespace-nowrap">
             {filteredPayments.length} received
           </span>
         </div>
